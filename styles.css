@@ -134,7 +134,7 @@ body {
 }
 
 #camera-preview-container {
-    margin-bottom: 1rem;
+    margin-top: 1rem; /* Espacio entre el botón y la cámara */
     text-align: center;
 }
 
