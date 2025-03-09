@@ -229,15 +229,10 @@ const uiController = {
     },
 
     showComingSoon: () => {
-        // Crear el elemento del mensaje
         const comingSoonEl = document.createElement('div');
         comingSoonEl.className = 'coming-soon-message';
         comingSoonEl.textContent = 'COMING SOON';
-
-        // Añadirlo al body
         document.body.appendChild(comingSoonEl);
-
-        // Eliminarlo después de 3 segundos
         setTimeout(() => {
             comingSoonEl.remove();
         }, 3000);
@@ -283,8 +278,10 @@ const handlers = {
             return;
         }
 
-        const originalHTML = domElements.decodeButton.innerHTML;
-        uiController.showLoader(domElements.decodeButton, 'Decrypting...');
+        const originalButtonHTML = domElements.imageButton.innerHTML;
+        uiController.showLoader(domElements.imageButton, '');
+
+        uiController.displayMessage('Loading image...', false);
 
         try {
             if (typeof jsQR === 'undefined') {
@@ -310,6 +307,8 @@ const handlers = {
                 reader.readAsDataURL(file);
             });
 
+            uiController.displayMessage('Image loaded, decoding QR...', false);
+
             const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
             if (!qrCode) {
                 throw new Error('No QR code detected in the image');
@@ -328,7 +327,7 @@ const handlers = {
                 false
             );
         } finally {
-            uiController.resetButton(domElements.decodeButton, originalHTML);
+            uiController.resetButton(domElements.imageButton, originalButtonHTML);
         }
     },
 
