@@ -7,7 +7,12 @@ const elements = {
     qrUpload: document.getElementById('qr-upload'),
     decodeButton: document.getElementById('decode-button'),
     downloadButton: document.getElementById('download-button'),
-    qrContainer: document.getElementById('qr-container')
+    qrContainer: document.getElementById('qr-container'),
+    shareButton: document.getElementById('share-button'),
+    cameraButton: document.getElementById('camera-button'),
+    qrModal: document.getElementById('qr-modal'),
+    qrModalCanvas: document.getElementById('qr-modal-canvas'),
+    closeModal: document.querySelector('.close-modal')
 };
 
 const cryptoUtils = {
@@ -142,6 +147,14 @@ const ui = {
         });
     },
 
+    showQRModal: () => {
+        const ctx = elements.qrModalCanvas.getContext('2d');
+        elements.qrModalCanvas.width = elements.qrCanvas.width;
+        elements.qrModalCanvas.height = elements.qrCanvas.height;
+        ctx.drawImage(elements.qrCanvas, 0, 0);
+        elements.qrModal.classList.remove('hidden');
+    },
+
     showLoader: (button, text = 'Processing...') => {
         button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${text}`;
         button.disabled = true;
@@ -181,7 +194,7 @@ const handlers = {
         try {
             const encrypted = await cryptoUtils.encryptMessage(message, passphrase);
             await ui.generateQR(encrypted);
-            ui.displayMessage(`${encrypted.slice(0, 40)}...`, true); // Mostrar mensaje cifrado
+            ui.displayMessage(`${encrypted.slice(0, 40)}...`, true);
             elements.messageInput.value = '';
         } catch (error) {
             console.error('Encryption error:', error);
@@ -229,7 +242,7 @@ const handlers = {
             }
 
             const decrypted = await cryptoUtils.decryptMessage(qrCode.data, passphrase);
-            ui.displayMessage(decrypted, false); // Mostrar mensaje descifrado
+            ui.displayMessage(decrypted, false);
         } catch (error) {
             console.error('Decryption error:', error);
             ui.showError(error.message.includes('decrypt') ? 
@@ -245,6 +258,98 @@ const handlers = {
         link.download = 'hushbox-qr.png';
         link.href = elements.qrCanvas.toDataURL('image/png', 1.0);
         link.click();
+    },
+
+    handleShare: () => {
+        const canvas = elements.qrCanvas;
+        canvas.toBlob((blob) => {
+            const file = new File([blob], 'hushbox-qr.png', { type: 'image/png' });
+            const shareData = {
+                files: [file],
+                title: 'HushBox QR',
+                text: 'Scan this QR code to decrypt the message.',
+            };
+
+            if (navigator.canShare && navigator.canShare(shareData)) {
+                navigator.share(shareData)
+                    .then(() => console.log('QR shared successfully'))
+                    .catch((error) => console.error('Error sharing QR:', error));
+            } else {
+                alert('Sharing not supported in this browser.');
+            }
+        }, 'image/png');
+    },
+
+    handleCamera: async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.play();
+
+            const cameraContainer = document.createElement('div');
+            cameraContainer.className = 'camera-container';
+            cameraContainer.innerHTML = `
+                <video autoplay></video>
+                <button id="close-camera" class="btn-secondary">
+                    <i class="fas fa-times"></i> Close Camera
+                </button>
+            `;
+            document.body.appendChild(cameraContainer);
+
+            const closeCamera = () => {
+                stream.getTracks().forEach(track => track.stop());
+                cameraContainer.remove();
+            };
+
+            document.getElementById('close-camera').addEventListener('click', closeCamera);
+
+            const scanQR = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
+
+                if (qrCode) {
+                    closeCamera();
+                    handlers.handleDecryptQR(qrCode.data);
+                } else {
+                    requestAnimationFrame(scanQR);
+                }
+            };
+
+            requestAnimationFrame(scanQR);
+        } catch (error) {
+            console.error('Error accessing camera:', error);
+            ui.showError('Camera access denied or not supported.');
+        }
+    },
+
+    handleDecryptQR: async (data) => {
+        const passphrase = elements.passphraseInput.value.trim();
+
+        if (!passphrase) {
+            ui.showError('Please enter the passphrase');
+            return;
+        }
+
+        ui.showLoader(elements.decodeButton, 'Decrypting...');
+
+        try {
+            const decrypted = await cryptoUtils.decryptMessage(data, passphrase);
+            ui.displayMessage(decrypted, false);
+        } catch (error) {
+            console.error('Decryption error:', error);
+            ui.showError(error.message.includes('decrypt') ? 
+                'Decryption failed. Wrong passphrase?' : 
+                error.message);
+        }
+
+        ui.resetButton(elements.decodeButton, `<i class="fas fa-unlock"></i> Decrypt Message`);
     }
 };
 
@@ -252,6 +357,12 @@ const handlers = {
 elements.sendButton.addEventListener('click', handlers.handleEncrypt);
 elements.decodeButton.addEventListener('click', handlers.handleDecrypt);
 elements.downloadButton.addEventListener('click', handlers.handleDownload);
+elements.shareButton.addEventListener('click', handlers.handleShare);
+elements.cameraButton.addEventListener('click', handlers.handleCamera);
+elements.qrCanvas.addEventListener('click', ui.showQRModal);
+elements.closeModal.addEventListener('click', () => {
+    elements.qrModal.classList.add('hidden');
+});
 
 // Hide QR container initially
 elements.qrContainer.classList.add('hidden');
