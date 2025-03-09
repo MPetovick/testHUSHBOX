@@ -14,7 +14,11 @@ const elements = {
     qrModalCanvas: document.getElementById('qr-modal-canvas'),
     closeModal: document.querySelector('.close-modal'),
     cameraPreview: document.getElementById('camera-preview'),
-    cameraPreviewContainer: document.getElementById('camera-preview-container')
+    cameraPreviewContainer: document.getElementById('camera-preview-container'),
+    passphraseModal: document.getElementById('passphrase-modal'),
+    modalPassphrase: document.getElementById('modal-passphrase'),
+    modalDecryptButton: document.getElementById('modal-decrypt-button'),
+    closePassphraseModal: document.querySelector('.close-passphrase-modal')
 };
 
 const cryptoUtils = {
@@ -128,6 +132,11 @@ const ui = {
         ctx.drawImage(elements.qrCanvas, 0, 0);
         elements.qrModal.classList.remove('hidden');
     },
+    showPassphraseModal: (qrData) => {
+        elements.passphraseModal.classList.remove('hidden');
+        elements.modalPassphrase.value = ''; // Limpiar el campo
+        elements.modalDecryptButton.onclick = () => handlers.handleDecryptQR(qrData);
+    },
     showLoader: (button, text = 'Processing...') => {
         button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${text}`;
         button.disabled = true;
@@ -233,7 +242,6 @@ const handlers = {
     handleCamera: async () => {
         const isCameraActive = !elements.cameraPreviewContainer.classList.contains('hidden');
         if (isCameraActive) {
-            // Apagar la cámara y ocultar la vista previa
             if (elements.cameraPreview.srcObject) {
                 elements.cameraPreview.srcObject.getTracks().forEach(track => track.stop());
                 elements.cameraPreview.srcObject = null;
@@ -241,7 +249,6 @@ const handlers = {
             elements.cameraPreviewContainer.classList.add('hidden');
             elements.cameraButton.querySelector('i').classList.replace('fa-times', 'fa-camera');
         } else {
-            // Encender la cámara y mostrar la vista previa
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
                 elements.cameraPreview.srcObject = stream;
@@ -249,9 +256,17 @@ const handlers = {
                 elements.cameraPreviewContainer.classList.remove('hidden');
                 elements.cameraButton.querySelector('i').classList.replace('fa-camera', 'fa-times');
 
-                // Escanear el QR continuamente
-                const scanQR = () => {
-                    if (!elements.cameraPreview.srcObject) return; // Detener si la cámara se apaga
+                let lastScanTime = 0;
+                const scanInterval = 200; // Escanear cada 200ms para optimizar rendimiento
+
+                const scanQR = (timestamp) => {
+                    if (!elements.cameraPreview.srcObject) return;
+                    if (timestamp - lastScanTime < scanInterval) {
+                        requestAnimationFrame(scanQR);
+                        return;
+                    }
+                    lastScanTime = timestamp;
+
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     canvas.width = elements.cameraPreview.videoWidth;
@@ -259,13 +274,13 @@ const handlers = {
                     ctx.drawImage(elements.cameraPreview, 0, 0, canvas.width, canvas.height);
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                     const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
+
                     if (qrCode) {
-                        handlers.handleDecryptQR(qrCode.data);
-                        // Apagar la cámara tras detectar un QR
                         elements.cameraPreview.srcObject.getTracks().forEach(track => track.stop());
                         elements.cameraPreview.srcObject = null;
                         elements.cameraPreviewContainer.classList.add('hidden');
                         elements.cameraButton.querySelector('i').classList.replace('fa-times', 'fa-camera');
+                        ui.showPassphraseModal(qrCode.data);
                     } else {
                         requestAnimationFrame(scanQR);
                     }
@@ -277,21 +292,27 @@ const handlers = {
             }
         }
     },
-    handleDecryptQR: async (data) => {
-        const passphrase = elements.passphraseInput.value.trim();
+    handleDecryptQR: async () => {
+        const passphrase = elements.modalPassphrase.value.trim();
+        const qrData = elements.passphraseModal.dataset.qrData; // Guardamos los datos del QR temporalmente
         if (!passphrase) {
             ui.showError('Please enter the passphrase');
             return;
         }
-        ui.showLoader(elements.decodeButton, 'Decrypting...');
+        if (passphrase.length < 8) {
+            ui.showError('Passphrase must be at least 8 characters long');
+            return;
+        }
+        ui.showLoader(elements.modalDecryptButton, 'Decrypting...');
         try {
-            const decrypted = await cryptoUtils.decryptMessage(data, passphrase);
+            const decrypted = await cryptoUtils.decryptMessage(qrData, passphrase);
             ui.displayMessage(decrypted, false);
+            elements.passphraseModal.classList.add('hidden');
         } catch (error) {
             console.error('Decryption error:', error);
             ui.showError(error.message.includes('decrypt') ? 'Decryption failed. Wrong passphrase?' : error.message);
         }
-        ui.resetButton(elements.decodeButton, `<i class="fas fa-unlock"></i> Decrypt Message`);
+        ui.resetButton(elements.modalDecryptButton, `<i class="fas fa-unlock"></i> Decrypt`);
     }
 };
 
@@ -305,7 +326,24 @@ elements.qrCanvas.addEventListener('click', ui.showQRModal);
 elements.closeModal.addEventListener('click', () => {
     elements.qrModal.classList.add('hidden');
 });
+elements.closePassphraseModal.addEventListener('click', () => {
+    elements.passphraseModal.classList.add('hidden');
+});
 
-// Hide QR and camera preview containers initially
+// Guardar los datos del QR en el modal temporalmente
+elements.passphraseModal.addEventListener('show', (e) => {
+    elements.passphraseModal.dataset.qrData = e.detail.qrData;
+});
+
+// Personalizamos el evento show para el modal
+ui.showPassphraseModal = (qrData) => {
+    elements.passphraseModal.classList.remove('hidden');
+    elements.modalPassphrase.value = '';
+    elements.passphraseModal.dataset.qrData = qrData;
+    elements.modalDecryptButton.onclick = () => handlers.handleDecryptQR();
+};
+
+// Inicializar contenedores como ocultos
 elements.qrContainer.classList.add('hidden');
 elements.cameraPreviewContainer.classList.add('hidden');
+elements.passphraseModal.classList.add('hidden');
