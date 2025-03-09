@@ -22,6 +22,7 @@
                     </div>
                     <div class="input-group">
                         <textarea id="message-input" placeholder="Write your secure message..." rows="4" required></textarea>
+                        <i class="fas fa-comment-dots icon"></i>
                         <button id="camera-button" class="btn btn-icon" title="Scan with Camera">
                             <i class="fas fa-camera"></i>
                         </button>
@@ -29,7 +30,6 @@
                     <button type="submit" id="send-button" class="btn-primary">
                         <i class="fas fa-lock"></i> Encrypt & Generate QR
                     </button>
-                    <!-- Contenedor de la cámara movido aquí -->
                     <div id="camera-preview-container" class="hidden">
                         <video id="camera-preview" autoplay playsinline></video>
                     </div>
@@ -79,6 +79,18 @@
         <div class="modal-content">
             <span class="close-modal">×</span>
             <canvas id="qr-modal-canvas"></canvas>
+        </div>
+    </div>
+
+    <!-- Nuevo modal para la contraseña al escanear QR -->
+    <div id="passphrase-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-passphrase-modal">×</span>
+            <h3>Enter Passphrase</h3>
+            <input type="password" id="modal-passphrase" placeholder="Enter the secret passphrase" minlength="8" required>
+            <button id="modal-decrypt-button" class="btn-primary">
+                <i class="fas fa-unlock"></i> Decrypt
+            </button>
         </div>
     </div>
 
