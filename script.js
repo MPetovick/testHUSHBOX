@@ -23,6 +23,7 @@ const domElements = {
     qrCanvas: document.getElementById('qr-canvas'),
     decodeButton: document.getElementById('decode-button'),
     downloadButton: document.getElementById('download-button'),
+    shareButton: document.getElementById('share-button'),
     qrContainer: document.getElementById('qr-container')
 };
 
@@ -294,7 +295,7 @@ const handlers = {
             const decrypted = await cryptoUtils.decryptMessage(result.text, passphrase);
             uiController.displayMessage(decrypted);
             domElements.passphraseInput.value = '';
-            fileInput.value = ''; // Limpiar el input después de procesar
+            fileInput.value = '';
         } catch (error) {
             console.error('Decryption error:', error);
             uiController.displayMessage(
@@ -313,6 +314,34 @@ const handlers = {
         link.download = 'hushbox-qr.png';
         link.href = domElements.qrCanvas.toDataURL('image/png', 1.0);
         link.click();
+    },
+
+    handleShare: async () => {
+        const qrDataUrl = domElements.qrCanvas.toDataURL('image/png', 1.0);
+        const qrBlob = await (await fetch(qrDataUrl)).blob();
+        const qrFile = new File([qrBlob], 'hushbox-qr.png', { type: 'image/png' });
+
+        if (navigator.share && navigator.canShare({ files: [qrFile] })) {
+            try {
+                await navigator.share({
+                    title: 'HushBox Secure QR',
+                    text: 'Check out this encrypted QR code from HushBox!',
+                    files: [qrFile]
+                });
+                uiController.displayMessage('QR shared successfully!', false);
+            } catch (error) {
+                console.error('Share error:', error);
+                uiController.displayMessage('Sharing failed: ' + error.message, false);
+            }
+        } else {
+            try {
+                await navigator.clipboard.writeText(qrDataUrl);
+                uiController.displayMessage('QR data URL copied to clipboard!', false);
+            } catch (error) {
+                console.error('Clipboard error:', error);
+                uiController.displayMessage('Failed to copy QR to clipboard', false);
+            }
+        }
     },
 
     handleScan: async () => {
@@ -341,7 +370,7 @@ const handlers = {
     },
 
     handleImageUpload: () => {
-        fileInput.click(); // Abre el selector de archivos
+        fileInput.click();
     },
 
     handlePDFUpload: () => {
@@ -353,10 +382,30 @@ const handlers = {
 domElements.sendButton.addEventListener('click', handlers.handleEncrypt);
 domElements.decodeButton.addEventListener('click', handlers.handleDecrypt);
 domElements.downloadButton.addEventListener('click', handlers.handleDownload);
+domElements.shareButton.addEventListener('click', handlers.handleShare);
 domElements.scanButton.addEventListener('click', handlers.handleScan);
 domElements.imageButton.addEventListener('click', handlers.handleImageUpload);
 domElements.pdfButton.addEventListener('click', handlers.handlePDFUpload);
-fileInput.addEventListener('change', handlers.handleDecrypt); // Ejecuta el descifrado al seleccionar un archivo
+fileInput.addEventListener('change', handlers.handleDecrypt);
+
+// Validación visual de la passphrase
+domElements.passphraseInput.addEventListener('input', (e) => {
+    const passphrase = e.target.value;
+    const keyIcon = domElements.passphraseInput.parentElement.querySelector('.icon');
+
+    if (passphrase.length === 0) {
+        keyIcon.style.color = 'rgba(160, 160, 160, 0.6)'; // Gris cuando está vacío
+    } else if (passphrase.length < CONFIG.MIN_PASSPHRASE_LENGTH) {
+        keyIcon.style.color = 'var(--error-color)'; // Rojo si tiene menos de 12 caracteres
+    } else {
+        try {
+            cryptoUtils.validatePassphrase(passphrase); // Verifica repetición de caracteres
+            keyIcon.style.color = 'var(--success-color)'; // Verde si pasa la validación
+        } catch (error) {
+            keyIcon.style.color = 'var(--error-color)'; // Rojo si falla por repetición
+        }
+    }
+});
 
 // Detener la cámara al salir de la página si está activa
 window.addEventListener('beforeunload', (e) => {
