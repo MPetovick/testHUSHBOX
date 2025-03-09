@@ -85,20 +85,17 @@ body {
 .passphrase-group {
     display: flex;
     align-items: center;
-    gap: clamp(0.5rem, 1vw, 1rem); /* Margen entre el input y el botón */
+    gap: clamp(0.5rem, 1vw, 1rem); /* Margen entre elementos */
 }
 
-.input-group .icon { 
-    position: absolute; 
-    right: 1rem; 
-    top: 50%; 
-    transform: translateY(-50%); 
+.passphrase-group .icon { 
     color: rgba(160, 160, 160, 0.6); 
+    font-size: clamp(1rem, 1.5vw, 1.2rem); /* Tamaño del ícono */
 }
 
 #passphrase, #message-input { 
     width: 100%; 
-    padding: clamp(0.8rem, 1.5vw, 1rem) clamp(2rem, 3vw, 2.5rem) clamp(0.8rem, 1.5vw, 1rem) clamp(0.8rem, 1.5vw, 1rem); 
+    padding: clamp(0.8rem, 1.5vw, 1rem) clamp(0.8rem, 1.5vw, 1rem); /* Reduje el padding-right para evitar solapamiento */
     border: 2px solid transparent; 
     border-radius: var(--border-radius); 
     background: rgba(58, 58, 58, 0.8); 
@@ -108,7 +105,7 @@ body {
 }
 
 .passphrase-group #passphrase {
-    width: calc(100% - 40px - clamp(0.5rem, 1vw, 1rem) - 2.5rem); /* Resta el botón (40px), el margen y el espacio del ícono */
+    width: calc(100% - 40px - clamp(0.5rem, 1vw, 1rem) - 1.5rem); /* Resta el botón (40px), el margen y el espacio del ícono */
 }
 
 #message-input { 
