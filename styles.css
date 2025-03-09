@@ -78,6 +78,11 @@ body {
     transform: translateY(-5px);
 }
 
+.decrypt-section {
+    display: flex;
+    flex-direction: column;
+}
+
 .input-group { 
     position: relative;
     margin-bottom: clamp(1rem, 2vw, 1.5rem);
@@ -137,6 +142,13 @@ body {
     background: #00b386;
     transform: translateY(-2px);
     box-shadow: 0 4px 16px var(--glow-color);
+}
+
+.btn-primary:disabled {
+    background: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 .btn-secondary {
@@ -202,44 +214,24 @@ body {
     transform: scale(1.02);
 }
 
-.upload-container { 
-    margin-bottom: clamp(1rem, 3vw, 2rem); 
-}
-
-.file-upload { 
-    display: block;
-    border: 2px dashed rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    padding: clamp(1rem, 3vw, 2rem);
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.file-upload:hover { 
-    border-color: var(--primary-color);
-}
-
-.upload-content i { 
-    font-size: clamp(2rem, 5vw, 2.5rem);
-    margin-bottom: clamp(0.5rem, 2vw, 1rem);
-    color: var(--primary-color);
-    animation: float 3s ease-in-out infinite;
-}
-
 .message-container { 
-    margin-top: clamp(1rem, 3vw, 2rem);
     background: rgba(30, 30, 30, 0.6);
     border-radius: 10px;
     padding: clamp(1rem, 2vw, 1.5rem);
-    min-height: clamp(150px, 40vw, 200px);
     border: 1px solid rgba(0, 204, 153, 0.1);
+    flex-grow: 1; /* Permite que ocupe todo el espacio disponible */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .message-placeholder {
     font-size: clamp(0.9rem, 2vw, 1rem);
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
 }
 
-/* Nuevos estilos para los botones con íconos */
+/* Botones con íconos */
 .button-group {
     display: flex;
     gap: 1rem;
@@ -273,7 +265,7 @@ body {
     font-size: 1.2rem;
 }
 
-/* Estilos para los íconos de redes sociales */
+/* Iconos de redes sociales */
 .social-icon {
     display: flex;
     align-items: center;
@@ -295,7 +287,7 @@ body {
     box-shadow: 0 4px 8px var(--glow-color);
 }
 
-/* Estilos para la cámara y otros elementos... */
+/* Cámara */
 #camera-container {
     display: none;
     margin-bottom: 1rem;
@@ -314,6 +306,17 @@ body {
     background: var(--secondary-color);
 }
 
+/* Contenedor para Encrypt y Decrypt */
+.action-buttons {
+    display: flex;
+    gap: clamp(0.5rem, 1vw, 1rem);
+    margin-top: clamp(1rem, 2vw, 1.5rem);
+}
+
+.action-buttons .btn-primary {
+    flex: 1;
+}
+
 /* Animaciones */
 @keyframes pulseGlow {
     0% { text-shadow: 0 0 10px var(--glow-color); }
@@ -325,12 +328,6 @@ body {
     0% { width: 60%; opacity: 0.7; }
     50% { width: 80%; opacity: 1; }
     100% { width: 60%; opacity: 0.7; }
-}
-
-@keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-    100% { transform: translateY(0px); }
 }
 
 @keyframes fadeIn {
