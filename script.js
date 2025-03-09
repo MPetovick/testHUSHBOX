@@ -134,8 +134,9 @@ const ui = {
     },
     showPassphraseModal: (qrData) => {
         elements.passphraseModal.classList.remove('hidden');
-        elements.modalPassphrase.value = ''; // Limpiar el campo
-        elements.modalDecryptButton.onclick = () => handlers.handleDecryptQR(qrData);
+        elements.modalPassphrase.value = '';
+        elements.passphraseModal.dataset.qrData = qrData;
+        elements.modalDecryptButton.onclick = () => handlers.handleDecryptQR();
     },
     showLoader: (button, text = 'Processing...') => {
         button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${text}`;
@@ -183,6 +184,10 @@ const handlers = {
         const passphrase = elements.passphraseInput.value.trim();
         if (!file || !passphrase) {
             ui.showError('Please select a QR file and enter passphrase');
+            return;
+        }
+        if (passphrase.length < 8) {
+            ui.showError('Passphrase must be at least 8 characters long');
             return;
         }
         ui.showLoader(elements.decodeButton, 'Decrypting...');
@@ -257,7 +262,7 @@ const handlers = {
                 elements.cameraButton.querySelector('i').classList.replace('fa-camera', 'fa-times');
 
                 let lastScanTime = 0;
-                const scanInterval = 200; // Escanear cada 200ms para optimizar rendimiento
+                const scanInterval = 200;
 
                 const scanQR = (timestamp) => {
                     if (!elements.cameraPreview.srcObject) return;
@@ -294,7 +299,7 @@ const handlers = {
     },
     handleDecryptQR: async () => {
         const passphrase = elements.modalPassphrase.value.trim();
-        const qrData = elements.passphraseModal.dataset.qrData; // Guardamos los datos del QR temporalmente
+        const qrData = elements.passphraseModal.dataset.qrData;
         if (!passphrase) {
             ui.showError('Please enter the passphrase');
             return;
@@ -329,19 +334,6 @@ elements.closeModal.addEventListener('click', () => {
 elements.closePassphraseModal.addEventListener('click', () => {
     elements.passphraseModal.classList.add('hidden');
 });
-
-// Guardar los datos del QR en el modal temporalmente
-elements.passphraseModal.addEventListener('show', (e) => {
-    elements.passphraseModal.dataset.qrData = e.detail.qrData;
-});
-
-// Personalizamos el evento show para el modal
-ui.showPassphraseModal = (qrData) => {
-    elements.passphraseModal.classList.remove('hidden');
-    elements.modalPassphrase.value = '';
-    elements.passphraseModal.dataset.qrData = qrData;
-    elements.modalDecryptButton.onclick = () => handlers.handleDecryptQR();
-};
 
 // Inicializar contenedores como ocultos
 elements.qrContainer.classList.add('hidden');
