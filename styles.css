@@ -85,17 +85,36 @@ body {
 .passphrase-group {
     display: flex;
     align-items: center;
-    gap: clamp(0.5rem, 1vw, 1rem); /* Margen entre elementos */
+    gap: clamp(0.5rem, 1vw, 1rem); 
+    position: relative; 
+}
+
+.passphrase-group #camera-button {
+    position: absolute; 
+    right: 0.5rem; 
+    top: 50%; 
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    background: transparent; /* Sin fondo para integrarse al input */
+    border: none; /* Sin borde para un look limpio */
+    color: rgba(160, 160, 160, 0.6);
+}
+
+.passphrase-group #camera-button:hover {
+    background: transparent; /* Mantener sin fondo al pasar el ratón */
+    color: var(--primary-color); /* Cambiar color al pasar el ratón */
 }
 
 .passphrase-group .icon { 
-    color: rgba(160, 160, 160, 0.6); 
-    font-size: clamp(1rem, 1.5vw, 1.2rem); /* Tamaño del ícono */
+    /* Ahora está fuera del input, en el flujo flex */
+    color: rgba(160, 160, 160, 0.6);
+    font-size: 1.2rem; /* Tamaño ajustado para que sea visible */
 }
 
 #passphrase, #message-input { 
     width: 100%; 
-    padding: clamp(0.8rem, 1.5vw, 1rem) clamp(0.8rem, 1.5vw, 1rem); /* Reduje el padding-right para evitar solapamiento */
+    padding: clamp(0.8rem, 1.5vw, 1rem) clamp(2.5rem, 3vw, 3rem) clamp(0.8rem, 1.5vw, 1rem) clamp(0.8rem, 1.5vw, 1rem); /* Reduje el padding-right */
     border: 2px solid transparent; 
     border-radius: var(--border-radius); 
     background: rgba(58, 58, 58, 0.8); 
@@ -104,8 +123,9 @@ body {
     transition: all var(--transition-speed) ease; 
 }
 
+/* Ajuste del ancho del passphrase */
 .passphrase-group #passphrase {
-    width: calc(100% - 40px - clamp(0.5rem, 1vw, 1rem) - 1.5rem); /* Resta el botón (40px), el margen y el espacio del ícono */
+    width: 250px; /* Mantenido como en tu versión */
 }
 
 #message-input { 
@@ -117,6 +137,24 @@ body {
     outline: none; 
     border-color: var(--primary-color); 
     box-shadow: 0 0 12px var(--glow-color); 
+}
+
+#camera-preview-container {
+    margin-bottom: clamp(1rem, 2vw, 1.5rem);
+    text-align: center;
+}
+
+#camera-preview-container.hidden {
+    display: none;
+}
+
+#camera-preview {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    border: 2px solid var(--primary-color);
+    border-radius: var(--border-radius);
+    background: #000;
 }
 
 .btn-primary, .btn-secondary { 
@@ -162,7 +200,7 @@ body {
     color: var(--primary-color); 
     width: 40px; 
     height: 40px; 
-    padding: 0; /* Elimina el padding para centrar el ícono */
+    padding: 0; 
 }
 
 .btn.btn-icon:hover { 
@@ -269,7 +307,6 @@ body {
     pointer-events: none; 
 }
 
-/* Modal para el QR grande */
 .modal { 
     display: none; 
     position: fixed; 
@@ -301,20 +338,6 @@ body {
     background: white; 
     border-radius: var(--border-radius); 
     border: 2px solid var(--primary-color); 
-}
-
-#camera-preview { 
-    width: 100%; 
-    height: auto; 
-    max-height: 70vh; 
-    border-radius: var(--border-radius); 
-    border: 2px solid var(--primary-color); 
-    margin-bottom: 1rem; 
-}
-
-#close-camera { 
-    width: 100%; 
-    margin-top: 1rem; 
 }
 
 .close-modal { 
@@ -355,10 +378,24 @@ body {
 @media (max-width: 480px) { 
     .container { padding: 0.5rem; } 
     .logo { font-size: 1.8rem; } 
-    #passphrase, #message-input { padding: 0.8rem 2rem 0.8rem 0.8rem; } 
+    #passphrase, #message-input { padding: 0.8rem 2.5rem 0.8rem 0.8rem; } /* Ajustado para pantallas pequeñas */
     .btn-primary, .btn-secondary { padding: 0.8rem; font-size: 0.9rem; } 
     .qr-header { flex-direction: column; } 
     #qr-canvas { max-width: 150px; } 
     .passphrase-group { flex-direction: column; align-items: stretch; gap: 0.5rem; }
-    .passphrase-group #passphrase { width: 100%; }
+    .passphrase-group #passphrase { width: 100%; } /* En pantallas pequeñas, ocupa el ancho completo */
+    .passphrase-group #camera-button { 
+        right: 0.5rem; /* Mantener dentro del input */
+        width: 30px; 
+        height: 30px; 
+        background: transparent; 
+        border: none; 
+        color: rgba(160, 160, 160, 0.6); 
+    }
+    .passphrase-group .icon { /* Ícono de la llave debajo en pantallas pequeñas */
+        position: static; 
+        transform: none; 
+        margin: 0 auto; 
+    }
+    #camera-preview { max-width: 100%; }
 }
