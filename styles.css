@@ -1,4 +1,5 @@
 :root {
+    /* Mantengo las variables existentes */
     --primary-color: #00cc99;
     --secondary-color: #2a2a2a;
     --background-gradient: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
@@ -25,26 +26,27 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    line-height: 1.6;
+    line-height: 1.5;
     padding: 1rem;
 }
 
 .container {
     width: 100%;
-    max-width: 1200px; /* Aumentamos el ancho máximo para PC */
-    padding: 2rem; /* Más padding para mejor espaciado */
+    max-width: 900px; /* Reducido para un diseño más compacto */
+    padding: 1rem;
+    margin: 0 auto;
 }
 
 .logo {
     text-align: center;
     color: var(--primary-color);
-    margin-bottom: 2rem; /* Más margen para mejor espaciado */
-    font-size: 3rem; /* Tamaño más grande para el logo */
+    margin-bottom: 1.5rem;
+    font-size: 2.5rem;
     letter-spacing: 2px;
     text-shadow: 0 0 10px var(--glow-color);
     animation: pulseGlow 2s infinite;
+    padding-bottom: 15px;
     position: relative;
-    padding-bottom: 20px;
 }
 
 .logo::after {
@@ -52,34 +54,36 @@ body {
     position: absolute;
     left: 50%;
     bottom: 0;
-    width: 60%;
+    width: 50%;
     height: 2px;
     background: var(--primary-color);
     transform: translateX(-50%);
     animation: lineGlow 2s infinite;
 }
 
+/* Diseño de grilla responsive */
 .main-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); /* Columnas más grandes */
-    gap: 2rem; /* Más espacio entre secciones */
+    grid-template-columns: 1fr 1fr; /* 2 columnas en PC */
+    gap: 1rem;
+    align-items: start;
 }
 
 .section {
     background: var(--section-bg);
     border-radius: var(--border-radius);
-    padding: 2rem; /* Más padding para mejor espaciado */
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    padding: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
     transition: transform var(--transition-speed) ease;
 }
 
 .section:hover {
-    transform: translateY(-5px);
+    transform: translateY(-3px);
 }
 
 .input-group {
     position: relative;
-    margin-bottom: 1.5rem; /* Más margen para mejor espaciado */
+    margin-bottom: 1rem;
 }
 
 .passphrase-group {
@@ -94,48 +98,47 @@ body {
     right: 0.5rem;
     top: 50%;
     transform: translateY(-50%);
-    width: 40px; /* Botón más grande */
-    height: 40px;
+    width: 32px;
+    height: 32px;
     background: transparent;
     border: none;
     color: rgba(160, 160, 160, 0.6);
 }
 
 .passphrase-group #camera-button:hover {
-    background: transparent;
     color: var(--primary-color);
 }
 
 .passphrase-group .icon {
     color: rgba(160, 160, 160, 0.6);
-    font-size: 1.5rem; /* Icono más grande */
+    font-size: 1.2rem;
 }
 
 #passphrase, #message-input {
     width: 100%;
-    padding: 1rem; /* Más padding para mejor espaciado */
+    padding: 0.8rem;
     border: 2px solid transparent;
     border-radius: var(--border-radius);
     background: rgba(58, 58, 58, 0.8);
     color: var(--text-color);
-    font-size: 1.2rem; /* Texto más grande */
+    font-size: 1rem;
     transition: all var(--transition-speed) ease;
 }
 
 #message-input {
     resize: vertical;
-    min-height: 150px; /* Área de texto más grande */
+    min-height: 100px;
+    max-height: 200px;
 }
 
 #passphrase:focus, #message-input:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 12px var(--glow-color);
+    box-shadow: 0 0 8px var(--glow-color);
 }
 
 #camera-preview-container {
-    margin-top: 1.5rem; /* Más margen para mejor espaciado */
-    text-align: center;
+    margin-top: 1rem;
 }
 
 #camera-preview-container.hidden {
@@ -144,7 +147,7 @@ body {
 
 #camera-preview {
     width: 100%;
-    max-width: 400px; /* Vista previa de la cámara más grande */
+    max-width: 300px;
     height: auto;
     border: 2px solid var(--primary-color);
     border-radius: var(--border-radius);
@@ -153,7 +156,7 @@ body {
 
 .btn-primary, .btn-secondary {
     width: 100%;
-    padding: 1.5rem; /* Botones más grandes */
+    padding: 1rem;
     border: none;
     border-radius: var(--border-radius);
     font-weight: 600;
@@ -163,7 +166,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    font-size: 1.2rem; /* Texto más grande */
+    font-size: 1rem;
 }
 
 .btn-primary {
@@ -174,26 +177,15 @@ body {
 .btn-primary:hover {
     background: #00b386;
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px var(--glow-color);
-}
-
-.btn-secondary {
-    background: var(--secondary-color);
-    border: 1px solid var(--primary-color);
-    color: var(--primary-color);
-}
-
-.btn-secondary:hover {
-    background: var(--primary-color);
-    color: #1a1a1a;
+    box-shadow: 0 4px 12px var(--glow-color);
 }
 
 .btn.btn-icon {
     background: var(--secondary-color);
     border: 1px solid var(--primary-color);
     color: var(--primary-color);
-    width: 50px; /* Botones de íconos más grandes */
-    height: 50px;
+    width: 40px;
+    height: 40px;
     padding: 0;
 }
 
@@ -203,7 +195,7 @@ body {
 }
 
 #qr-container {
-    margin-top: 2rem; /* Más margen para mejor espaciado */
+    margin-top: 1rem;
     text-align: center;
 }
 
@@ -215,14 +207,13 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem; /* Más margen para mejor espaciado */
-    flex-wrap: wrap;
-    gap: 1rem;
+    margin-bottom: 1rem;
+    gap: 0.5rem;
 }
 
 #qr-canvas {
     width: 100%;
-    max-width: 300px; /* QR más grande */
+    max-width: 200px;
     height: auto;
     aspect-ratio: 1/1;
     background: white;
@@ -237,50 +228,83 @@ body {
     transform: scale(1.02);
 }
 
-.upload-container { 
-    margin-bottom: 1.5rem; 
+.upload-container {
+    margin-bottom: 1rem;
 }
 
-.file-upload { 
-    display: block; 
-    border: 2px dashed rgba(255, 255, 255, 0.2); 
-    border-radius: var(--border-radius); 
-    padding: 1.5rem; 
-    cursor: pointer; 
-    transition: all var(--transition-speed) ease; 
+.file-upload {
+    display: block;
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
 }
 
-.file-upload:hover { 
-    border-color: var(--primary-color); 
+.file-upload:hover {
+    border-color: var(--primary-color);
 }
 
-.upload-content i { 
-    font-size: 2rem; 
-    margin-bottom: 0.5rem; 
-    color: var(--primary-color); 
-    animation: float 3s ease-in-out infinite; 
+.upload-content i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+    animation: float 3s ease-in-out infinite;
 }
 
-.message-container { 
-    margin-top: 1.5rem; 
-    background: rgba(30, 30, 30, 0.6); 
-    border-radius: var(--border-radius); 
-    padding: 1rem; 
-    min-height: 120px; 
-    overflow-y: auto; 
+.message-container {
+    margin-top: 1rem;
+    background: rgba(30, 30, 30, 0.6);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    min-height: 100px;
+    max-height: 200px;
+    overflow-y: auto;
 }
 
-.message-placeholder { 
-    font-size: 0.9rem; 
-    text-align: center; 
+/* Media Query para móviles */
+@media (max-width: 768px) {
+    .container {
+        max-width: 100%;
+        padding: 0.5rem;
+    }
+
+    .main-grid {
+        grid-template-columns: 1fr; /* 1 columna en móviles */
+        gap: 0.5rem;
+    }
+
+    .logo {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .section {
+        padding: 1rem;
+    }
+
+    #passphrase, #message-input {
+        padding: 0.6rem;
+        font-size: 0.9rem;
+    }
+
+    .btn-primary, .btn-secondary {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+    }
+
+    #qr-canvas {
+        max-width: 180px;
+    }
 }
 
+/* Resto de estilos (notificaciones, modal, animaciones) se mantienen igual */
 .notification { 
     position: fixed; 
-    bottom: 20px; 
+    bottom: 15px; 
     left: 50%; 
     transform: translateX(-50%); 
-    padding: 1rem 2rem; 
+    padding: 0.8rem 1.5rem; 
     border-radius: var(--border-radius); 
     color: white; 
     font-weight: 500; 
@@ -316,19 +340,19 @@ body {
 
 .modal-content { 
     background: var(--section-bg); 
-    padding: 2rem; 
+    padding: 1.5rem; 
     border-radius: var(--border-radius); 
     text-align: center; 
     position: relative; 
     width: 90%; 
-    max-width: 600px; 
+    max-width: 500px; 
 }
 
 #qr-modal-canvas { 
     width: 80vw; 
     height: 80vw; 
-    max-width: 500px; 
-    max-height: 500px; 
+    max-width: 400px; 
+    max-height: 400px; 
     background: white; 
     border-radius: var(--border-radius); 
     border: 2px solid var(--primary-color); 
@@ -337,8 +361,8 @@ body {
 .close-modal { 
     position: absolute; 
     top: 10px; 
-    right: 20px; 
-    font-size: 2rem; 
+    right: 15px; 
+    font-size: 1.5rem; 
     color: var(--primary-color); 
     cursor: pointer; 
 }
@@ -347,18 +371,17 @@ body {
     color: var(--error-color); 
 }
 
-/* Animaciones */
 @keyframes pulseGlow { 
     0%, 100% { text-shadow: 0 0 10px var(--glow-color); } 
     50% { text-shadow: 0 0 20px var(--glow-color); } 
 }
 
 @keyframes lineGlow { 
-    0%, 100% { width: 60%; opacity: 0.7; } 
-    50% { width: 80%; opacity: 1; } 
+    0%, 100% { width: 50%; opacity: 0.7; } 
+    50% { width: 70%; opacity: 1; } 
 }
 
 @keyframes float { 
     0%, 100% { transform: translateY(0); } 
-    50% { transform: translateY(-10px); } 
+    50% { transform: translateY(-8px); } 
 }
