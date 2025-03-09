@@ -34,6 +34,12 @@ fileInput.accept = 'image/*';
 fileInput.style.display = 'none';
 document.body.appendChild(fileInput);
 
+// Canvas oculto para procesar el video
+const scanCanvas = document.createElement('canvas');
+const scanContext = scanCanvas.getContext('2d');
+scanCanvas.style.display = 'none';
+document.body.appendChild(scanCanvas);
+
 // Utilidades criptográficas
 const cryptoUtils = {
     stringToArrayBuffer: str => new TextEncoder().encode(str),
@@ -220,6 +226,21 @@ const uiController = {
     resetButton: (button, originalHTML) => {
         button.innerHTML = originalHTML;
         button.disabled = false;
+    },
+
+    showComingSoon: () => {
+        // Crear el elemento del mensaje
+        const comingSoonEl = document.createElement('div');
+        comingSoonEl.className = 'coming-soon-message';
+        comingSoonEl.textContent = 'COMING SOON';
+
+        // Añadirlo al body
+        document.body.appendChild(comingSoonEl);
+
+        // Eliminarlo después de 3 segundos
+        setTimeout(() => {
+            comingSoonEl.remove();
+        }, 3000);
     }
 };
 
@@ -266,6 +287,10 @@ const handlers = {
         uiController.showLoader(domElements.decodeButton, 'Decrypting...');
 
         try {
+            if (typeof jsQR === 'undefined') {
+                throw new Error('jsQR library not loaded. Please refresh the page.');
+            }
+
             const imageData = await new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = e => {
@@ -276,7 +301,7 @@ const handlers = {
                         canvas.height = img.height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0);
-                        resolve(ctx.getImageData(0, 0, canvas.width, canvas.height));
+                        resolve(ctx.getImageData(0, 0, img.width, img.height));
                     };
                     img.onerror = reject;
                     img.src = e.target.result;
@@ -285,14 +310,12 @@ const handlers = {
                 reader.readAsDataURL(file);
             });
 
-            const codeReader = new ZXing.BrowserQRCodeReader();
-            const result = await codeReader.decodeFromImageData(imageData);
-
-            if (!result) {
+            const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
+            if (!qrCode) {
                 throw new Error('No QR code detected in the image');
             }
 
-            const decrypted = await cryptoUtils.decryptMessage(result.text, passphrase);
+            const decrypted = await cryptoUtils.decryptMessage(qrCode.data, passphrase);
             uiController.displayMessage(decrypted);
             domElements.passphraseInput.value = '';
             fileInput.value = '';
@@ -352,11 +375,65 @@ const handlers = {
                 return;
             }
 
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            if (typeof jsQR === 'undefined') {
+                throw new Error('jsQR library not loaded. Please refresh the page.');
+            }
+
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'environment' }
+            });
             domElements.cameraPreview.srcObject = stream;
             domElements.cameraContainer.classList.remove('hidden');
+
+            uiController.displayMessage('Scanning QR code... Aim the camera at the QR.', false);
+
+            scanCanvas.width = domElements.cameraPreview.videoWidth;
+            scanCanvas.height = domElements.cameraPreview.videoHeight;
+
+            let isScanning = true;
+            const scanFrame = () => {
+                if (!isScanning || !domElements.cameraPreview.srcObject) return;
+
+                scanContext.drawImage(domElements.cameraPreview, 0, 0, scanCanvas.width, scanCanvas.height);
+                const imageData = scanContext.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+                const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
+
+                if (qrCode) {
+                    isScanning = false;
+                    handlers.stopCamera();
+                    processQR(qrCode.data);
+                } else {
+                    requestAnimationFrame(scanFrame);
+                }
+            };
+
+            const processQR = async (qrData) => {
+                const passphrase = domElements.passphraseInput.value.trim();
+                if (!passphrase) {
+                    uiController.displayMessage('Please enter a passphrase to decrypt the QR.', false);
+                    return;
+                }
+
+                try {
+                    const decrypted = await cryptoUtils.decryptMessage(qrData, passphrase);
+                    uiController.displayMessage(decrypted);
+                    domElements.passphraseInput.value = '';
+                } catch (error) {
+                    uiController.displayMessage(
+                        error.message.includes('decrypt') || error.message.includes('Integrity')
+                            ? 'Decryption failed. Wrong passphrase or tampered data?'
+                            : error.message,
+                        false
+                    );
+                }
+            };
+
+            requestAnimationFrame(scanFrame);
+
         } catch (error) {
-            uiController.displayMessage('Error accessing the camera: ' + error.message, false);
+            console.error('Scan error:', error);
+            uiController.displayMessage('Error scanning QR: ' + error.message, false);
+            handlers.stopCamera();
         }
     },
 
@@ -374,7 +451,7 @@ const handlers = {
     },
 
     handlePDFUpload: () => {
-        uiController.displayMessage('PDF upload functionality to be implemented.', false);
+        uiController.showComingSoon();
     }
 };
 
@@ -394,15 +471,15 @@ domElements.passphraseInput.addEventListener('input', (e) => {
     const keyIcon = domElements.passphraseInput.parentElement.querySelector('.icon');
 
     if (passphrase.length === 0) {
-        keyIcon.style.color = 'rgba(160, 160, 160, 0.6)'; // Gris cuando está vacío
+        keyIcon.style.color = 'rgba(160, 160, 160, 0.6)';
     } else if (passphrase.length < CONFIG.MIN_PASSPHRASE_LENGTH) {
-        keyIcon.style.color = 'var(--error-color)'; // Rojo si tiene menos de 12 caracteres
+        keyIcon.style.color = 'var(--error-color)';
     } else {
         try {
-            cryptoUtils.validatePassphrase(passphrase); // Verifica repetición de caracteres
-            keyIcon.style.color = 'var(--success-color)'; // Verde si pasa la validación
+            cryptoUtils.validatePassphrase(passphrase);
+            keyIcon.style.color = 'var(--success-color)';
         } catch (error) {
-            keyIcon.style.color = 'var(--error-color)'; // Rojo si falla por repetición
+            keyIcon.style.color = 'var(--error-color)';
         }
     }
 });
