@@ -69,36 +69,38 @@ const ui = {
         elements.messagesDiv.scrollTop = elements.messagesDiv.scrollHeight;
     },
 
-    generateQR: async (data) => {
-        const size = Math.min(window.innerWidth * 0.4, 250);
-        elements.qrCanvas.width = size;
-        elements.qrCanvas.height = size;
-
-        await new Promise((resolve, reject) => {
-            QRCode.toCanvas(elements.qrCanvas, data, {
-                width: size,
-                margin: 2,
-                color: { dark: '#000000', light: '#ffffff' }
-            }, (error) => error ? reject(error) : resolve());
-        });
-
+    generateQR: (data) => {
+        // Limpiar el canvas antes de generar un nuevo QR
         const ctx = elements.qrCanvas.getContext('2d');
-        const center = size / 2;
-        const radius = size * 0.15;
+        ctx.clearRect(0, 0, elements.qrCanvas.width, elements.qrCanvas.height);
 
-        ctx.beginPath();
-        ctx.arc(center, center, radius, 0, Math.PI * 2);
-        ctx.fillStyle = 'var(--primary-color)';
-        ctx.fill();
+        // Generar el QR
+        QRCode.toCanvas(elements.qrCanvas, data, {
+            width: 250, // Tamaño fijo para consistencia
+            margin: 2,
+            color: { dark: '#000000', light: '#ffffff' }
+        }, (error) => {
+            if (error) {
+                ui.showNotification(`QR generation failed: ${error.message}`, 'error');
+                return;
+            }
 
-        ctx.fillStyle = '#1a1a1a';
-        ctx.font = 'bold 18px "Segoe UI", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('HUSH', center, center - 10);
-        ctx.fillText('BOX', center, center + 15);
+            // Añadir marca de agua después de generar el QR
+            const center = elements.qrCanvas.width / 2;
+            ctx.beginPath();
+            ctx.arc(center, center, 40, 0, Math.PI * 2);
+            ctx.fillStyle = 'var(--primary-color)';
+            ctx.fill();
 
-        elements.qrContainer.classList.remove('hidden');
+            ctx.fillStyle = '#1a1a1a';
+            ctx.font = 'bold 18px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('HUSH', center, center - 10);
+            ctx.fillText('BOX', center, center + 15);
+
+            elements.qrContainer.classList.remove('hidden');
+        });
     },
 
     showLoader: (button) => {
@@ -132,7 +134,7 @@ const handlers = {
 
         try {
             const encrypted = await cryptoUtils.encryptMessage(message, passphrase);
-            await ui.generateQR(encrypted);
+            ui.generateQR(encrypted);
             ui.displayMessage(`Encrypted: ${encrypted.slice(0, 40)}...`, true);
             ui.showNotification('Message encrypted successfully!');
             ui.resetForm();
