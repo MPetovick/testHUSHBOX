@@ -7,6 +7,8 @@
     --error-color: #ff4d4d; 
     --section-bg: rgba(42, 42, 42, 0.95); 
     --glow-color: rgba(0, 204, 153, 0.4);
+    --border-radius: 12px;
+    --transition-speed: 0.3s;
 }
 
 * { 
@@ -60,15 +62,15 @@ body {
 .main-grid { 
     display: grid; 
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-    gap: clamp(1rem, 2vw, 2rem); 
+    gap: clamp(1.5rem, 3vw, 2rem); 
 }
 
 .section { 
     background: var(--section-bg); 
-    border-radius: 15px; 
-    padding: clamp(1rem, 2vw, 2rem); 
+    border-radius: var(--border-radius); 
+    padding: clamp(1.5rem, 2.5vw, 2rem); 
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); 
-    transition: transform 0.3s ease; 
+    transition: transform var(--transition-speed) ease; 
 }
 
 .section:hover { 
@@ -92,16 +94,16 @@ body {
     width: 100%; 
     padding: clamp(0.8rem, 1.5vw, 1rem) clamp(2rem, 3vw, 2.5rem) clamp(0.8rem, 1.5vw, 1rem) clamp(0.8rem, 1.5vw, 1rem); 
     border: 2px solid transparent; 
-    border-radius: 10px; 
+    border-radius: var(--border-radius); 
     background: rgba(58, 58, 58, 0.8); 
     color: var(--text-color); 
     font-size: clamp(0.9rem, 1.5vw, 1rem); 
-    transition: all 0.3s ease; 
+    transition: all var(--transition-speed) ease; 
 }
 
 #message-input { 
     resize: vertical; 
-    min-height: clamp(100px, 20vw, 150px); 
+    min-height: clamp(120px, 25vw, 160px); 
 }
 
 #passphrase:focus, #message-input:focus { 
@@ -114,10 +116,10 @@ body {
     width: 100%; 
     padding: clamp(0.8rem, 1.5vw, 1.2rem); 
     border: none; 
-    border-radius: 10px; 
+    border-radius: var(--border-radius); 
     font-weight: 600; 
     cursor: pointer; 
-    transition: all 0.3s ease; 
+    transition: all var(--transition-speed) ease; 
     display: flex; 
     align-items: center; 
     justify-content: center; 
@@ -148,7 +150,7 @@ body {
 }
 
 #qr-container { 
-    margin-top: clamp(1rem, 2vw, 2rem); 
+    margin-top: clamp(1.5rem, 2.5vw, 2rem); 
     text-align: center; 
 }
 
@@ -160,19 +162,21 @@ body {
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
-    margin-bottom: clamp(0.5rem, 1vw, 1rem); 
+    margin-bottom: clamp(1rem, 2vw, 1.5rem); 
     flex-wrap: wrap; 
-    gap: 0.5rem; 
+    gap: 1rem; 
 }
 
 #qr-canvas { 
-    width: 250px; 
-    height: 250px; 
+    width: 100%; 
+    max-width: 250px; 
+    height: auto; 
+    aspect-ratio: 1/1; 
     background: white; 
-    border-radius: 12px; 
+    border-radius: var(--border-radius); 
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); 
     border: 2px solid var(--primary-color); 
-    transition: transform 0.3s ease; 
+    transition: transform var(--transition-speed) ease; 
     cursor: pointer; 
 }
 
@@ -181,16 +185,16 @@ body {
 }
 
 .upload-container { 
-    margin-bottom: clamp(1rem, 2vw, 2rem); 
+    margin-bottom: clamp(1.5rem, 2.5vw, 2rem); 
 }
 
 .file-upload { 
     display: block; 
     border: 2px dashed rgba(255, 255, 255, 0.2); 
-    border-radius: 12px; 
-    padding: clamp(1rem, 2vw, 2rem); 
+    border-radius: var(--border-radius); 
+    padding: clamp(1.5rem, 2.5vw, 2rem); 
     cursor: pointer; 
-    transition: all 0.3s ease; 
+    transition: all var(--transition-speed) ease; 
 }
 
 .file-upload:hover { 
@@ -205,9 +209,9 @@ body {
 }
 
 .message-container { 
-    margin-top: clamp(1rem, 2vw, 2rem); 
+    margin-top: clamp(1.5rem, 2.5vw, 2rem); 
     background: rgba(30, 30, 30, 0.6); 
-    border-radius: 10px; 
+    border-radius: var(--border-radius); 
     padding: clamp(1rem, 1.5vw, 1.5rem); 
     min-height: clamp(120px, 30vw, 200px); 
     overflow-y: auto; 
@@ -224,11 +228,11 @@ body {
     left: 50%; 
     transform: translateX(-50%); 
     padding: 1rem 2rem; 
-    border-radius: 8px; 
+    border-radius: var(--border-radius); 
     color: white; 
     font-weight: 500; 
     z-index: 1000; 
-    transition: opacity 0.5s ease; 
+    transition: opacity var(--transition-speed) ease; 
 }
 
 .notification.success { 
@@ -261,7 +265,7 @@ body {
 .modal-content { 
     background: var(--section-bg); 
     padding: 2rem; 
-    border-radius: 15px; 
+    border-radius: var(--border-radius); 
     text-align: center; 
     position: relative; 
 }
@@ -285,7 +289,7 @@ body {
     max-width: 500px; 
     max-height: 500px; 
     background: white; 
-    border-radius: 12px; 
+    border-radius: var(--border-radius); 
     border: 2px solid var(--primary-color); 
 }
 
@@ -308,7 +312,7 @@ body {
 /* Media Queries */
 @media (max-width: 768px) { 
     .main-grid { grid-template-columns: 1fr; gap: 1.5rem; } 
-    #qr-canvas { width: 200px; height: 200px; } 
+    #qr-canvas { max-width: 200px; } 
 }
 
 @media (max-width: 480px) { 
@@ -317,5 +321,5 @@ body {
     #passphrase, #message-input { padding: 0.8rem 2rem 0.8rem 0.8rem; } 
     .btn-primary, .btn-secondary { padding: 0.8rem; font-size: 0.9rem; } 
     .qr-header { flex-direction: column; } 
-    #qr-canvas { width: 150px; height: 150px; } 
+    #qr-canvas { max-width: 150px; } 
 }
