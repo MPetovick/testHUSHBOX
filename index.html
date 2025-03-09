@@ -4,57 +4,67 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HushBox - Secure Messaging with QR</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- API de Telegram Web App -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1 class="logo">HUSHBOX</h1>
-            <p id="telegram-notice" style="display: none; text-align: center; color: #00cc99; font-size: 0.9rem;">
-                Running in Telegram Mini App
-            </p>
-        </header>
-        <main class="main-grid">
-            <section class="encrypt-section section">
-                <form id="encrypt-form">
-                    <div class="input-group passphrase-group">
-                        <input type="password" id="passphrase" placeholder="Enter your secret passphrase" minlength="8" required>
-                        <i class="fas fa-key icon"></i>
-                    </div>
-                    <div class="input-group">
-                        <textarea id="message-input" placeholder="Write your secure message..." rows="4" required></textarea>
-                        <i class="fas fa-comment-dots icon"></i>
-                        <button id="camera-button" class="btn btn-icon" title="Scan with Camera">
-                            <i class="fas fa-camera"></i>
-                        </button>
-                    </div>
-                    <button type="submit" id="send-button" class="btn-primary">
-                        <i class="fas fa-lock"></i> Encrypt & Generate QR
+        <h1 class="logo">HUSHBOX</h1>
+        <div class="main-grid">
+            <div class="section encrypt-section">
+                <div class="input-group">
+                    <input type="password" id="passphrase" placeholder="Enter your secret passphrase" required>
+                    <i class="fas fa-key icon"></i>
+                </div>
+                <div class="input-group">
+                    <textarea id="message-input" placeholder="Write your secure message..." rows="4"></textarea>
+                    <i class="fas fa-comment-dots icon"></i>
+                </div>
+
+                <!-- Nuevos botones con solo íconos -->
+                <div class="button-group">
+                    <button id="scan-button" class="btn-icon" title="Scan QR">
+                        <i class="fas fa-camera"></i>
                     </button>
-                    <div id="camera-preview-container" class="hidden">
-                        <video id="camera-preview" autoplay playsinline></video>
-                    </div>
-                </form>
+                    <button id="image-button" class="btn-icon" title="Upload Image">
+                        <i class="fas fa-image"></i>
+                    </button>
+                    <button id="pdf-button" class="btn-icon" title="Upload PDF">
+                        <i class="fas fa-file-pdf"></i>
+                    </button>
+                    <!-- Iconos redondos de Telegram y Twitter -->
+                    <a href="https://t.me/your_telegram_bot" target="_blank" class="btn-icon social-icon telegram" title="Telegram">
+                        <i class="fab fa-telegram-plane"></i>
+                    </a>
+                    <a href="https://twitter.com/your_twitter" target="_blank" class="btn-icon social-icon twitter" title="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                </div>
+
+                <!-- Área de la cámara -->
+                <div id="camera-container" class="hidden">
+                    <video id="camera-preview" autoplay></video>
+                </div>
+
+                <button id="send-button" class="btn-primary">
+                    <i class="fas fa-lock"></i> Encrypt & Generate QR
+                </button>
+
                 <div id="qr-container" class="hidden">
                     <div class="qr-header">
                         <h3><i class="fas fa-qrcode"></i> Secure QR</h3>
                         <div class="qr-actions">
-                            <button id="download-button" class="btn btn-icon" title="Download">
-                                <i class="fas fa-download"></i>
-                            </button>
-                            <button id="share-button" class="btn btn-icon" title="Share">
-                                <i class="fas fa-share"></i>
+                            <button id="download-button" class="btn-secondary">
+                                <i class="fas fa-arrow-down"></i> Download
                             </button>
                         </div>
                     </div>
                     <canvas id="qr-canvas"></canvas>
                 </div>
-            </section>
+            </div>
 
-            <section class="decrypt-section section">
+            <div class="section decrypt-section">
                 <div class="upload-container">
                     <label class="file-upload">
                         <input type="file" id="qr-upload" accept="image/*">
@@ -73,34 +83,12 @@
                         <p>Encrypted & Decrypted messages appear here</p>
                     </div>
                 </div>
-            </section>
-        </main>
-        <div id="notification" class="notification hidden"></div>
-    </div>
-
-    <!-- Modal para el QR grande -->
-    <div id="qr-modal" class="modal hidden">
-        <div class="modal-content">
-            <span class="close-modal">×</span>
-            <canvas id="qr-modal-canvas"></canvas>
+            </div>
         </div>
     </div>
 
-    <!-- Modal para la contraseña al escanear QR -->
-    <div id="passphrase-modal" class="modal hidden">
-        <div class="modal-content">
-            <span class="close-passphrase-modal">×</span>
-            <h3>Enter Passphrase</h3>
-            <input type="password" id="modal-passphrase" placeholder="Enter the secret passphrase" minlength="8" required>
-            <button id="modal-decrypt-button" class="btn-primary">
-                <i class="fas fa-unlock"></i> Decrypt
-            </button>
-        </div>
-    </div>
-
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <script src="script.js"></script>
 </body>
