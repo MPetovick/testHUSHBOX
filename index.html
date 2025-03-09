@@ -20,9 +20,6 @@
                         <input type="password" id="passphrase" placeholder="Enter your secret passphrase" minlength="8" required>
                         <i class="fas fa-key icon"></i>
                     </div>
-                    <div id="camera-preview-container" class="hidden">
-                        <video id="camera-preview" autoplay playsinline></video>
-                    </div>
                     <div class="input-group">
                         <textarea id="message-input" placeholder="Write your secure message..." rows="4" required></textarea>
                         <i class="fas fa-comment-dots icon"></i>
@@ -33,6 +30,10 @@
                     <button type="submit" id="send-button" class="btn-primary">
                         <i class="fas fa-lock"></i> Encrypt & Generate QR
                     </button>
+                    <!-- Contenedor de la cámara movido aquí -->
+                    <div id="camera-preview-container" class="hidden">
+                        <video id="camera-preview" autoplay playsinline></video>
+                    </div>
                 </form>
                 <div id="qr-container" class="hidden">
                     <div class="qr-header">
