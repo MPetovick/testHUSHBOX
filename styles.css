@@ -199,8 +199,8 @@ body {
 }
 
 .qr-actions {
-    display: flex; /* Añadido para alinear botones en la misma fila */
-    gap: clamp(0.5rem, 1vw, 1rem); /* Espaciado entre botones */
+    display: flex;
+    gap: clamp(0.5rem, 1vw, 1rem);
 }
 
 #qr-canvas { 
@@ -322,6 +322,26 @@ body {
     flex: 1;
 }
 
+/* Mensaje "Coming Soon" */
+.coming-soon-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--section-bg);
+    color: var(--primary-color);
+    padding: clamp(0.5rem, 1vw, 0.8rem) clamp(1rem, 2vw, 1.2rem); /* Reducido */
+    border-radius: 10px; /* Más pequeño y elegante */
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); /* Sombra más sutil */
+    font-size: clamp(1rem, 2vw, 1.2rem); /* Tamaño de fuente reducido */
+    font-weight: 600;
+    text-align: center;
+    text-shadow: 0 0 8px var(--glow-color); /* Brillo ajustado */
+    animation: fadeIn 0.5s ease-out, fadeOut 0.5s ease-out 2.5s forwards;
+    z-index: 1000;
+}
+
 /* Animaciones */
 @keyframes pulseGlow {
     0% { text-shadow: 0 0 10px var(--glow-color); }
@@ -336,6 +356,11 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translate(-50%, -60%); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; transform: translate(-50%, -50%); }
+    to { opacity: 0; transform: translate(-50%, -40%); }
 }
