@@ -1,3 +1,12 @@
+// Detectar si estamos en Telegram Mini App
+const isTelegram = !!window.Telegram?.WebApp?.initData;
+if (isTelegram) {
+    window.Telegram.WebApp.ready(); // Inicializar la Mini App
+    window.Telegram.WebApp.expand(); // Expandir la ventana
+    document.getElementById('telegram-notice').style.display = 'block';
+}
+
+// Elementos del DOM
 const elements = {
     messagesDiv: document.getElementById('messages'),
     passphraseInput: document.getElementById('passphrase'),
@@ -21,6 +30,7 @@ const elements = {
     closePassphraseModal: document.querySelector('.close-passphrase-modal')
 };
 
+// Utilidades criptográficas
 const cryptoUtils = {
     stringToArrayBuffer: str => new TextEncoder().encode(str),
     arrayBufferToString: buffer => new TextDecoder().decode(buffer),
@@ -78,6 +88,7 @@ const cryptoUtils = {
     }
 };
 
+// Funciones de interfaz de usuario
 const ui = {
     displayMessage: (content, isEncrypted = false) => {
         const messageEl = document.createElement('div');
@@ -136,7 +147,6 @@ const ui = {
         elements.passphraseModal.classList.remove('hidden');
         elements.modalPassphrase.value = '';
         elements.passphraseModal.dataset.qrData = qrData;
-        elements.modalDecryptButton.onclick = () => handlers.handleDecryptQR();
     },
     showLoader: (button, text = 'Processing...') => {
         button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${text}`;
@@ -152,9 +162,13 @@ const ui = {
         errorEl.textContent = message;
         elements.messagesDiv.appendChild(errorEl);
         setTimeout(() => errorEl.remove(), 5000);
+        if (isTelegram) {
+            window.Telegram.WebApp.showAlert(message); // Mostrar alerta en Telegram
+        }
     }
 };
 
+// Manejadores de eventos
 const handlers = {
     handleEncrypt: async () => {
         const message = elements.messageInput.value.trim();
@@ -184,10 +198,6 @@ const handlers = {
         const passphrase = elements.passphraseInput.value.trim();
         if (!file || !passphrase) {
             ui.showError('Please select a QR file and enter passphrase');
-            return;
-        }
-        if (passphrase.length < 8) {
-            ui.showError('Passphrase must be at least 8 characters long');
             return;
         }
         ui.showLoader(elements.decodeButton, 'Decrypting...');
@@ -221,28 +231,72 @@ const handlers = {
         ui.resetButton(elements.decodeButton, `<i class="fas fa-unlock"></i> Decrypt Message`);
     },
     handleDownload: () => {
-        const link = document.createElement('a');
-        link.download = 'hushbox-qr.png';
-        link.href = elements.qrCanvas.toDataURL('image/png', 1.0);
-        link.click();
+        if (isTelegram) {
+            // Enviar el QR al chat del bot para descarga
+            elements.qrCanvas.toBlob((blob) => {
+                const file = new File([blob], 'hushbox-qr.png', { type: 'image/png' });
+                const formData = new FormData();
+                formData.append('chat_id', window.Telegram.WebApp.initDataUnsafe.user?.id || 'YOUR_CHAT_ID');
+                formData.append('photo', file);
+                fetch(`https://api.telegram.org/botYOUR_BOT_TOKEN/sendPhoto`, { // Reemplaza YOUR_BOT_TOKEN
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.ok) {
+                        window.Telegram.WebApp.showAlert('QR sent to chat! You can download it there.');
+                    } else {
+                        throw new Error(data.description);
+                    }
+                })
+                .catch(err => ui.showError('Failed to send QR: ' + err.message));
+            }, 'image/png');
+        } else {
+            const link = document.createElement('a');
+            link.download = 'hushbox-qr.png';
+            link.href = elements.qrCanvas.toDataURL('image/png', 1.0);
+            link.click();
+        }
     },
     handleShare: () => {
-        const canvas = elements.qrCanvas;
-        canvas.toBlob((blob) => {
-            const file = new File([blob], 'hushbox-qr.png', { type: 'image/png' });
-            const shareData = {
-                files: [file],
-                title: 'HushBox QR',
-                text: 'Scan this QR code to decrypt the message.',
-            };
-            if (navigator.canShare && navigator.canShare(shareData)) {
-                navigator.share(shareData)
-                    .then(() => console.log('QR shared successfully'))
-                    .catch((error) => console.error('Error sharing QR:', error));
-            } else {
-                alert('Sharing not supported in this browser.');
-            }
-        }, 'image/png');
+        if (isTelegram) {
+            // Enviar el QR al chat del bot para compartir
+            elements.qrCanvas.toBlob((blob) => {
+                const file = new File([blob], 'hushbox-qr.png', { type: 'image/png' });
+                const formData = new FormData();
+                formData.append('chat_id', window.Telegram.WebApp.initDataUnsafe.user?.id || 'YOUR_CHAT_ID');
+                formData.append('photo', file);
+                fetch(`https://api.telegram.org/botYOUR_BOT_TOKEN/sendPhoto`, { // Reemplaza YOUR_BOT_TOKEN
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.ok) {
+                        window.Telegram.WebApp.showAlert('QR sent to chat! You can share it from there.');
+                    } else {
+                        throw new Error(data.description);
+                    }
+                })
+                .catch(err => ui.showError('Failed to share QR: ' + err.message));
+            }, 'image/png');
+        } else {
+            const canvas = elements.qrCanvas;
+            canvas.toBlob((blob) => {
+                const file = new File([blob], 'hushbox-qr.png', { type: 'image/png' });
+                const shareData = {
+                    files: [file],
+                    title: 'HushBox QR',
+                    text: 'Scan this QR code to decrypt the message.',
+                };
+                if (navigator.canShare && navigator.canShare(shareData)) {
+                    navigator.share(shareData).catch(console.error);
+                } else {
+                    alert('Sharing not supported.');
+                }
+            }, 'image/png');
+        }
     },
     handleCamera: async () => {
         const isCameraActive = !elements.cameraPreviewContainer.classList.contains('hidden');
@@ -322,7 +376,10 @@ const handlers = {
 };
 
 // Event listeners
-elements.sendButton.addEventListener('click', handlers.handleEncrypt);
+elements.sendButton.addEventListener('click', (e) => {
+    e.preventDefault(); // Prevenir envío del formulario
+    handlers.handleEncrypt();
+});
 elements.decodeButton.addEventListener('click', handlers.handleDecrypt);
 elements.downloadButton.addEventListener('click', handlers.handleDownload);
 elements.shareButton.addEventListener('click', handlers.handleShare);
@@ -334,6 +391,14 @@ elements.closeModal.addEventListener('click', () => {
 elements.closePassphraseModal.addEventListener('click', () => {
     elements.passphraseModal.classList.add('hidden');
 });
+
+// Personalizamos el evento show para el modal
+ui.showPassphraseModal = (qrData) => {
+    elements.passphraseModal.classList.remove('hidden');
+    elements.modalPassphrase.value = '';
+    elements.passphraseModal.dataset.qrData = qrData;
+    elements.modalDecryptButton.onclick = () => handlers.handleDecryptQR();
+};
 
 // Inicializar contenedores como ocultos
 elements.qrContainer.classList.add('hidden');
