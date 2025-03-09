@@ -12,7 +12,10 @@ const elements = {
     cameraButton: document.getElementById('camera-button'),
     qrModal: document.getElementById('qr-modal'),
     qrModalCanvas: document.getElementById('qr-modal-canvas'),
-    closeModal: document.querySelector('.close-modal')
+    closeModal: document.querySelector('.close-modal'),
+    cameraModal: document.getElementById('camera-modal'),
+    cameraPreview: document.getElementById('camera-preview'),
+    closeCamera: document.getElementById('close-camera')
 };
 
 const cryptoUtils = {
@@ -283,39 +286,26 @@ const handlers = {
     handleCamera: async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            const video = document.createElement('video');
-            video.srcObject = stream;
-            video.play();
+            elements.cameraPreview.srcObject = stream;
+            elements.cameraPreview.play();
 
-            const cameraContainer = document.createElement('div');
-            cameraContainer.className = 'camera-container';
-            cameraContainer.innerHTML = `
-                <video autoplay></video>
-                <button id="close-camera" class="btn-secondary">
-                    <i class="fas fa-times"></i> Close Camera
-                </button>
-            `;
-            document.body.appendChild(cameraContainer);
+            // Mostrar el modal de la cámara
+            elements.cameraModal.classList.remove('hidden');
 
-            const closeCamera = () => {
-                stream.getTracks().forEach(track => track.stop());
-                cameraContainer.remove();
-            };
-
-            document.getElementById('close-camera').addEventListener('click', closeCamera);
-
+            // Escanear el QR
             const scanQR = () => {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                canvas.width = elements.cameraPreview.videoWidth;
+                canvas.height = elements.cameraPreview.videoHeight;
+                ctx.drawImage(elements.cameraPreview, 0, 0, canvas.width, canvas.height);
 
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
 
                 if (qrCode) {
-                    closeCamera();
+                    stream.getTracks().forEach(track => track.stop());
+                    elements.cameraModal.classList.add('hidden');
                     handlers.handleDecryptQR(qrCode.data);
                 } else {
                     requestAnimationFrame(scanQR);
@@ -362,6 +352,12 @@ elements.cameraButton.addEventListener('click', handlers.handleCamera);
 elements.qrCanvas.addEventListener('click', ui.showQRModal);
 elements.closeModal.addEventListener('click', () => {
     elements.qrModal.classList.add('hidden');
+});
+elements.closeCamera.addEventListener('click', () => {
+    elements.cameraModal.classList.add('hidden');
+    if (elements.cameraPreview.srcObject) {
+        elements.cameraPreview.srcObject.getTracks().forEach(track => track.stop());
+    }
 });
 
 // Hide QR container initially
