@@ -160,10 +160,9 @@ body {
 }
 
 #qr-canvas { 
-    width: clamp(150px, 40vw, 250px);
-    height: clamp(150px, 40vw, 250px);
+    width: 250px; /* Tamaño fijo inicial, ajustado por JS si es necesario */
+    height: 250px;
     background: white;
-    padding: 0.5rem;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     border: 2px solid var(--primary-color);
@@ -239,7 +238,7 @@ body {
 /* Media Queries */
 @media (max-width: 768px) {
     .main-grid { grid-template-columns: 1fr; gap: 1.5rem; }
-    #qr-canvas { width: clamp(150px, 60vw, 250px); height: clamp(150px, 60vw, 250px); }
+    #qr-canvas { width: 200px; height: 200px; }
 }
 
 @media (max-width: 480px) {
@@ -248,4 +247,5 @@ body {
     #passphrase, #message-input { padding: 0.8rem 2rem 0.8rem 0.8rem; }
     .btn-primary, .btn-secondary { padding: 0.8rem; font-size: 0.9rem; }
     .qr-header { flex-direction: column; }
+    #qr-canvas { width: 150px; height: 150px; }
 }
