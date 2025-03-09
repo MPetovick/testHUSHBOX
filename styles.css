@@ -31,16 +31,16 @@ body {
 
 .container { 
     width: 100%; 
-    max-width: 1200px; 
-    padding: clamp(1rem, 2vw, 2rem); 
+    max-width: 100%; 
+    padding: 1rem; 
 }
 
 .logo { 
     text-align: center; 
     color: var(--primary-color); 
-    margin-bottom: clamp(1.5rem, 3vw, 2rem); 
-    font-size: clamp(2rem, 5vw, 2.8rem); 
-    letter-spacing: clamp(2px, 0.5vw, 4px); 
+    margin-bottom: 1.5rem; 
+    font-size: 2rem; 
+    letter-spacing: 2px; 
     text-shadow: 0 0 10px var(--glow-color); 
     animation: pulseGlow 2s infinite; 
     position: relative; 
@@ -62,13 +62,13 @@ body {
 .main-grid { 
     display: grid; 
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-    gap: clamp(1.5rem, 3vw, 2rem); 
+    gap: 1.5rem; 
 }
 
 .section { 
     background: var(--section-bg); 
     border-radius: var(--border-radius); 
-    padding: clamp(1.5rem, 2.5vw, 2rem); 
+    padding: 1.5rem; 
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); 
     transition: transform var(--transition-speed) ease; 
 }
@@ -79,14 +79,14 @@ body {
 
 .input-group { 
     position: relative; 
-    margin-bottom: clamp(1rem, 2vw, 1.5rem); 
+    margin-bottom: 1rem; 
 }
 
 .passphrase-group {
     display: flex;
     align-items: center;
-    gap: clamp(0.5rem, 1vw, 1rem); 
-    position: relative; 
+    gap: 0.5rem;
+    position: relative;
 }
 
 .passphrase-group #camera-button {
@@ -94,43 +94,37 @@ body {
     right: 0.5rem; 
     top: 50%; 
     transform: translateY(-50%);
-    width: 30px;
+    width: 30px; 
     height: 30px;
-    background: transparent; /* Sin fondo para integrarse al input */
-    border: none; /* Sin borde para un look limpio */
+    background: transparent; 
+    border: none; 
     color: rgba(160, 160, 160, 0.6);
 }
 
 .passphrase-group #camera-button:hover {
-    background: transparent; /* Mantener sin fondo al pasar el ratón */
-    color: var(--primary-color); /* Cambiar color al pasar el ratón */
+    background: transparent; 
+    color: var(--primary-color); 
 }
 
 .passphrase-group .icon { 
-    /* Ahora está fuera del input, en el flujo flex */
     color: rgba(160, 160, 160, 0.6);
-    font-size: 1.2rem; /* Tamaño ajustado para que sea visible */
+    font-size: 1.2rem; 
 }
 
 #passphrase, #message-input { 
     width: 100%; 
-    padding: clamp(0.8rem, 1.5vw, 1rem) clamp(2.5rem, 3vw, 3rem) clamp(0.8rem, 1.5vw, 1rem) clamp(0.8rem, 1.5vw, 1rem); /* Reduje el padding-right */
+    padding: 0.8rem; 
     border: 2px solid transparent; 
     border-radius: var(--border-radius); 
     background: rgba(58, 58, 58, 0.8); 
     color: var(--text-color); 
-    font-size: clamp(0.9rem, 1.5vw, 1rem); 
+    font-size: 1rem; 
     transition: all var(--transition-speed) ease; 
-}
-
-/* Ajuste del ancho del passphrase */
-.passphrase-group #passphrase {
-    width: 250px; /* Mantenido como en tu versión */
 }
 
 #message-input { 
     resize: vertical; 
-    min-height: clamp(120px, 25vw, 160px); 
+    min-height: 120px; 
 }
 
 #passphrase:focus, #message-input:focus { 
@@ -140,7 +134,7 @@ body {
 }
 
 #camera-preview-container {
-    margin-bottom: clamp(1rem, 2vw, 1.5rem);
+    margin-bottom: 1rem;
     text-align: center;
 }
 
@@ -159,7 +153,7 @@ body {
 
 .btn-primary, .btn-secondary { 
     width: 100%; 
-    padding: clamp(0.8rem, 1.5vw, 1.2rem); 
+    padding: 1rem; 
     border: none; 
     border-radius: var(--border-radius); 
     font-weight: 600; 
@@ -169,7 +163,7 @@ body {
     align-items: center; 
     justify-content: center; 
     gap: 0.5rem; 
-    font-size: clamp(0.9rem, 1.5vw, 1.1rem); 
+    font-size: 1rem; 
 }
 
 .btn-primary { 
@@ -209,7 +203,7 @@ body {
 }
 
 #qr-container { 
-    margin-top: clamp(1.5rem, 2.5vw, 2rem); 
+    margin-top: 1.5rem; 
     text-align: center; 
 }
 
@@ -221,7 +215,7 @@ body {
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
-    margin-bottom: clamp(1rem, 2vw, 1.5rem); 
+    margin-bottom: 1rem; 
     flex-wrap: wrap; 
     gap: 1rem; 
 }
@@ -244,14 +238,14 @@ body {
 }
 
 .upload-container { 
-    margin-bottom: clamp(1.5rem, 2.5vw, 2rem); 
+    margin-bottom: 1.5rem; 
 }
 
 .file-upload { 
     display: block; 
     border: 2px dashed rgba(255, 255, 255, 0.2); 
     border-radius: var(--border-radius); 
-    padding: clamp(1.5rem, 2.5vw, 2rem); 
+    padding: 1.5rem; 
     cursor: pointer; 
     transition: all var(--transition-speed) ease; 
 }
@@ -261,23 +255,23 @@ body {
 }
 
 .upload-content i { 
-    font-size: clamp(2rem, 4vw, 2.5rem); 
+    font-size: 2rem; 
     margin-bottom: 0.5rem; 
     color: var(--primary-color); 
     animation: float 3s ease-in-out infinite; 
 }
 
 .message-container { 
-    margin-top: clamp(1.5rem, 2.5vw, 2rem); 
+    margin-top: 1.5rem; 
     background: rgba(30, 30, 30, 0.6); 
     border-radius: var(--border-radius); 
-    padding: clamp(1rem, 1.5vw, 1.5rem); 
-    min-height: clamp(120px, 30vw, 200px); 
+    padding: 1rem; 
+    min-height: 120px; 
     overflow-y: auto; 
 }
 
 .message-placeholder { 
-    font-size: clamp(0.9rem, 1.5vw, 1rem); 
+    font-size: 0.9rem; 
     text-align: center; 
 }
 
@@ -367,35 +361,4 @@ body {
 @keyframes float { 
     0%, 100% { transform: translateY(0); } 
     50% { transform: translateY(-10px); } 
-}
-
-/* Media Queries */
-@media (max-width: 768px) { 
-    .main-grid { grid-template-columns: 1fr; gap: 1.5rem; } 
-    #qr-canvas { max-width: 200px; } 
-}
-
-@media (max-width: 480px) { 
-    .container { padding: 0.5rem; } 
-    .logo { font-size: 1.8rem; } 
-    #passphrase, #message-input { padding: 0.8rem 2.5rem 0.8rem 0.8rem; } /* Ajustado para pantallas pequeñas */
-    .btn-primary, .btn-secondary { padding: 0.8rem; font-size: 0.9rem; } 
-    .qr-header { flex-direction: column; } 
-    #qr-canvas { max-width: 150px; } 
-    .passphrase-group { flex-direction: column; align-items: stretch; gap: 0.5rem; }
-    .passphrase-group #passphrase { width: 100%; } /* En pantallas pequeñas, ocupa el ancho completo */
-    .passphrase-group #camera-button { 
-        right: 0.5rem; /* Mantener dentro del input */
-        width: 30px; 
-        height: 30px; 
-        background: transparent; 
-        border: none; 
-        color: rgba(160, 160, 160, 0.6); 
-    }
-    .passphrase-group .icon { /* Ícono de la llave debajo en pantallas pequeñas */
-        position: static; 
-        transform: none; 
-        margin: 0 auto; 
-    }
-    #camera-preview { max-width: 100%; }
 }
