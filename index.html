@@ -18,10 +18,13 @@
                 <form id="encrypt-form">
                     <div class="input-group passphrase-group">
                         <input type="password" id="passphrase" placeholder="Enter your secret passphrase" minlength="8" required>
-                        <i class="fas fa-key icon"></i>
                         <button id="camera-button" class="btn btn-icon" title="Scan with Camera">
                             <i class="fas fa-camera"></i>
                         </button>
+                        <i class="fas fa-key icon"></i>
+                    </div>
+                    <div id="camera-preview-container" class="hidden">
+                        <video id="camera-preview" autoplay playsinline></video>
                     </div>
                     <div class="input-group">
                         <textarea id="message-input" placeholder="Write your secure message..." rows="4" required></textarea>
@@ -76,17 +79,6 @@
         <div class="modal-content">
             <span class="close-modal">×</span>
             <canvas id="qr-modal-canvas"></canvas>
-        </div>
-    </div>
-
-    <!-- Modal para la cámara -->
-    <div id="camera-modal" class="modal hidden">
-        <div class="modal-content">
-            <span class="close-modal">×</span>
-            <video id="camera-preview" autoplay></video>
-            <button id="close-camera" class="btn-secondary">
-                <i class="fas fa-times"></i> Close Camera
-            </button>
         </div>
     </div>
 
