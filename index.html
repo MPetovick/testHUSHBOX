@@ -22,18 +22,17 @@
                     <i class="fas fa-comment-dots icon"></i>
                 </div>
 
-                <!-- Nuevos botones con solo íconos -->
+                <!-- Botones de acción con íconos -->
                 <div class="button-group">
                     <button id="scan-button" class="btn-icon" title="Scan QR">
                         <i class="fas fa-camera"></i>
                     </button>
-                    <button id="image-button" class="btn-icon" title="Upload Image">
+                    <button id="image-button" class="btn-icon" title="Upload QR Image">
                         <i class="fas fa-image"></i>
                     </button>
                     <button id="pdf-button" class="btn-icon" title="Upload PDF">
                         <i class="fas fa-file-pdf"></i>
                     </button>
-                    <!-- Iconos redondos de Telegram y Twitter -->
                     <a href="https://t.me/your_telegram_bot" target="_blank" class="btn-icon social-icon telegram" title="Telegram">
                         <i class="fab fa-telegram-plane"></i>
                     </a>
@@ -47,9 +46,15 @@
                     <video id="camera-preview" autoplay></video>
                 </div>
 
-                <button id="send-button" class="btn-primary">
-                    <i class="fas fa-lock"></i> Encrypt & Generate QR
-                </button>
+                <!-- Botones Encrypt y Decrypt en la misma fila -->
+                <div class="action-buttons">
+                    <button id="send-button" class="btn-primary">
+                        <i class="fas fa-lock"></i> Encrypt
+                    </button>
+                    <button id="decode-button" class="btn-primary">
+                        <i class="fas fa-unlock"></i> Decrypt
+                    </button>
+                </div>
 
                 <div id="qr-container" class="hidden">
                     <div class="qr-header">
@@ -65,18 +70,6 @@
             </div>
 
             <div class="section decrypt-section">
-                <div class="upload-container">
-                    <label class="file-upload">
-                        <input type="file" id="qr-upload" accept="image/*">
-                        <div class="upload-content">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <p>Drop or click to upload QR</p>
-                        </div>
-                    </label>
-                </div>
-                <button id="decode-button" class="btn-primary">
-                    <i class="fas fa-unlock"></i> Decrypt Message
-                </button>
                 <div id="messages" class="message-container">
                     <div class="message-placeholder">
                         <i class="fas fa-comments"></i>
