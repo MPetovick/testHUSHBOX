@@ -5,7 +5,7 @@ const CONFIG = {
     IV_LENGTH: 12,
     AES_KEY_LENGTH: 256,
     HMAC_LENGTH: 256,
-    QR_SIZE: 300,
+    QR_SIZE: 200, // Tamaño base más compacto
     MIN_PASSPHRASE_LENGTH: 12
 };
 
@@ -189,7 +189,7 @@ const uiController = {
     generateQR: async (data) => {
         return new Promise((resolve, reject) => {
             const dataLength = data.length;
-            const qrSize = Math.max(CONFIG.QR_SIZE, Math.min(500, Math.ceil(dataLength / 10) * 10 + 200));
+            const qrSize = Math.max(CONFIG.QR_SIZE, Math.min(400, Math.ceil(dataLength / 20) * 10 + 150));
 
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = qrSize;
