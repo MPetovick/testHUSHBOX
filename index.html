@@ -24,6 +24,9 @@
 
                 <!-- Botones de acción con íconos -->
                 <div class="button-group">
+                    <button id="upload-arrow-button" class="btn-icon" title="Upload Image">
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
                     <button id="scan-button" class="btn-icon" title="Scan QR">
                         <i class="fas fa-camera"></i>
                     </button>
@@ -68,7 +71,9 @@
                             </button>
                         </div>
                     </div>
-                    <canvas id="qr-canvas"></canvas>
+                    <canvas id="qr-canvas" aria-label="Generated QR code with encrypted message">
+                        Your browser does not support canvas. The QR code with your encrypted message cannot be displayed.
+                    </canvas>
                 </div>
             </div>
 
