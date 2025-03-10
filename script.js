@@ -188,45 +188,50 @@ const uiController = {
 
     generateQR: async (data) => {
         return new Promise((resolve, reject) => {
-            QRCode.toCanvas(domElements.qrCanvas, data, {
-                width: 250,
-                margin: 2,
-                color: {
-                    dark: '#000000',
-                    light: '#ffffff'
-                }
+            const dataLength = data.length;
+            const qrSize = Math.max(CONFIG.QR_SIZE, Math.min(500, Math.ceil(dataLength / 10) * 10 + 200));
+
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = qrSize;
+            tempCanvas.height = qrSize;
+
+            QRCode.toCanvas(tempCanvas, data, {
+                width: qrSize,
+                margin: 1,
+                color: { dark: '#000000', light: '#ffffff' },
+                errorCorrectionLevel: 'H'
             }, (error) => {
                 if (error) {
                     reject(error);
-                } else {
-                    const ctx = domElements.qrCanvas.getContext('2d');
-
-                    // Tamaño del círculo de la marca de agua
-                    const circleRadius = 40;
-                    const circleX = 125;
-                    const circleY = 125;
-
-                    // Dibujar el círculo de fondo
-                    ctx.beginPath();
-                    ctx.arc(circleX, circleY, circleRadius, 0, Math.PI * 2);
-                    ctx.fillStyle = 'var(--primary-color)';
-                    ctx.fill();
-
-                    // Configurar el estilo del texto
-                    ctx.fillStyle = '#00cc99';
-                    ctx.font = 'bold 18px "Segoe UI", system-ui, sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-
-                    // Texto "HUSH" arriba
-                    ctx.fillText('HUSH', circleX, circleY - 10);
-
-                    // Texto "BOX" debajo
-                    ctx.fillText('BOX', circleX, circleY + 15);
-
-                    domElements.qrContainer.classList.remove('hidden');
-                    resolve();
+                    return;
                 }
+
+                const ctx = tempCanvas.getContext('2d');
+                const circleRadius = qrSize * 0.15;
+                const circleX = qrSize / 2;
+                const circleY = qrSize / 2;
+
+                ctx.beginPath();
+                ctx.arc(circleX, circleY, circleRadius, 0, Math.PI * 2);
+                ctx.fillStyle = 'var(--primary-color)';
+                ctx.fill();
+
+                ctx.fillStyle = '#00cc99';
+                ctx.font = `bold ${qrSize * 0.06}px "Segoe UI", system-ui, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('HUSH', circleX, circleY - circleRadius * 0.3);
+                ctx.fillText('BOX', circleX, circleY + circleRadius * 0.5);
+
+                domElements.qrCanvas.width = qrSize;
+                domElements.qrCanvas.height = qrSize;
+                domElements.qrContainer.classList.remove('hidden');
+
+                const qrCtx = domElements.qrCanvas.getContext('2d');
+                qrCtx.clearRect(0, 0, qrSize, qrSize);
+                qrCtx.drawImage(tempCanvas, 0, 0, qrSize, qrSize);
+
+                resolve();
             });
         });
     },
@@ -277,8 +282,7 @@ const handlers = {
         try {
             const encrypted = await cryptoUtils.encryptMessage(message, passphrase);
             await uiController.generateQR(encrypted);
-            const time = new Date().toLocaleTimeString();
-            uiController.displayMessage(`Encrypted (${time}): ${encrypted.slice(0, 40)}...`, true);
+            uiController.displayMessage(`Encrypted: ${encrypted.slice(0, 40)}...`, true);
             domElements.messageInput.value = '';
             domElements.passphraseInput.value = '';
         } catch (error) {
@@ -335,8 +339,7 @@ const handlers = {
             }
 
             const decrypted = await cryptoUtils.decryptMessage(qrCode.data, passphrase);
-            const time = new Date().toLocaleTimeString();
-            uiController.displayMessage(`Decrypted (${time}): ${decrypted}`, false);
+            uiController.displayMessage(`Decrypted: ${decrypted}`, false);
             domElements.passphraseInput.value = '';
             fileInput.value = '';
         } catch (error) {
