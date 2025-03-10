@@ -217,11 +217,11 @@ const uiController = {
                 ctx.fill();
 
                 ctx.fillStyle = '#00cc99';
-                ctx.font = `bold ${qrSize * 0.06}px "Segoe UI", system-ui, sans-serif`;
+                ctx.font = `bold ${qrSize * 0.08}px "Segoe UI", system-ui, sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText('HUSH', circleX, circleY - circleRadius * 0.3);
-                ctx.fillText('BOX', circleX, circleY + circleRadius * 0.5);
+                ctx.fillText('HUSH', circleX, circleY - circleRadius * 0.2);
+                ctx.fillText('BOX', circleX, circleY + circleRadius * 0.3);
 
                 domElements.qrCanvas.width = qrSize;
                 domElements.qrCanvas.height = qrSize;
