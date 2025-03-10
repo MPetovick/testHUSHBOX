@@ -241,7 +241,7 @@ body {
     justify-content: center;
     overflow-x: hidden;
     overflow-y: auto;
-    max-height: 300px;
+    max-height: 500px;
 }
 
 .message { 
