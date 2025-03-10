@@ -351,7 +351,6 @@ body {
     background: var(--secondary-color);
 }
 
-/* Contenedor para Encrypt y Decrypt */
 .action-buttons {
     display: flex;
     gap: clamp(0.5rem, 1vw, 1rem);
