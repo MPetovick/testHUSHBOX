@@ -11,6 +11,7 @@ const CONFIG = {
 
 // Elementos del DOM
 const domElements = {
+    uploadArrowButton: document.getElementById('upload-arrow-button'),
     scanButton: document.getElementById('scan-button'),
     imageButton: document.getElementById('image-button'),
     pdfButton: document.getElementById('pdf-button'),
@@ -191,6 +192,10 @@ const uiController = {
             const dataLength = data.length;
             const qrSize = Math.max(CONFIG.QR_SIZE, Math.min(400, Math.ceil(dataLength / 20) * 10 + 150));
 
+            // Preparar el canvas principal con dimensiones desde el inicio
+            domElements.qrCanvas.width = qrSize;
+            domElements.qrCanvas.height = qrSize;
+
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = qrSize;
             tempCanvas.height = qrSize;
@@ -223,13 +228,12 @@ const uiController = {
                 ctx.fillText('HUSH', circleX, circleY - circleRadius * 0.2);
                 ctx.fillText('BOX', circleX, circleY + circleRadius * 0.3);
 
-                domElements.qrCanvas.width = qrSize;
-                domElements.qrCanvas.height = qrSize;
-                domElements.qrContainer.classList.remove('hidden');
-
                 const qrCtx = domElements.qrCanvas.getContext('2d');
                 qrCtx.clearRect(0, 0, qrSize, qrSize);
                 qrCtx.drawImage(tempCanvas, 0, 0, qrSize, qrSize);
+
+                // Mostrar el contenedor solo después de que el QR esté listo
+                domElements.qrContainer.classList.remove('hidden');
 
                 resolve();
             });
@@ -409,10 +413,15 @@ const handlers = {
 
     handlePDFUpload: (event) => {
         uiController.showComingSoon(event.currentTarget);
+    },
+
+    handleUploadArrow: () => {
+        fileInput.click();
     }
 };
 
 // Event listeners
+domElements.uploadArrowButton.addEventListener('click', handlers.handleUploadArrow);
 domElements.sendButton.addEventListener('click', handlers.handleEncrypt);
 domElements.decodeButton.addEventListener('click', handlers.handleDecrypt);
 domElements.downloadButton.addEventListener('click', handlers.handleDownload);
