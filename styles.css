@@ -185,10 +185,16 @@ body {
     margin-top: clamp(1rem, 3vw, 2rem);
     text-align: center;
     animation: fadeIn 0.5s ease-out;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 #qr-container.hidden { 
     display: none; 
+}
+
+#qr-container:not(.hidden) {
+    opacity: 1;
 }
 
 .qr-header { 
@@ -204,8 +210,8 @@ body {
 }
 
 #qr-canvas { 
-    width: clamp(150px, 50%, 300px);
-    height: clamp(150px, 50%, 300px);
+    max-width: 100%;
+    max-height: 500px;
     background: white;
     padding: clamp(0.5rem, 1vw, 0.8rem);
     border-radius: 12px;
@@ -213,6 +219,11 @@ body {
     border: 2px solid var(--primary-color);
     transition: transform 0.3s ease;
     margin: 0 auto;
+    visibility: hidden;
+}
+
+#qr-container:not(.hidden) #qr-canvas {
+    visibility: visible;
 }
 
 #qr-canvas:hover {
@@ -228,6 +239,35 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: 300px;
+}
+
+.message { 
+    max-width: 100%;
+    word-break: break-all;
+    margin-bottom: 0.5rem;
+}
+
+.message.sent {
+    text-align: right;
+}
+
+.message-content { 
+    display: inline-block;
+    max-width: 100%;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 204, 153, 0.1);
+    border-radius: 8px;
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    word-break: break-all;
+}
+
+.message-time { 
+    font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 0.2rem;
 }
 
 .message-placeholder {
@@ -324,20 +364,17 @@ body {
 
 /* Mensaje "Coming Soon" */
 .coming-soon-message {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    position: absolute;
     background: var(--section-bg);
     color: var(--primary-color);
-    padding: clamp(0.5rem, 1vw, 0.8rem) clamp(1rem, 2vw, 1.2rem); /* Reducido */
-    border-radius: 10px; /* Más pequeño y elegante */
+    padding: clamp(0.5rem, 1vw, 0.8rem) clamp(1rem, 2vw, 1.2rem);
+    border-radius: 10px;
     border: 2px solid var(--primary-color);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); /* Sombra más sutil */
-    font-size: clamp(1rem, 2vw, 1.2rem); /* Tamaño de fuente reducido */
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    font-size: clamp(1rem, 2vw, 1.2rem);
     font-weight: 600;
     text-align: center;
-    text-shadow: 0 0 8px var(--glow-color); /* Brillo ajustado */
+    text-shadow: 0 0 8px var(--glow-color);
     animation: fadeIn 0.5s ease-out, fadeOut 0.5s ease-out 2.5s forwards;
     z-index: 1000;
 }
@@ -356,11 +393,11 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translate(-50%, -60%); }
-    to { opacity: 1; transform: translate(-50%, -50%); }
+    from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 @keyframes fadeOut {
-    from { opacity: 1; transform: translate(-50%, -50%); }
-    to { opacity: 0; transform: translate(-50%, -40%); }
+    from { opacity: 1; transform: translateX(-50%) translateY(0); }
+    to { opacity: 0; transform: translateX(-50%) translateY(10px); }
 }
