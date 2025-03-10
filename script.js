@@ -5,7 +5,7 @@ const CONFIG = {
     IV_LENGTH: 12,
     AES_KEY_LENGTH: 256,
     HMAC_LENGTH: 256,
-    QR_SIZE: 250,
+    QR_SIZE: 300,
     MIN_PASSPHRASE_LENGTH: 12
 };
 
@@ -189,26 +189,39 @@ const uiController = {
     generateQR: async (data) => {
         return new Promise((resolve, reject) => {
             QRCode.toCanvas(domElements.qrCanvas, data, {
-                width: CONFIG.QR_SIZE,
+                width: 250,
                 margin: 2,
-                color: { dark: '#000000', light: '#ffffff' }
+                color: {
+                    dark: '#000000',
+                    light: '#ffffff'
+                }
             }, (error) => {
                 if (error) {
                     reject(error);
                 } else {
                     const ctx = domElements.qrCanvas.getContext('2d');
-                    const circleRadius = 40, circleX = CONFIG.QR_SIZE / 2, circleY = CONFIG.QR_SIZE / 2;
 
+                    // Tamaño del círculo de la marca de agua
+                    const circleRadius = 40;
+                    const circleX = 125;
+                    const circleY = 125;
+
+                    // Dibujar el círculo de fondo
                     ctx.beginPath();
                     ctx.arc(circleX, circleY, circleRadius, 0, Math.PI * 2);
                     ctx.fillStyle = 'var(--primary-color)';
                     ctx.fill();
 
+                    // Configurar el estilo del texto
                     ctx.fillStyle = '#00cc99';
                     ctx.font = 'bold 18px "Segoe UI", system-ui, sans-serif';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
+
+                    // Texto "HUSH" arriba
                     ctx.fillText('HUSH', circleX, circleY - 10);
+
+                    // Texto "BOX" debajo
                     ctx.fillText('BOX', circleX, circleY + 15);
 
                     domElements.qrContainer.classList.remove('hidden');
@@ -228,11 +241,19 @@ const uiController = {
         button.disabled = false;
     },
 
-    showComingSoon: () => {
+    showComingSoon: (button) => {
         const comingSoonEl = document.createElement('div');
         comingSoonEl.className = 'coming-soon-message';
         comingSoonEl.textContent = 'COMING SOON';
-        document.body.appendChild(comingSoonEl);
+
+        const buttonRect = button.getBoundingClientRect();
+        const containerRect = document.querySelector('.container').getBoundingClientRect();
+
+        comingSoonEl.style.left = `${buttonRect.left - containerRect.left + buttonRect.width / 2}px`;
+        comingSoonEl.style.top = `${buttonRect.top - containerRect.top - 50}px`;
+        comingSoonEl.style.transform = 'translateX(-50%)';
+
+        document.querySelector('.container').appendChild(comingSoonEl);
         setTimeout(() => {
             comingSoonEl.remove();
         }, 3000);
@@ -256,9 +277,8 @@ const handlers = {
         try {
             const encrypted = await cryptoUtils.encryptMessage(message, passphrase);
             await uiController.generateQR(encrypted);
-            uiController.displayMessage(`Encrypted: ${encrypted.slice(0, 40)}...`, true);
-            navigator.clipboard.writeText(encrypted);
-            uiController.displayMessage('Encrypted text copied to clipboard!', false);
+            const time = new Date().toLocaleTimeString();
+            uiController.displayMessage(`Encrypted (${time}): ${encrypted.slice(0, 40)}...`, true);
             domElements.messageInput.value = '';
             domElements.passphraseInput.value = '';
         } catch (error) {
@@ -315,7 +335,8 @@ const handlers = {
             }
 
             const decrypted = await cryptoUtils.decryptMessage(qrCode.data, passphrase);
-            uiController.displayMessage(decrypted);
+            const time = new Date().toLocaleTimeString();
+            uiController.displayMessage(`Decrypted (${time}): ${decrypted}`, false);
             domElements.passphraseInput.value = '';
             fileInput.value = '';
         } catch (error) {
@@ -366,74 +387,8 @@ const handlers = {
         }
     },
 
-    handleScan: async () => {
-        try {
-            const permission = await navigator.permissions.query({ name: 'camera' });
-            if (permission.state === 'denied') {
-                uiController.displayMessage('Camera access denied. Please enable it in your settings.', false);
-                return;
-            }
-
-            if (typeof jsQR === 'undefined') {
-                throw new Error('jsQR library not loaded. Please refresh the page.');
-            }
-
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: 'environment' }
-            });
-            domElements.cameraPreview.srcObject = stream;
-            domElements.cameraContainer.classList.remove('hidden');
-
-            uiController.displayMessage('Scanning QR code... Aim the camera at the QR.', false);
-
-            scanCanvas.width = domElements.cameraPreview.videoWidth;
-            scanCanvas.height = domElements.cameraPreview.videoHeight;
-
-            let isScanning = true;
-            const scanFrame = () => {
-                if (!isScanning || !domElements.cameraPreview.srcObject) return;
-
-                scanContext.drawImage(domElements.cameraPreview, 0, 0, scanCanvas.width, scanCanvas.height);
-                const imageData = scanContext.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
-                const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
-
-                if (qrCode) {
-                    isScanning = false;
-                    handlers.stopCamera();
-                    processQR(qrCode.data);
-                } else {
-                    requestAnimationFrame(scanFrame);
-                }
-            };
-
-            const processQR = async (qrData) => {
-                const passphrase = domElements.passphraseInput.value.trim();
-                if (!passphrase) {
-                    uiController.displayMessage('Please enter a passphrase to decrypt the QR.', false);
-                    return;
-                }
-
-                try {
-                    const decrypted = await cryptoUtils.decryptMessage(qrData, passphrase);
-                    uiController.displayMessage(decrypted);
-                    domElements.passphraseInput.value = '';
-                } catch (error) {
-                    uiController.displayMessage(
-                        error.message.includes('decrypt') || error.message.includes('Integrity')
-                            ? 'Decryption failed. Wrong passphrase or tampered data?'
-                            : error.message,
-                        false
-                    );
-                }
-            };
-
-            requestAnimationFrame(scanFrame);
-
-        } catch (error) {
-            console.error('Scan error:', error);
-            uiController.displayMessage('Error scanning QR: ' + error.message, false);
-            handlers.stopCamera();
-        }
+    handleScan: async (event) => {
+        uiController.showComingSoon(event.currentTarget);
     },
 
     stopCamera: () => {
@@ -445,12 +400,12 @@ const handlers = {
         }
     },
 
-    handleImageUpload: () => {
-        fileInput.click();
+    handleImageUpload: (event) => {
+        uiController.showComingSoon(event.currentTarget);
     },
 
-    handlePDFUpload: () => {
-        uiController.showComingSoon();
+    handlePDFUpload: (event) => {
+        uiController.showComingSoon(event.currentTarget);
     }
 };
 
@@ -459,8 +414,8 @@ domElements.sendButton.addEventListener('click', handlers.handleEncrypt);
 domElements.decodeButton.addEventListener('click', handlers.handleDecrypt);
 domElements.downloadButton.addEventListener('click', handlers.handleDownload);
 domElements.shareButton.addEventListener('click', handlers.handleShare);
-domElements.scanButton.addEventListener('click', handlers.handleScan);
-domElements.imageButton.addEventListener('click', handlers.handleImageUpload);
+domElements.scanButton.addEventListener('click', handlers.handlePDFUpload);
+domElements.imageButton.addEventListener('click', handlers.handlePDFUpload);
 domElements.pdfButton.addEventListener('click', handlers.handlePDFUpload);
 fileInput.addEventListener('change', handlers.handleDecrypt);
 
