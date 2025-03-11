@@ -27,13 +27,13 @@
                     <button id="upload-arrow-button" class="btn-icon" title="Upload Image">
                         <i class="fas fa-arrow-up"></i>
                     </button>
-                    <button id="scan-button" class="btn-icon" title="Scan QR">
+                    <button id="scan-button" class="btn-icon" title="Scan QR" disabled>
                         <i class="fas fa-camera"></i>
                     </button>
-                    <button id="image-button" class="btn-icon" title="Upload QR Image">
+                    <button id="image-button" class="btn-icon" title="Upload QR Image" disabled>
                         <i class="fas fa-image"></i>
                     </button>
-                    <button id="pdf-button" class="btn-icon" title="Upload PDF">
+                    <button id="pdf-button" class="btn-icon" title="Upload PDF" disabled>
                         <i class="fas fa-file-pdf"></i>
                     </button>
                     <a href="https://t.me/HUSHBOXbot" target="_blank" class="btn-icon social-icon telegram" title="Telegram">
@@ -51,10 +51,10 @@
 
                 <!-- Botones Encrypt y Decrypt en la misma fila -->
                 <div class="action-buttons">
-                    <button id="send-button" class="btn-primary">
+                    <button id="send-button" class="btn-primary" aria-label="Encrypt message">
                         <i class="fas fa-lock"></i> Encrypt
                     </button>
-                    <button id="decode-button" class="btn-primary">
+                    <button id="decode-button" class="btn-primary" aria-label="Decrypt message">
                         <i class="fas fa-unlock"></i> Decrypt
                     </button>
                 </div>
@@ -63,17 +63,15 @@
                     <div class="qr-header">
                         <h3><i class="fas fa-qrcode"></i> Secure QR</h3>
                         <div class="qr-actions">
-                            <button id="download-button" class="btn-secondary">
+                            <button id="download-button" class="btn-secondary" aria-label="Download QR code">
                                 <i class="fas fa-arrow-down"></i> Download
                             </button>
-                            <button id="share-button" class="btn-secondary">
+                            <button id="share-button" class="btn-secondary" aria-label="Share QR code">
                                 <i class="fas fa-share-alt"></i> Share
                             </button>
                         </div>
                     </div>
-                    <canvas id="qr-canvas" aria-label="Generated QR code with encrypted message">
-                        Your browser does not support canvas. The QR code with your encrypted message cannot be displayed.
-                    </canvas>
+                    <canvas id="qr-canvas" aria-label="Generated QR code with encrypted message"></canvas>
                 </div>
             </div>
 
@@ -89,11 +87,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <script src="script.js"></script>
-
     <meta name="google-adsense-account" content="ca-pub-8457972429738145">
-
 </body>
 </html>
