@@ -1,16 +1,16 @@
 // Configuración global para parámetros criptográficos
 const CONFIG = {
-    PBKDF2_ITERATIONS: 250000, // Reducido para mejor rendimiento
+    PBKDF2_ITERATIONS: 250000,
     SALT_LENGTH: 32,
     IV_LENGTH: 12,
     AES_KEY_LENGTH: 256,
     HMAC_LENGTH: 256,
-    QR_SIZE: 200, // Tamaño base más compacto
+    QR_SIZE: 200,
     MIN_PASSPHRASE_LENGTH: 12,
-    COMPRESSION_THRESHOLD: 100, // Umbral para compresión
-    MAX_QR_SIZE: 350, // Tamaño máximo del QR
-    CAMERA_TIMEOUT: 30000, // 30 segundos
-    DECRYPT_DELAY_INCREMENT: 100 // ms por intento fallido
+    COMPRESSION_THRESHOLD: 100,
+    MAX_QR_SIZE: 350,
+    CAMERA_TIMEOUT: 30000,
+    DECRYPT_DELAY_INCREMENT: 100
 };
 
 // Elementos del DOM
@@ -29,7 +29,11 @@ const domElements = {
     decodeButton: document.getElementById('decode-button'),
     downloadButton: document.getElementById('download-button'),
     shareButton: document.getElementById('share-button'),
-    qrContainer: document.getElementById('qr-container')
+    qrContainer: document.getElementById('qr-container'),
+    lockIcon: document.getElementById('lock-icon'),
+    tutorialModal: document.getElementById('tutorial-modal'),
+    closeTutorial: document.getElementById('close-tutorial'),
+    comingSoonMessage: document.getElementById('coming-soon-message')
 };
 
 // Input oculto para la carga de imágenes
@@ -48,6 +52,59 @@ document.body.appendChild(scanCanvas);
 // Variables para protección contra fuerza bruta
 let decryptAttempts = 0;
 let cameraTimeoutId = null;
+
+// Mostrar el modal de tutorial solo la primera vez
+document.addEventListener('DOMContentLoaded', () => {
+    const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
+    if (!hasSeenTutorial) {
+        domElements.tutorialModal.style.display = 'flex';
+        localStorage.setItem('hasSeenTutorial', 'true');
+    }
+});
+
+// Cerrar el modal de tutorial
+domElements.closeTutorial.addEventListener('click', () => {
+    domElements.tutorialModal.style.display = 'none';
+});
+
+document.querySelector('.close-modal').addEventListener('click', () => {
+    domElements.tutorialModal.style.display = 'none';
+});
+
+// Mostrar mensaje de ayuda al hacer clic en el ícono de candado
+domElements.lockIcon.addEventListener('click', () => {
+    alert(`Welcome to HushBox!\n\n1. Enter a passphrase and write your message.\n2. Click "Encrypt" to generate a secure QR code.\n3. Share or download the QR code.\n4. Use "Decrypt" to read messages from a QR code.\n\nFor more details, check the tutorial.`);
+});
+
+// Función para mostrar y ocultar el mensaje "Coming Soon"
+function showComingSoonMessage() {
+    domElements.comingSoonMessage.classList.add('visible');
+    setTimeout(() => {
+        domElements.comingSoonMessage.classList.remove('visible');
+    }, 2000); // El mensaje desaparece después de 2 segundos
+}
+
+// Event listeners para los botones
+domElements.scanButton.addEventListener('click', showComingSoonMessage);
+domElements.imageButton.addEventListener('click', showComingSoonMessage);
+domElements.pdfButton.addEventListener('click', showComingSoonMessage);
+
+// Habilitar botones dinámicamente
+domElements.scanButton.disabled = false; // Habilitar cuando la funcionalidad de escaneo esté lista
+domElements.imageButton.disabled = false; // Habilitar cuando la funcionalidad de carga de imagen esté lista
+domElements.pdfButton.disabled = false; // Habilitar cuando la funcionalidad de PDF esté lista
+
+// Deshabilitar decodeButton inicialmente
+domElements.decodeButton.disabled = true;
+
+// Habilitar decodeButton cuando se cargue un archivo
+fileInput.addEventListener('change', () => {
+    if (fileInput.files.length > 0) {
+        domElements.decodeButton.disabled = false;
+    } else {
+        domElements.decodeButton.disabled = true;
+    }
+});
 
 // Utilidades criptográficas
 const cryptoUtils = {
