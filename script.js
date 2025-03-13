@@ -30,9 +30,10 @@ const domElements = {
     downloadButton: document.getElementById('download-button'),
     shareButton: document.getElementById('share-button'),
     qrContainer: document.getElementById('qr-container'),
-    lockIcon: document.getElementById('lock-icon'),
     tutorialModal: document.getElementById('tutorial-modal'),
     closeTutorial: document.getElementById('close-tutorial'),
+    dontShowAgain: document.getElementById('dont-show-again'),
+    closeModalButton: document.querySelector('.close-modal'),
     comingSoonMessage: document.getElementById('coming-soon-message')
 };
 
@@ -53,38 +54,45 @@ document.body.appendChild(scanCanvas);
 let decryptAttempts = 0;
 let cameraTimeoutId = null;
 
-// Mostrar el modal de tutorial solo la primera vez
-document.addEventListener('DOMContentLoaded', () => {
-    const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
-    if (!hasSeenTutorial) {
+// Verificar si el usuario ha elegido no mostrar el modal nuevamente
+const shouldShowModal = () => {
+    const dontShowAgain = localStorage.getItem('dontShowAgain');
+    return dontShowAgain !== 'true'; // Mostrar modal si no está marcado como "No mostrar nuevamente"
+};
+
+// Mostrar el modal si es necesario
+const showTutorialModal = () => {
+    if (shouldShowModal()) {
         domElements.tutorialModal.style.display = 'flex';
-        localStorage.setItem('hasSeenTutorial', 'true');
     }
-});
+};
 
-// Cerrar el modal de tutorial
-domElements.closeTutorial.addEventListener('click', () => {
+// Cerrar el modal
+const closeTutorialModal = () => {
     domElements.tutorialModal.style.display = 'none';
-});
+};
 
-document.querySelector('.close-modal').addEventListener('click', () => {
-    domElements.tutorialModal.style.display = 'none';
-});
-
-// Mostrar mensaje de ayuda al hacer clic en el ícono de candado
-domElements.lockIcon.addEventListener('click', () => {
-    alert(`Welcome to HushBox!\n\n1. Enter a passphrase and write your message.\n2. Click "Encrypt" to generate a secure QR code.\n3. Share or download the QR code.\n4. Use "Decrypt" to read messages from a QR code.\n\nFor more details, check the tutorial.`);
-});
+// Guardar la preferencia del usuario en localStorage
+const setDontShowAgain = () => {
+    localStorage.setItem('dontShowAgain', 'true');
+    closeTutorialModal();
+};
 
 // Función para mostrar y ocultar el mensaje "Coming Soon"
-function showComingSoonMessage() {
+const showComingSoonMessage = () => {
     domElements.comingSoonMessage.classList.add('visible');
     setTimeout(() => {
         domElements.comingSoonMessage.classList.remove('visible');
     }, 2000); // El mensaje desaparece después de 2 segundos
-}
+};
 
-// Event listeners para los botones
+// Event listeners
+document.addEventListener('DOMContentLoaded', showTutorialModal); // Mostrar modal al cargar la página
+domElements.closeTutorial.addEventListener('click', closeTutorialModal); // Cerrar modal al hacer clic en "Got it!"
+domElements.closeModalButton.addEventListener('click', closeTutorialModal); // Cerrar modal al hacer clic en la "X"
+domElements.dontShowAgain.addEventListener('click', setDontShowAgain); // Guardar preferencia y cerrar modal
+
+// Event listeners para los botones de "Coming Soon"
 domElements.scanButton.addEventListener('click', showComingSoonMessage);
 domElements.imageButton.addEventListener('click', showComingSoonMessage);
 domElements.pdfButton.addEventListener('click', showComingSoonMessage);
