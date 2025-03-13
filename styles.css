@@ -64,10 +64,12 @@ body {
     cursor: pointer;
     margin-right: 10px;
     transition: color 0.3s ease;
+    text-decoration: none; /* Eliminar subrayado */
 }
 
 .lock-icon:hover {
     color: #00b386;
+    text-decoration: none; /* Asegurar que no haya subrayado al pasar el mouse */
 }
 
 .main-grid { 
@@ -413,10 +415,22 @@ body {
     margin-top: 1rem;
 }
 
+#dont-show-again {
+    margin-top: 10px;
+    background: var(--secondary-color);
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+}
+
+#dont-show-again:hover {
+    background: var(--primary-color);
+    color: #1a1a1a;
+}
+
 /* Estilos para el mensaje "Coming Soon" */
 #coming-soon-message {
-    position: absolute; /* Cambiamos a posición absoluta */
-    bottom: -40px; /* Lo colocamos debajo de los botones */
+    position: absolute;
+    bottom: -40px;
     left: 50%;
     transform: translateX(-50%);
     background: var(--section-bg);
