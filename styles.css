@@ -64,7 +64,6 @@ body {
     cursor: pointer;
     margin-right: 10px;
     transition: color 0.3s ease;
-    text-decoration: none; /* Eliminar subrayado del enlace */
 }
 
 .lock-icon:hover {
@@ -416,8 +415,8 @@ body {
 
 /* Estilos para el mensaje "Coming Soon" */
 #coming-soon-message {
-    position: fixed;
-    bottom: 20px;
+    position: absolute; /* Cambiamos a posición absoluta */
+    bottom: -40px; /* Lo colocamos debajo de los botones */
     left: 50%;
     transform: translateX(-50%);
     background: var(--section-bg);
