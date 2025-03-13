@@ -10,7 +10,9 @@
 </head>
 <body>
     <div class="container">
-        <h1 class="logo">HUSHBOX</h1>
+        <h1 class="logo">
+            <i class="fas fa-lock lock-icon" id="lock-icon" title="Secure messaging"></i> HUSHBOX
+        </h1>
         <div class="main-grid">
             <div class="section encrypt-section">
                 <div class="input-group">
@@ -42,6 +44,10 @@
                     <a href="https://twitter.com/HUSHBOXonline" target="_blank" class="btn-icon social-icon twitter" title="Twitter">
                         <i class="fab fa-twitter"></i>
                     </a>
+                    <!-- Mensaje "Coming Soon" -->
+                    <div id="coming-soon-message" class="hidden">
+                        <p>Coming Soon!</p>
+                    </div>
                 </div>
 
                 <!-- Área de la cámara -->
@@ -54,7 +60,7 @@
                     <button id="send-button" class="btn-primary" aria-label="Encrypt message">
                         <i class="fas fa-lock"></i> Encrypt
                     </button>
-                    <button id="decode-button" class="btn-primary" aria-label="Decrypt message">
+                    <button id="decode-button" class="btn-primary" aria-label="Decrypt message" disabled>
                         <i class="fas fa-unlock"></i> Decrypt
                     </button>
                 </div>
@@ -86,10 +92,25 @@
         </div>
     </div>
 
+    <!-- Modal de tutorial -->
+    <div id="tutorial-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Welcome to HushBox!</h2>
+            <p>Here's how to use HushBox:</p>
+            <ol>
+                <li>Enter a secure passphrase and write your message.</li>
+                <li>Click "Encrypt" to generate a secure QR code.</li>
+                <li>Share or download the QR code.</li>
+                <li>Use "Decrypt" to read messages from a QR code.</li>
+            </ol>
+            <button id="close-tutorial" class="btn-primary">Got it!</button>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <script src="script.js"></script>
-    
 </body>
 </html>
