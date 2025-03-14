@@ -145,8 +145,7 @@ MIT License - See [LICENSE](LICENSE) file
 
 
 
-
-Aquí tienes un diagrama de flujo ampliado que incluye el intercambio a través de redes sociales:
+Here's the English version of the workflow diagram with social media integration:
 
 ```mermaid
 sequenceDiagram
@@ -156,45 +155,52 @@ sequenceDiagram
     participant HUSHBOX_B
     participant UserB
 
-    UserA->>HUSHBOX_A: 1. Write message + passphrase
-    HUSHBOX_A->>HUSHBOX_A: 2. Encrypt + Generate QR
-    HUSHBOX_A->>UserA: 3. Secured QR ready
+    UserA->>HUSHBOX_A: 1. Compose message + set passphrase
+    HUSHBOX_A->>HUSHBOX_A: 2. Encrypt & Generate Secured QR
+    HUSHBOX_A->>UserA: 3. Display Protected QR Code
     
-    UserA->>SocialMedia: 4. Upload QR to Twitter/Telegram
-    Note right of SocialMedia: Platform Agnostic Exchange
-    SocialMedia->>UserB: 5. See post with QR
+    UserA->>SocialMedia: 4. Share QR via Twitter/Telegram/Other
+    Note right of SocialMedia: Platform-Neutral Exchange
+    SocialMedia->>UserB: 5. Notification of QR Post
     
-    UserB->>HUSHBOX_B: 6. Download QR image
-    UserB->>HUSHBOX_B: 7. Enter passphrase (secure channel)
-    HUSHBOX_B->>HUSHBOX_B: 8. Decrypt message
-    HUSHBOX_B->>UserB: 9. Show decrypted content
+    UserB->>HUSHBOX_B: 6. Import QR from Social Media
+    UserB->>HUSHBOX_B: 7. Input Passphrase (via secure channel)
+    HUSHBOX_B->>HUSHBOX_B: 8. Validate & Decrypt Contents
+    HUSHBOX_B->>UserB: 9. Display Clear-Text Message
     
-    Note over UserA,UserB: Secure Passphrase Exchange via<br>Signal/Email/In-Person
-    Note over SocialMedia: Public QR Sharing<br>(Twitter DM/Telegram/Posts)
+    Note over UserA,UserB: Passphrase Exchange via<br>Signal/Encrypted Email/Physical Meet
+    Note over SocialMedia: Public QR Hosting<br>(Twitter DMs/Telegram Chats/Posts)
 ```
 
-**Flujo Detallado:**
-1. **Creación Segura:** 
-   - Usuario A escribe mensaje + passphrase fuerte
-   - HUSHBOX cifra y genera QR con marca temporal
+**Enhanced Workflow Explanation:**
 
-2. **Distribución Pública:**
-   - Sube QR a plataforma social (Twitter DM, Telegram, post público)
-   - El QR permanece cifrado/públicamente accesible
+1. **Secure Creation Phase:**
+   - User A crafts message + 15+ character passphrase
+   - HUSHBOX performs AES-256 encryption with time-stamped IV
+   - Generates branded QR with anti-scanning protection
 
-3. **Recepción Privada:**
-   - Usuario B descarga imagen QR desde la red social
-   - Introduce passphrase (previamente compartida por canal seguro)
-   - HUSHBOX verifica integridad y descifra contenido
+2. **Social Media Distribution:**
+   - User posts encrypted QR to chosen platform(s)
+   - Options: Twitter DM groups, Telegram channels, or public posts
+   - QR contains no metadata about sender/receiver
 
-4. **Protección Multi-capa:**
-   - Red Social: Solo transporta el QR cifrado
-   - Canal Secundario: Transmite passphrase (fuera de banda)
-   - TTL Automático: Los QRs contienen timestamp para caducidad
+3. **Cross-Platform Reception:**
+   - User B saves QR image from social platform
+   - Uses HUSHBOX to scan/upload the QR file
+   - Enters pre-shared passphrase (via separate secure channel)
 
-**Consideraciones de Seguridad en Redes Sociales:**
-- 🛡️ Nunca compartir passphrase en la misma plataforma
-- 🔄 Usar diferentes redes para QR y credenciales
-- ⏳ Configurar caducidad del post según sensibilidad
-- 🖼️ Usar formatos con pérdida (JPEG) para dificultar lectura automática
-- 📍 Publicar en canales privados/DM vs. público abierto
+4. **Multi-Layer Security:**
+   - Social Media: Acts as public transport layer only
+   - Secondary Channel: For passphrase exchange (e.g., Signal)
+   - Time-Based Protection: QR contains encrypted timestamp for expiration
+
+**Security Best Practices for Social Sharing:**
+- 🔒 Never share passphrase on same platform as QR
+- 🌐 Use different networks for QR and credential exchange
+- ⏳ Set post expiration where possible (e.g., Twitter Fleets)
+- 🖼️ Convert QR to lossy formats (JPEG) to hinder automated scanning
+- 🔗 Prefer private channels (DMs) over public posts
+- 📍 Add visual noise to QR background when posting publicly
+- ✉️ Split QR across multiple posts for high-sensitivity messages
+
+This workflow enables secure communication through untrusted platforms while maintaining E2E encryption through the combination of QR steganography and separate credential exchange.
