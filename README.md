@@ -177,25 +177,12 @@ HUSHBOX/
 - Secure error handling
 - CSP-compliant script loading
 
-## 🤝 Contributing
-
-We welcome security researchers and developers to help improve HUSHBOX:
-
-1. Fork repository
-2. Create feature branch (`git checkout -b feature/improvement`)
-3. Commit changes (`git commit -am 'Add security enhancement'`)
-4. Push to branch (`git push origin feature/improvement`)
-5. Open Pull Request
-
-Please report vulnerabilities via [security@hushbox.io](mailto:security@hushbox.io)
-
 ## 📜 License
 MIT License - See [LICENSE](LICENSE) file
 
 ## 🌐 Contact & Community
 - Official Telegram: [@HUSHBOX_QR](https://t.me/HUSHBOX_QR)
 - Twitter Updates: [@HUSHBOXonline](https://twitter.com/HUSHBOXonline)
-- Developer Blog: [hushbox.io/blog](https://hushbox.io/blog) *Coming Soon*
 
 ---
 
