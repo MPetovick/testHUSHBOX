@@ -64,6 +64,7 @@ Open `http://localhost:8000` in modern browser
 
 ## 🔄 Workflow Diagram
 
+**Basic Workflow:**
 ```mermaid
 sequenceDiagram
     participant UserA
@@ -77,7 +78,7 @@ sequenceDiagram
     UserB->>HUSHBOX: 5. Scan QR + Enter passphrase
     HUSHBOX->>UserB: 6. Decrypted message
 ```
-**Enhanced Workflow Explanation:**
+**SocialMedia Workflow:**
 
 ```mermaid
 sequenceDiagram
