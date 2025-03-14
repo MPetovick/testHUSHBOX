@@ -138,19 +138,6 @@ sequenceDiagram
 
 This workflow enables secure communication through untrusted platforms while maintaining E2E encryption through the combination of QR steganography and separate credential exchange.
 
-
-## 🖥️ Developer Guide
-
-### Encryption Process
-1. Passphrase validation (complexity rules)
-2. Cryptographic salt generation
-3. Key derivation (PBKDF2)
-4. Data compression (zlib)
-5. AES-GCM encryption
-6. HMAC signature
-7. Base64 encoding for QR
-
-
 ## ⚠️ Security Considerations
 
 ### Best Practices
