@@ -1,7 +1,5 @@
 # 🔒 HUSHBOX - Secure Messaging with QR Encryption 
 
-![HUSHBOX Demo](assets/hushbox-demo.gif) *Example of encryption/decryption flow*
-
 ## 🌟 Project Overview
 **HUSHBOX** is a privacy-first communication tool that combines military-grade encryption with QR code technology to enable secure message transmission. Designed for users who value digital privacy, it implements modern cryptographic standards to protect your communications from prying eyes.
 
