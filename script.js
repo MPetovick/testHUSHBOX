@@ -10,7 +10,9 @@ const CONFIG = {
     COMPRESSION_THRESHOLD: 100,
     MAX_QR_SIZE: 350,
     CAMERA_TIMEOUT: 30000,
-    DECRYPT_DELAY_INCREMENT: 100
+    DECRYPT_DELAY_INCREMENT: 100,
+    MAX_DECRYPT_ATTEMPTS: 5,
+    DECRYPT_COOLDOWN: 5 * 60 * 1000 // 5 minutos
 };
 
 // Elementos del DOM
@@ -131,6 +133,11 @@ const cryptoUtils = {
         if (uniqueChars < 5) {
             throw new Error('Passphrase should have at least 5 unique characters');
         }
+        // Evitar contraseñas comunes
+        const commonPasswords = ['password', '123456', 'qwerty', 'admin'];
+        if (commonPasswords.includes(passphrase.toLowerCase())) {
+            throw new Error('Passphrase is too common. Please choose a stronger one.');
+        }
         return true;
     },
 
@@ -228,6 +235,10 @@ const cryptoUtils = {
 
     decryptMessage: async (encryptedBase64, passphrase) => {
         try {
+            if (decryptAttempts >= CONFIG.MAX_DECRYPT_ATTEMPTS) {
+                throw new Error('Too many failed attempts. Please try again later.');
+            }
+
             const encryptedData = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
             const salt = encryptedData.slice(0, CONFIG.SALT_LENGTH);
             const iv = encryptedData.slice(CONFIG.SALT_LENGTH, CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH);
