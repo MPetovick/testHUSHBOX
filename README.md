@@ -80,6 +80,7 @@ sequenceDiagram
     UserB->>HUSHBOX: 5. Scan QR + Enter passphrase
     HUSHBOX->>UserB: 6. Decrypted message
 ```
+**Enhanced Workflow Explanation:**
 
 ```mermaid
 sequenceDiagram
@@ -105,8 +106,6 @@ sequenceDiagram
     Note over UserA,UserB: Passphrase Exchange via<br>Signal/Encrypted Email/Physical Meet
     Note over SocialMedia: Public QR Hosting<br>(Twitter DMs/Telegram Chats/Posts)
 ```
-
-**Enhanced Workflow Explanation:**
 
 1. **Secure Creation Phase:**
    - User A crafts message + 15+ character passphrase
