@@ -80,6 +80,7 @@ sequenceDiagram
     UserB->>HUSHBOX: 5. Scan QR + Enter passphrase
     HUSHBOX->>UserB: 6. Decrypted message
 ```
+
 ```mermaid
 sequenceDiagram
     participant UserA
