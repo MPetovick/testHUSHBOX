@@ -1,4 +1,4 @@
-# HUSHBOX - Secure Messaging with QR Encryption 🔒
+# 🔒 HUSHBOX - Secure Messaging with QR Encryption 
 
 ![HUSHBOX Demo](assets/hushbox-demo.gif) *Example of encryption/decryption flow*
 
