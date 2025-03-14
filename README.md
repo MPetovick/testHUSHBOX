@@ -151,15 +151,6 @@ This workflow enables secure communication through untrusted platforms while mai
 6. HMAC signature
 7. Base64 encoding for QR
 
-### Code Structure
-```
-HUSHBOX/
-├── index.html          - Main application interface
-├── styles.css          - Responsive styling
-├── script.js           - Core encryption logic
-├── manifest.json       - PWA configuration
-└── assets/             - Icons & branding
-```
 
 ## ⚠️ Security Considerations
 
