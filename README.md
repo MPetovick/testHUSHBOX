@@ -61,9 +61,8 @@ python3 -m http.server 8000
 ```
 Open `http://localhost:8000` in modern browser
 
-### Web Version
-Access live demo:  
-[https://mpetovick.github.io/HUSHBOX](https://mpetovick.github.io/HUSHBOX)
+### Web Version  
+[https://www.hushbox.online](https://mpetovick.github.io/HUSHBOX)
 
 ## 🔄 Workflow Diagram
 
