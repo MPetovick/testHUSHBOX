@@ -80,6 +80,64 @@ sequenceDiagram
     UserB->>HUSHBOX: 5. Scan QR + Enter passphrase
     HUSHBOX->>UserB: 6. Decrypted message
 ```
+```mermaid
+sequenceDiagram
+    participant UserA
+    participant HUSHBOX_A
+    participant SocialMedia
+    participant HUSHBOX_B
+    participant UserB
+
+    UserA->>HUSHBOX_A: 1. Compose message + set passphrase
+    HUSHBOX_A->>HUSHBOX_A: 2. Encrypt & Generate Secured QR
+    HUSHBOX_A->>UserA: 3. Display Protected QR Code
+    
+    UserA->>SocialMedia: 4. Share QR via Twitter/Telegram/Other
+    Note right of SocialMedia: Platform-Neutral Exchange
+    SocialMedia->>UserB: 5. Notification of QR Post
+    
+    UserB->>HUSHBOX_B: 6. Import QR from Social Media
+    UserB->>HUSHBOX_B: 7. Input Passphrase (via secure channel)
+    HUSHBOX_B->>HUSHBOX_B: 8. Validate & Decrypt Contents
+    HUSHBOX_B->>UserB: 9. Display Clear-Text Message
+    
+    Note over UserA,UserB: Passphrase Exchange via<br>Signal/Encrypted Email/Physical Meet
+    Note over SocialMedia: Public QR Hosting<br>(Twitter DMs/Telegram Chats/Posts)
+```
+
+**Enhanced Workflow Explanation:**
+
+1. **Secure Creation Phase:**
+   - User A crafts message + 15+ character passphrase
+   - HUSHBOX performs AES-256 encryption with time-stamped IV
+   - Generates branded QR with anti-scanning protection
+
+2. **Social Media Distribution:**
+   - User posts encrypted QR to chosen platform(s)
+   - Options: Twitter DM groups, Telegram channels, or public posts
+   - QR contains no metadata about sender/receiver
+
+3. **Cross-Platform Reception:**
+   - User B saves QR image from social platform
+   - Uses HUSHBOX to scan/upload the QR file
+   - Enters pre-shared passphrase (via separate secure channel)
+
+4. **Multi-Layer Security:**
+   - Social Media: Acts as public transport layer only
+   - Secondary Channel: For passphrase exchange (e.g., Signal)
+   - Time-Based Protection: QR contains encrypted timestamp for expiration
+
+**Security Best Practices for Social Sharing:**
+- 🔒 Never share passphrase on same platform as QR
+- 🌐 Use different networks for QR and credential exchange
+- ⏳ Set post expiration where possible (e.g., Twitter Fleets)
+- 🖼️ Convert QR to lossy formats (JPEG) to hinder automated scanning
+- 🔗 Prefer private channels (DMs) over public posts
+- 📍 Add visual noise to QR background when posting publicly
+- ✉️ Split QR across multiple posts for high-sensitivity messages
+
+This workflow enables secure communication through untrusted platforms while maintaining E2E encryption through the combination of QR steganography and separate credential exchange.
+
 
 ## 🖥️ Developer Guide
 
@@ -145,62 +203,5 @@ MIT License - See [LICENSE](LICENSE) file
 
 
 
-Here's the English version of the workflow diagram with social media integration:
 
-```mermaid
-sequenceDiagram
-    participant UserA
-    participant HUSHBOX_A
-    participant SocialMedia
-    participant HUSHBOX_B
-    participant UserB
 
-    UserA->>HUSHBOX_A: 1. Compose message + set passphrase
-    HUSHBOX_A->>HUSHBOX_A: 2. Encrypt & Generate Secured QR
-    HUSHBOX_A->>UserA: 3. Display Protected QR Code
-    
-    UserA->>SocialMedia: 4. Share QR via Twitter/Telegram/Other
-    Note right of SocialMedia: Platform-Neutral Exchange
-    SocialMedia->>UserB: 5. Notification of QR Post
-    
-    UserB->>HUSHBOX_B: 6. Import QR from Social Media
-    UserB->>HUSHBOX_B: 7. Input Passphrase (via secure channel)
-    HUSHBOX_B->>HUSHBOX_B: 8. Validate & Decrypt Contents
-    HUSHBOX_B->>UserB: 9. Display Clear-Text Message
-    
-    Note over UserA,UserB: Passphrase Exchange via<br>Signal/Encrypted Email/Physical Meet
-    Note over SocialMedia: Public QR Hosting<br>(Twitter DMs/Telegram Chats/Posts)
-```
-
-**Enhanced Workflow Explanation:**
-
-1. **Secure Creation Phase:**
-   - User A crafts message + 15+ character passphrase
-   - HUSHBOX performs AES-256 encryption with time-stamped IV
-   - Generates branded QR with anti-scanning protection
-
-2. **Social Media Distribution:**
-   - User posts encrypted QR to chosen platform(s)
-   - Options: Twitter DM groups, Telegram channels, or public posts
-   - QR contains no metadata about sender/receiver
-
-3. **Cross-Platform Reception:**
-   - User B saves QR image from social platform
-   - Uses HUSHBOX to scan/upload the QR file
-   - Enters pre-shared passphrase (via separate secure channel)
-
-4. **Multi-Layer Security:**
-   - Social Media: Acts as public transport layer only
-   - Secondary Channel: For passphrase exchange (e.g., Signal)
-   - Time-Based Protection: QR contains encrypted timestamp for expiration
-
-**Security Best Practices for Social Sharing:**
-- 🔒 Never share passphrase on same platform as QR
-- 🌐 Use different networks for QR and credential exchange
-- ⏳ Set post expiration where possible (e.g., Twitter Fleets)
-- 🖼️ Convert QR to lossy formats (JPEG) to hinder automated scanning
-- 🔗 Prefer private channels (DMs) over public posts
-- 📍 Add visual noise to QR background when posting publicly
-- ✉️ Split QR across multiple posts for high-sensitivity messages
-
-This workflow enables secure communication through untrusted platforms while maintaining E2E encryption through the combination of QR steganography and separate credential exchange.
