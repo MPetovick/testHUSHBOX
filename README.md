@@ -161,8 +161,8 @@ MIT License - See [LICENSE](LICENSE) file
 ---
 
 **HUSHBOX** - Your Digital Privacy Vault 🔏  
-Because your secrets deserve better than the cloud ☁️❌
-Zero-trust encryption that never relies on third-party servers
+Because your secrets deserve better than the cloud ☁️✔
+
 
 
 
