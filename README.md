@@ -142,3 +142,59 @@ MIT License - See [LICENSE](LICENSE) file
 
 **HUSHBOX** - Your Digital Privacy Vault 🔏  
 *Because your secrets deserve better than the cloud* ☁️❌
+
+
+
+
+Aquí tienes un diagrama de flujo ampliado que incluye el intercambio a través de redes sociales:
+
+```mermaid
+sequenceDiagram
+    participant UserA
+    participant HUSHBOX_A
+    participant SocialMedia
+    participant HUSHBOX_B
+    participant UserB
+
+    UserA->>HUSHBOX_A: 1. Write message + passphrase
+    HUSHBOX_A->>HUSHBOX_A: 2. Encrypt + Generate QR
+    HUSHBOX_A->>UserA: 3. Secured QR ready
+    
+    UserA->>SocialMedia: 4. Upload QR to Twitter/Telegram
+    Note right of SocialMedia: Platform Agnostic Exchange
+    SocialMedia->>UserB: 5. See post with QR
+    
+    UserB->>HUSHBOX_B: 6. Download QR image
+    UserB->>HUSHBOX_B: 7. Enter passphrase (secure channel)
+    HUSHBOX_B->>HUSHBOX_B: 8. Decrypt message
+    HUSHBOX_B->>UserB: 9. Show decrypted content
+    
+    Note over UserA,UserB: Secure Passphrase Exchange via<br>Signal/Email/In-Person
+    Note over SocialMedia: Public QR Sharing<br>(Twitter DM/Telegram/Posts)
+```
+
+**Flujo Detallado:**
+1. **Creación Segura:** 
+   - Usuario A escribe mensaje + passphrase fuerte
+   - HUSHBOX cifra y genera QR con marca temporal
+
+2. **Distribución Pública:**
+   - Sube QR a plataforma social (Twitter DM, Telegram, post público)
+   - El QR permanece cifrado/públicamente accesible
+
+3. **Recepción Privada:**
+   - Usuario B descarga imagen QR desde la red social
+   - Introduce passphrase (previamente compartida por canal seguro)
+   - HUSHBOX verifica integridad y descifra contenido
+
+4. **Protección Multi-capa:**
+   - Red Social: Solo transporta el QR cifrado
+   - Canal Secundario: Transmite passphrase (fuera de banda)
+   - TTL Automático: Los QRs contienen timestamp para caducidad
+
+**Consideraciones de Seguridad en Redes Sociales:**
+- 🛡️ Nunca compartir passphrase en la misma plataforma
+- 🔄 Usar diferentes redes para QR y credenciales
+- ⏳ Configurar caducidad del post según sensibilidad
+- 🖼️ Usar formatos con pérdida (JPEG) para dificultar lectura automática
+- 📍 Publicar en canales privados/DM vs. público abierto
