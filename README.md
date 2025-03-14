@@ -155,8 +155,8 @@ This workflow enables secure communication through untrusted platforms while mai
 MIT License - See [LICENSE](LICENSE) file
 
 ## 🌐 Contact & Community
-- Official Telegram: [@HUSHBOX_QR](https://t.me/HUSHBOX_QR)
-- Twitter Updates: [@HUSHBOXonline](https://twitter.com/HUSHBOXonline)
+- Telegram: [@HUSHBOX_QR](https://t.me/HUSHBOX_QR)
+- Twitter: [@HUSHBOXonline](https://twitter.com/HUSHBOXonline)
 
 ---
 
