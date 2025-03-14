@@ -21,7 +21,7 @@ Key Characteristics:
 - Responsive design with mobile-first approach
 - Real-time passphrase strength indicators
 - Animated QR codes with custom branding
-- Camera QR scanning (mobile devices)
+- Camera QR scanning (mobile devices) *Coming Soon
 - Social media integration for secure sharing
 
 ### 🛡️ Advanced Protections
