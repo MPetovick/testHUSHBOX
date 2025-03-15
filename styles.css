@@ -64,12 +64,12 @@ body {
     cursor: pointer;
     margin-right: 10px;
     transition: color 0.3s ease;
-    text-decoration: none; /* Eliminar subrayado */
+    text-decoration: none;
 }
 
 .lock-icon:hover {
     color: #00b386;
-    text-decoration: none; /* Asegurar que no haya subrayado al pasar el mouse */
+    text-decoration: none;
 }
 
 .main-grid { 
@@ -334,14 +334,31 @@ body {
     box-shadow: 0 4px 8px var(--glow-color);
 }
 
-#camera-container {
+#camera-modal {
     display: none;
-    margin-bottom: 1rem;
-    text-align: center;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    justify-content: center;
+    align-items: center;
 }
 
-#camera-container.hidden {
+#camera-modal.hidden {
     display: none;
+}
+
+#camera-modal .modal-content {
+    background: var(--section-bg);
+    padding: 2rem;
+    border-radius: 15px;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+    position: relative;
 }
 
 #camera-preview {
@@ -350,6 +367,21 @@ body {
     border-radius: 12px;
     border: 2px solid var(--primary-color);
     background: var(--secondary-color);
+}
+
+#stop-camera-button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: var(--error-color);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#stop-camera-button:hover {
+    background: #cc0000;
 }
 
 .action-buttons {
@@ -457,32 +489,32 @@ body {
 /* Media Queries para móviles */
 @media (max-width: 768px) {
     .main-grid {
-        grid-template-columns: 1fr; /* Una sola columna en móviles */
+        grid-template-columns: 1fr;
     }
 
     .logo {
-        animation: none; /* Desactivar animaciones en móviles */
+        animation: none;
     }
 
     .logo::after {
-        animation: none; /* Desactivar animaciones en móviles */
+        animation: none;
     }
 
     .container {
-        padding: 1rem; /* Reducir padding en móviles */
+        padding: 1rem;
     }
 
     .btn-primary {
-        padding: 1rem; /* Aumentar padding en móviles */
-        font-size: 1rem; /* Aumentar tamaño de fuente */
+        padding: 1rem;
+        font-size: 1rem;
     }
 
     #qr-canvas {
-        max-height: 250px; /* Reducir altura máxima del QR */
+        max-height: 250px;
     }
 
     #coming-soon-message {
-        font-size: 0.9rem; /* Reducir tamaño de fuente */
-        padding: 8px 16px; /* Reducir padding */
+        font-size: 0.9rem;
+        padding: 8px 16px;
     }
 }
