@@ -1,6 +1,6 @@
 // Configuración global para parámetros criptográficos
 const CONFIG = {
-    PBKDF2_ITERATIONS: 250000,
+    PBKDF2_ITERATIONS: 600000,
     SALT_LENGTH: 32,
     IV_LENGTH: 12,
     AES_KEY_LENGTH: 256,
