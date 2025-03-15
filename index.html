@@ -31,7 +31,7 @@
                     <button id="upload-arrow-button" class="btn-icon" title="Upload Image">
                         <i class="fas fa-arrow-up"></i>
                     </button>
-                    <button id="scan-button" class="btn-icon" title="Scan QR" disabled>
+                    <button id="scan-button" class="btn-icon" title="Scan QR">
                         <i class="fas fa-camera"></i>
                     </button>
                     <button id="image-button" class="btn-icon" title="Upload QR Image" disabled>
@@ -53,8 +53,11 @@
                 </div>
 
                 <!-- Área de la cámara -->
-                <div id="camera-container" class="hidden">
-                    <video id="camera-preview" autoplay></video>
+                <div id="camera-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <video id="camera-preview" autoplay playsinline></video>
+                        <button id="stop-camera-button" class="btn btn-danger">Stop Camera</button>
+                    </div>
                 </div>
 
                 <!-- Botones Encrypt y Decrypt en la misma fila -->
