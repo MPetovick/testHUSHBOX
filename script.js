@@ -40,6 +40,23 @@ const domElements = {
     loginIcon: document.getElementById('login-icon') // Nuevo ícono de login
 };
 
+//charCounter
+const messageInput = document.getElementById('message-input');
+const charCounter = document.getElementById('char-counter');
+
+messageInput.addEventListener('input', () => {
+    const currentLength = messageInput.value.length;
+    const maxLength = messageInput.getAttribute('maxlength');
+    charCounter.textContent = `${currentLength}/${maxLength}`;
+
+    // Cambiar el color del contador si se acerca al límite
+    if (currentLength >= maxLength * 0.9) {
+        charCounter.style.color = 'var(--error-color)';
+    } else {
+        charCounter.style.color = 'rgba(160, 160, 160, 0.8)';
+    }
+});
+
 // Input oculto para la carga de imágenes
 const fileInput = document.createElement('input');
 fileInput.type = 'file';
