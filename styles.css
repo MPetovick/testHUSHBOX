@@ -564,8 +564,7 @@ body {
     bottom: 0.5rem;
     font-size: 0.8rem;
     color: rgba(160, 160, 160, 0.8);
-    background: var(--section-bg);
-    padding: 0.2rem 0.5rem;
-    border-radius: 5px;
-    pointer-events: none; /* Evita que el contador interfiera con el textarea */
+    /* Eliminamos el fondo y el borde redondeado */
+    padding: 0; /* Quitamos el padding para que no haya espacio extra */
+    pointer-events: none;
 }
