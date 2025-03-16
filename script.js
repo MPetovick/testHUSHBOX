@@ -1,4 +1,4 @@
-// Configuración global
+// Configuración global para parámetros criptográficos
 const CONFIG = {
     PBKDF2_ITERATIONS: 250000,
     SALT_LENGTH: 32,
@@ -36,8 +36,7 @@ const domElements = {
     closeTutorial: document.getElementById('close-tutorial'),
     dontShowAgain: document.getElementById('dont-show-again'),
     closeModalButton: document.querySelector('.close-modal'),
-    comingSoonMessage: document.getElementById('coming-soon-message'),
-    stopCameraButton: document.getElementById('stop-camera-button')
+    comingSoonMessage: document.getElementById('coming-soon-message')
 };
 
 // Input oculto para la carga de imágenes
@@ -47,12 +46,21 @@ fileInput.accept = 'image/*';
 fileInput.style.display = 'none';
 document.body.appendChild(fileInput);
 
+// Canvas oculto para procesar el video
+const scanCanvas = document.createElement('canvas');
+const scanContext = scanCanvas.getContext('2d');
+scanCanvas.style.display = 'none';
+document.body.appendChild(scanCanvas);
+
 // Variables para protección contra fuerza bruta
 let decryptAttempts = 0;
 let cameraTimeoutId = null;
 
 // Verificar si el usuario ha elegido no mostrar el modal nuevamente
-const shouldShowModal = () => localStorage.getItem('dontShowAgain') !== 'true';
+const shouldShowModal = () => {
+    const dontShowAgain = localStorage.getItem('dontShowAgain');
+    return dontShowAgain !== 'true';
+};
 
 // Mostrar el modal si es necesario
 const showTutorialModal = () => {
@@ -80,11 +88,13 @@ const showComingSoonMessage = () => {
     }, 2000);
 };
 
-// Event listeners iniciales
+// Event listeners
 document.addEventListener('DOMContentLoaded', showTutorialModal);
 domElements.closeTutorial.addEventListener('click', closeTutorialModal);
 domElements.closeModalButton.addEventListener('click', closeTutorialModal);
 domElements.dontShowAgain.addEventListener('click', setDontShowAgain);
+
+// Event listeners para los botones de "Coming Soon"
 domElements.scanButton.addEventListener('click', showComingSoonMessage);
 domElements.imageButton.addEventListener('click', showComingSoonMessage);
 domElements.pdfButton.addEventListener('click', showComingSoonMessage);
@@ -99,7 +109,11 @@ domElements.decodeButton.disabled = true;
 
 // Habilitar decodeButton cuando se cargue un archivo
 fileInput.addEventListener('change', () => {
-    domElements.decodeButton.disabled = fileInput.files.length === 0;
+    if (fileInput.files.length > 0) {
+        domElements.decodeButton.disabled = false;
+    } else {
+        domElements.decodeButton.disabled = true;
+    }
 });
 
 // Utilidades criptográficas
@@ -270,6 +284,9 @@ const uiController = {
             <div class="message-content">${content}</div>
             <div class="message-time">${new Date().toLocaleTimeString()}</div>
         `;
+        if (!isSent) {
+            domElements.messagesDiv.querySelector('.message-placeholder')?.remove();
+        }
         domElements.messagesDiv.appendChild(messageEl);
         domElements.messagesDiv.scrollTop = domElements.messagesDiv.scrollHeight;
     },
@@ -500,82 +517,59 @@ const handlers = {
         }
     },
 
-    startCamera: async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            domElements.cameraPreview.srcObject = stream;
-            domElements.cameraContainer.classList.remove('hidden');
-        } catch (error) {
-            console.error('Error accessing camera:', error);
-            uiController.displayMessage('Failed to access camera. Please ensure permissions are granted.', false);
-        }
-    },
-
     stopCamera: () => {
         const stream = domElements.cameraPreview.srcObject;
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
             domElements.cameraPreview.srcObject = null;
             domElements.cameraContainer.classList.add('hidden');
-        }
-    },
-
-    scanQRCode: () => {
-        const video = domElements.cameraPreview;
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-
-        const scanFrame = () => {
-            if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
-
-                if (qrCode) {
-                    handlers.stopCamera();
-                    handlers.handleDecryptedQR(qrCode.data);
-                } else {
-                    requestAnimationFrame(scanFrame);
-                }
-            } else {
-                requestAnimationFrame(scanFrame);
+            if (cameraTimeoutId) {
+                clearTimeout(cameraTimeoutId);
+                cameraTimeoutId = null;
             }
-        };
-
-        requestAnimationFrame(scanFrame);
+        }
     },
 
-    handleDecryptedQR: async (encryptedData) => {
-        const passphrase = domElements.passphraseInput.value.trim();
-
-        if (!passphrase) {
-            uiController.displayMessage('Please enter a passphrase to decrypt the message.', false);
-            return;
-        }
-
-        try {
-            const decryptedMessage = await cryptoUtils.decryptMessage(encryptedData, passphrase);
-            uiController.displayMessage(`Decrypted: ${decryptedMessage}`, false);
-        } catch (error) {
-            console.error('Decryption error:', error);
-            uiController.displayMessage('Decryption failed. Wrong passphrase or tampered data?', false);
-        }
+    handleUploadArrow: () => {
+        fileInput.click();
     }
 };
 
 // Event listeners
-domElements.uploadArrowButton.addEventListener('click', () => fileInput.click());
+domElements.uploadArrowButton.addEventListener('click', handlers.handleUploadArrow);
 domElements.sendButton.addEventListener('click', handlers.handleEncrypt);
 domElements.decodeButton.addEventListener('click', handlers.handleDecrypt);
 domElements.downloadButton.addEventListener('click', handlers.handleDownload);
 domElements.shareButton.addEventListener('click', handlers.handleShare);
-domElements.scanButton.addEventListener('click', async () => {
-    await handlers.startCamera();
-    handlers.scanQRCode();
+fileInput.addEventListener('change', handlers.handleDecrypt);
+
+// Validación visual de la passphrase
+domElements.passphraseInput.addEventListener('input', (e) => {
+    const passphrase = e.target.value;
+    const keyIcon = domElements.passphraseInput.parentElement.querySelector('.icon');
+
+    if (passphrase.length === 0) {
+        keyIcon.style.color = 'rgba(160, 160, 160, 0.6)';
+    } else if (passphrase.length < CONFIG.MIN_PASSPHRASE_LENGTH) {
+        keyIcon.style.color = 'var(--error-color)';
+    } else {
+        try {
+            cryptoUtils.validatePassphrase(passphrase);
+            keyIcon.style.color = 'var(--success-color)';
+        } catch (error) {
+            keyIcon.style.color = 'var(--error-color)';
+        }
+    }
 });
-domElements.stopCameraButton.addEventListener('click', handlers.stopCamera);
+
+// Detener la cámara al salir de la página si está activa
+window.addEventListener('beforeunload', (e) => {
+    if (domElements.cameraPreview.srcObject) {
+        e.preventDefault();
+        e.returnValue = 'Camera is active. Are you sure you want to leave?';
+        handlers.stopCamera();
+    }
+});
 
 // Inicialización
 domElements.qrContainer.classList.add('hidden');
