@@ -1,12 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+    <!-- Meta Tags -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="HUSHBOX is a privacy-focused tool for secure messaging using advanced encryption and QR codes. Simple and functional, it requires both users to share a password externally for secure transmission. Built upon SHUMZU.">
+  
+    <!-- Title and Icons -->
     <title>HushBox - Secure Messaging with QR</title>
+    <link rel="icon" href="/HUSHBOX/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/HUSHBOX/assets/favicon.png" type="image/png" sizes="any">
+    <link rel="icon" href="/HUSHBOX/assets/icons/android-icon-192x192.png" type="image/png" sizes="192x192">
+    <link rel="apple-touch-icon" href="/HUSHBOX/assets/apple-touch-icon-180x180.png" sizes="180x180">
+    <link rel="apple-touch-icon" href="/HUSHBOX/assets/apple-touch-icon-152x152.png" sizes="152x152">
+    <link rel="apple-touch-icon" href="/HUSHBOX/assets/apple-touch-icon-120x120.png" sizes="120x120">
+    <link rel="manifest" href="/HUSHBOX/manifest.json">
+
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
 </head>
 <body>
     <div class="container">
@@ -31,7 +42,7 @@
                     <button id="upload-arrow-button" class="btn-icon" title="Upload Image">
                         <i class="fas fa-arrow-up"></i>
                     </button>
-                    <button id="scan-button" class="btn-icon" title="Scan QR">
+                    <button id="scan-button" class="btn-icon" title="Scan QR" disabled>
                         <i class="fas fa-camera"></i>
                     </button>
                     <button id="image-button" class="btn-icon" title="Upload QR Image" disabled>
@@ -40,7 +51,7 @@
                     <button id="pdf-button" class="btn-icon" title="Upload PDF" disabled>
                         <i class="fas fa-file-pdf"></i>
                     </button>
-                    <a href="https://t.me/HUSHBOXbot" target="_blank" class="btn-icon social-icon telegram" title="Telegram">
+                    <a href="https://t.me/HUSHBOX_QR" target="_blank" class="btn-icon social-icon telegram" title="Telegram">
                         <i class="fab fa-telegram-plane"></i>
                     </a>
                     <a href="https://twitter.com/HUSHBOXonline" target="_blank" class="btn-icon social-icon twitter" title="Twitter">
@@ -53,11 +64,8 @@
                 </div>
 
                 <!-- Área de la cámara -->
-                <div id="camera-modal" class="modal hidden">
-                    <div class="modal-content">
-                        <video id="camera-preview" autoplay playsinline></video>
-                        <button id="stop-camera-button" class="btn btn-danger">Stop Camera</button>
-                    </div>
+                <div id="camera-container" class="hidden">
+                    <video id="camera-preview" autoplay></video>
                 </div>
 
                 <!-- Botones Encrypt y Decrypt en la misma fila -->
