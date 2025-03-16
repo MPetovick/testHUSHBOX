@@ -253,8 +253,9 @@ body {
     flex-direction: column;
     justify-content: flex-start;
     overflow-x: hidden;
-    overflow-y: auto;
-    min-height: 200px;
+    overflow-y: auto; /* Permitir scroll vertical */
+    min-height: 200px; /* Mantener el tamaño mínimo actual */
+    max-height: 280px; /* Limitar a la altura aproximada de 7 mensajes */
 }
 
 .message {
