@@ -29,7 +29,7 @@
             </a> HUSHBOX
         </h1>
         <a href="#" id="login-icon" class="login-icon" title="Login">
-            <i class="fas fa-key"></i>
+            <i class="fas fa-user-circle"></i>
         </a>
     </header>
 
@@ -43,8 +43,9 @@
                     <i class="fas fa-key icon"></i>
                 </div>
                 <div class="input-group">
-                    <textarea id="message-input" placeholder="Write your secure message..." rows="4"></textarea>
+                    <textarea id="message-input" placeholder="Write your secure message..." rows="4" maxlength="2000"></textarea>
                     <i class="fas fa-comment-dots icon"></i>
+                <div id="char-counter" class="char-counter">0/2000</div>
                 </div>
 
                 <!-- Botones de acción con íconos -->
