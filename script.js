@@ -56,6 +56,14 @@ document.body.appendChild(scanCanvas);
 let decryptAttempts = 0;
 let cameraTimeoutId = null;
 
+// Función para limpiar un ArrayBuffer o Uint8Array
+const clearBuffer = (buffer) => {
+    if (buffer instanceof ArrayBuffer || buffer instanceof Uint8Array) {
+        const zeros = new Uint8Array(buffer.length);
+        buffer.set(zeros);
+    }
+};
+
 // Verificar si el usuario ha elegido no mostrar el modal nuevamente
 const shouldShowModal = () => {
     const dontShowAgain = localStorage.getItem('dontShowAgain');
@@ -136,6 +144,10 @@ const cryptoUtils = {
         if (commonPasswords.includes(passphrase.toLowerCase())) {
             throw new Error('Passphrase is too common. Please choose a stronger one.');
         }
+        const dangerousChars = /[<>'"&\\/]/;
+        if (dangerousChars.test(passphrase)) {
+            throw new Error('Passphrase contains invalid characters.');
+        }
         return true;
     },
 
@@ -185,20 +197,30 @@ const cryptoUtils = {
             ['sign', 'verify']
         );
 
-        derivedBitsArray.fill(0);
+        clearBuffer(derivedBitsArray); // Limpiar la memoria
         return { aesKey, hmacKey };
     },
 
     encryptMessage: async (message, passphrase) => {
+        let dataToEncrypt = null;
+        let salt = null;
+        let iv = null;
+        let aesKey = null;
+        let hmacKey = null;
+
         try {
             cryptoUtils.validatePassphrase(passphrase);
-            let dataToEncrypt = cryptoUtils.stringToArrayBuffer(message);
+            dataToEncrypt = cryptoUtils.stringToArrayBuffer(message);
+
             if (message.length > CONFIG.COMPRESSION_THRESHOLD) {
                 dataToEncrypt = pako.deflate(dataToEncrypt, { level: 6 });
             }
-            const salt = crypto.getRandomValues(new Uint8Array(CONFIG.SALT_LENGTH));
-            const iv = cryptoUtils.generateIV();
-            const { aesKey, hmacKey } = await cryptoUtils.deriveKeyPair(passphrase, salt);
+
+            salt = crypto.getRandomValues(new Uint8Array(CONFIG.SALT_LENGTH));
+            iv = cryptoUtils.generateIV();
+            const { aesKey: derivedAesKey, hmacKey: derivedHmacKey } = await cryptoUtils.deriveKeyPair(passphrase, salt);
+            aesKey = derivedAesKey;
+            hmacKey = derivedHmacKey;
 
             const encrypted = await crypto.subtle.encrypt(
                 { name: 'AES-GCM', iv },
@@ -222,24 +244,35 @@ const cryptoUtils = {
         } catch (error) {
             throw new Error('Encryption failed: ' + error.message);
         } finally {
-            passphrase = null;
-            dataToEncrypt = null;
+            // Limpiar buffers sensibles
+            if (dataToEncrypt) clearBuffer(dataToEncrypt);
+            if (salt) clearBuffer(salt);
+            if (iv) clearBuffer(iv);
+            passphrase = null; // Eliminar la referencia a la passphrase
         }
     },
 
     decryptMessage: async (encryptedBase64, passphrase) => {
+        let salt = null;
+        let iv = null;
+        let aesKey = null;
+        let hmacKey = null;
+        let decrypted = null;
+
         try {
             if (decryptAttempts >= CONFIG.MAX_DECRYPT_ATTEMPTS) {
                 throw new Error('Too many failed attempts. Please try again later.');
             }
 
             const encryptedData = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
-            const salt = encryptedData.slice(0, CONFIG.SALT_LENGTH);
-            const iv = encryptedData.slice(CONFIG.SALT_LENGTH, CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH);
+            salt = encryptedData.slice(0, CONFIG.SALT_LENGTH);
+            iv = encryptedData.slice(CONFIG.SALT_LENGTH, CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH);
             const ciphertext = encryptedData.slice(CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH, -32);
             const hmac = encryptedData.slice(-32);
 
-            const { aesKey, hmacKey } = await cryptoUtils.deriveKeyPair(passphrase, salt);
+            const { aesKey: derivedAesKey, hmacKey: derivedHmacKey } = await cryptoUtils.deriveKeyPair(passphrase, salt);
+            aesKey = derivedAesKey;
+            hmacKey = derivedHmacKey;
 
             const isValid = await crypto.subtle.verify(
                 'HMAC',
@@ -252,7 +285,7 @@ const cryptoUtils = {
                 throw new Error('Integrity check failed: Data has been tampered with');
             }
 
-            const decrypted = await crypto.subtle.decrypt(
+            decrypted = await crypto.subtle.decrypt(
                 { name: 'AES-GCM', iv },
                 aesKey,
                 ciphertext
@@ -270,7 +303,11 @@ const cryptoUtils = {
             await new Promise(resolve => setTimeout(resolve, decryptAttempts * CONFIG.DECRYPT_DELAY_INCREMENT));
             throw new Error('Decryption failed: ' + error.message);
         } finally {
-            passphrase = null;
+            // Limpiar buffers sensibles
+            if (salt) clearBuffer(salt);
+            if (iv) clearBuffer(iv);
+            if (decrypted) clearBuffer(decrypted);
+            passphrase = null; // Eliminar la referencia a la passphrase
         }
     }
 };
