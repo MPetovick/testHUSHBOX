@@ -555,3 +555,15 @@ body {
     transform: translateY(-2px); /* Efecto de levantar el ícono */
     box-shadow: none; /* Eliminar la sombra */
 }
+
+.char-counter {
+    position: absolute;
+    right: 1rem;
+    bottom: 0.5rem;
+    font-size: 0.8rem;
+    color: rgba(160, 160, 160, 0.8);
+    background: var(--section-bg);
+    padding: 0.2rem 0.5rem;
+    border-radius: 5px;
+    pointer-events: none; /* Evita que el contador interfiera con el textarea */
+}
