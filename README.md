@@ -79,7 +79,7 @@ sequenceDiagram
     HUSHBOX->>HUSHBOX: 7. Decrypt data
     HUSHBOX->>User: 8. Display decrypted data
 ```
-**Basic Workflow:**
+**Offline Workflow:**
 ```mermaid
 sequenceDiagram
     participant UserA
@@ -93,7 +93,7 @@ sequenceDiagram
     UserB->>HUSHBOX: 5. Scan QR + Enter passphrase
     HUSHBOX->>UserB: 6. Decrypted message
 ```
-**SocialMedia Workflow:**
+**Online Workflow:**
 
 ```mermaid
 sequenceDiagram
