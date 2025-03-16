@@ -46,18 +46,6 @@ body {
     position: relative; /* Añadimos esto para mayor control */
 }
 
-.logo::after {
-    content: '';
-    position: absolute;
-    left: 55%;
-    bottom: -10px; /* Ajusta esta distancia según necesites */
-    width: 100%;
-    height: 2px;
-    background: var(--primary-color);
-    transform: translateX(-50%);
-    animation: lineGlow 4s infinite;
-}
-
 .lock-icon {
     font-size: 0.8em;
     color: var(--primary-color);
