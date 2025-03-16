@@ -34,6 +34,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 1rem;
+    position: relative; /* Añadimos esto para que sea el contenedor de referencia */
 }
 
 .logo {
@@ -42,13 +43,14 @@ body {
     letter-spacing: clamp(2px, 0.5vw, 4px);
     text-shadow: 0 0 10px var(--glow-color);
     animation: pulseGlow 4s infinite;
+    position: relative; /* Añadimos esto para mayor control */
 }
 
 .logo::after {
     content: '';
     position: absolute;
     left: 50%;
-    bottom: -10px;
+    bottom: -10px; /* Ajusta esta distancia según necesites */
     width: 60%;
     height: 2px;
     background: var(--primary-color);
