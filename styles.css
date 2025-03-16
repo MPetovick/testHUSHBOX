@@ -255,7 +255,7 @@ body {
     overflow-x: hidden;
     overflow-y: auto; /* Permitir scroll vertical */
     min-height: 200px; /* Mantener el tamaño mínimo actual */
-    max-height: 280px; /* Limitar a la altura aproximada de 7 mensajes */
+    max-height: 400px; /* Limitar a la altura aproximada de 7 mensajes */
 }
 
 .message {
