@@ -49,9 +49,9 @@ body {
 .logo::after {
     content: '';
     position: absolute;
-    left: 50%;
+    left: 55%;
     bottom: -10px; /* Ajusta esta distancia según necesites */
-    width: 60%;
+    width: 100%;
     height: 2px;
     background: var(--primary-color);
     transform: translateX(-50%);
@@ -511,14 +511,14 @@ body {
 /* Footer */
 .footer {
     text-align: center;
-    padding: 1rem;
+    padding: 0.5rem; /* Reducimos el padding de 1rem a 0.5rem */
     background: var(--secondary-color);
-    margin-top: 2rem;
+    margin-top: 1rem; /* Reducimos el margen superior de 2rem a 1rem */
 }
 
 .footer p {
     margin: 0;
-    font-size: 0.9rem;
+    font-size: 0.8rem; /* Reducimos el tamaño de fuente de 0.9rem a 0.8rem */
     color: rgba(255, 255, 255, 0.7);
 }
 
@@ -532,30 +532,30 @@ body {
     color: #00b386;
 }
 
-/* Estilos para los íconos de redes sociales en el footer */
 .social-icons {
     display: flex;
     justify-content: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
+    gap: 0.5rem; /* Reducimos el gap de 1rem a 0.5rem */
+    margin-bottom: 0.5rem; /* Reducimos el margen inferior de 1rem a 0.5rem */
 }
 
 .social-icons .btn-icon {
-    width: auto; /* Eliminar el ancho fijo */
-    height: auto; /* Eliminar la altura fija */
-    border-radius: 0; /* Eliminar el borde circular */
-    background: transparent; /* Eliminar el fondo */
-    color: var(--primary-color); /* Color del ícono */
-    border: none; /* Eliminar el borde */
-    transition: color 0.3s ease; /* Transición solo para el color */
-    padding: 0.5rem; /* Espaciado para mejorar la interacción */
+    width: auto;
+    height: auto;
+    border-radius: 0;
+    background: transparent;
+    color: var(--primary-color);
+    border: none;
+    transition: color 0.3s ease;
+    padding: 0.3rem; /* Reducimos el padding de 0.5rem a 0.3rem */
+    font-size: 1rem; /* Tamaño de los íconos más pequeño si es necesario */
 }
 
 .social-icons .btn-icon:hover {
-    background: transparent; /* Mantener el fondo transparente */
-    color: #00b386; /* Cambiar el color al hacer hover */
-    transform: translateY(-2px); /* Efecto de levantar el ícono */
-    box-shadow: none; /* Eliminar la sombra */
+    background: transparent;
+    color: #00b386;
+    transform: translateY(-2px);
+    box-shadow: none;
 }
 
 .char-counter {
