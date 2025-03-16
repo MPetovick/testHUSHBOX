@@ -339,17 +339,28 @@ const cryptoUtils = {
 // Controlador de la interfaz de usuario
 const uiController = {
     displayMessage: (content, isSent = false) => {
+        const messagesDiv = domElements.messagesDiv;
         const messageEl = document.createElement('div');
         messageEl.className = `message ${isSent ? 'sent' : ''}`;
         messageEl.innerHTML = `
             <div class="message-content">${content}</div>
             <div class="message-time">${new Date().toLocaleTimeString()}</div>
         `;
-        if (!isSent) {
-            domElements.messagesDiv.querySelector('.message-placeholder')?.remove();
+
+        // Eliminar el placeholder si existe y es el primer mensaje
+        if (!isSent && messagesDiv.children.length === 0) {
+            messagesDiv.querySelector('.message-placeholder')?.remove();
         }
-        domElements.messagesDiv.appendChild(messageEl);
-        domElements.messagesDiv.scrollTop = domElements.messagesDiv.scrollHeight;
+
+        // Limitar a 7 mensajes
+        const maxMessages = 7;
+        if (messagesDiv.children.length >= maxMessages) {
+            messagesDiv.removeChild(messagesDiv.firstChild); // Eliminar el mensaje más antiguo
+        }
+
+        // Agregar el nuevo mensaje
+        messagesDiv.appendChild(messageEl);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight; // Desplazar al final
     },
 
     generateQR: async (data) => {
