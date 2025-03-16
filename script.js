@@ -36,7 +36,8 @@ const domElements = {
     closeTutorial: document.getElementById('close-tutorial'),
     dontShowAgain: document.getElementById('dont-show-again'),
     closeModalButton: document.querySelector('.close-modal'),
-    comingSoonMessage: document.getElementById('coming-soon-message')
+    comingSoonMessage: document.getElementById('coming-soon-message'),
+    loginIcon: document.getElementById('login-icon') // Nuevo ícono de login
 };
 
 // Input oculto para la carga de imágenes
@@ -58,9 +59,15 @@ let cameraTimeoutId = null;
 
 // Función para limpiar un ArrayBuffer o Uint8Array
 const clearBuffer = (buffer) => {
-    if (buffer instanceof ArrayBuffer || buffer instanceof Uint8Array) {
-        const zeros = new Uint8Array(buffer.length);
-        buffer.set(zeros);
+    if (buffer instanceof ArrayBuffer) {
+        // Si es un ArrayBuffer, creamos un Uint8Array para sobrescribirlo
+        const zeros = new Uint8Array(buffer.byteLength);
+        new Uint8Array(buffer).set(zeros);
+    } else if (buffer instanceof Uint8Array || buffer instanceof Int32Array || buffer instanceof Float32Array) {
+        // Si es un TypedArray, lo sobrescribimos con ceros
+        buffer.fill(0);
+    } else {
+        console.warn("clearBuffer: El objeto no es un ArrayBuffer ni un TypedArray. No se puede limpiar.");
     }
 };
 
