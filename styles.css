@@ -130,12 +130,12 @@ body {
     right: 3rem;
 }
 
-.input-group #passphrase ~ .fa-random {
+.input-group #passphrase ~ .fa-dice {
     right: 1rem;
     cursor: pointer;
 }
 
-.input-group #passphrase ~ .fa-random:hover {
+.input-group #passphrase ~ .fa-dice:hover {
     color: var(--primary-color);
 }
 
