@@ -610,6 +610,66 @@ body {
 
     .feature-grid {
         grid-template-columns: 1fr;
+        gap: 0.75rem; /* Reduced gap for tighter spacing */
+    }
+
+    /* Modal optimizations for smartphones */
+    .modal-content {
+        max-width: 340px; /* Reduced from 600px for smaller screens */
+        padding: 1rem; /* Reduced padding */
+    }
+
+    .modal-header h2 {
+        font-size: clamp(1.2rem, 3vw, 1.5rem); /* Smaller header */
+    }
+
+    .modal-subtitle {
+        font-size: clamp(0.8rem, 2vw, 0.9rem); /* Smaller subtitle */
+    }
+
+    .modal-body {
+        margin-bottom: 1.5rem; /* Slightly reduced margin */
+    }
+
+    .feature-item {
+        padding: 0.75rem; /* Reduced padding */
+    }
+
+    .feature-icon {
+        font-size: 1.5rem; /* Smaller icon */
+    }
+
+    .feature-item h3 {
+        font-size: 1rem; /* Slightly smaller title */
+    }
+
+    .feature-item p {
+        font-size: 0.8rem; /* Smaller text */
+    }
+
+    .security-tip {
+        padding: 0.75rem; /* Reduced padding */
+        font-size: 0.8rem; /* Smaller text */
+    }
+
+    .modal-actions {
+        gap: 0.75rem; /* Reduced gap */
+    }
+
+    .btn-primary {
+        min-width: 150px; /* Reduced from 200px */
+        padding: 0.75rem 1.5rem; /* Adjusted padding */
+        font-size: 1rem; /* Consistent smaller size */
+    }
+
+    .disable-toggle {
+        font-size: 0.8rem; /* Smaller text */
+    }
+
+    .close-modal {
+        font-size: 1.2rem; /* Smaller close button */
+        top: 0.75rem;
+        right: 0.75rem;
     }
 }
 
