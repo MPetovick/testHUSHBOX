@@ -394,13 +394,15 @@ body {
 
 .action-buttons {
     display: flex;
+    justify-content: center;
     gap: clamp(0.5rem, 1vw, 1rem);
     margin-top: clamp(1rem, 2vw, 1.5rem);
 }
 
 .action-buttons .btn-primary {
-    flex: 1;
-    max-width: 200px;
+    width: auto;
+    min-width: 150px;
+    max-width: none;
 }
 
 /* Modal Enhancements */
@@ -608,6 +610,12 @@ body {
 
     .feature-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .feature-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
