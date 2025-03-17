@@ -142,8 +142,8 @@ body {
 /* Estilos específicos para el campo message-input */
 .input-group #message-input ~ .fa-comment-dots {
     right: 1rem;
-    top: calc(1rem + 0.5rem); /* Ajustado para alinearse con el texto en el textarea */
-    transform: none; /* Elimina translateY porque el textarea tiene varias líneas */
+    top: calc(1rem + 0.5rem);
+    transform: none;
 }
 
 #passphrase, #message-input {
@@ -418,7 +418,7 @@ body {
     justify-content: center;
     align-items: center;
     animation: fadeIn 0.3s ease;
-    overflow-y: auto; /* Allow scrolling if content overflows */
+    overflow-y: auto;
 }
 
 .modal-content {
@@ -430,8 +430,8 @@ body {
     text-align: center;
     position: relative;
     box-shadow: 0 10px 40px rgba(0, 204, 153, 0.2);
-    border: 1pxuliflower solid var(--primary-color);
-    overflow-y: auto; /* Enable scrolling within modal */
+    border: 1px solid var(--primary-color);
+    overflow-y: auto;
 }
 
 .modal-header {
@@ -536,7 +536,7 @@ body {
     font-size: 1.5rem;
     cursor: pointer;
     color: var(--primary-color);
-    z-index: 1001; /* Ensure it’s above content */
+    z-index: 1001;
 }
 
 .close-modal:hover {
@@ -610,79 +610,77 @@ body {
         padding: 8px 16px;
     }
 
-    .feature-grid {
-        grid-template-columns: 1fr;
-        gap: 0.5rem; /* Tighter gap */
-    }
-
-    /* Modal optimizations for smartphones */
-    .modal {
-        padding: 1rem; /* Add padding to prevent edge-to-edge */
-    }
-
+    /* Optimización específica para el modal en móviles */
     .modal-content {
-        max-width: 300px; /* Further reduced from 340px */
-        max-height: 80vh; /* Limit height to 80% of viewport */
-        padding: 1rem;
-        margin: 1rem 0; /* Add vertical margin for spacing */
-        overflow-y: auto; /* Ensure scrolling within modal */
-    }
-
-    .modal-header {
-        margin-bottom: 1rem;
+        max-width: 340px;
+        padding: 1.2rem;
+        margin: 1rem;
+        border-radius: 15px;
     }
 
     .modal-header h2 {
-        font-size: clamp(1.1rem, 3vw, 1.3rem); /* Even smaller header */
+        font-size: 1.4rem;
+        flex-wrap: wrap;
+        line-height: 1.3;
     }
 
     .modal-subtitle {
-        font-size: clamp(0.7rem, 2vw, 0.8rem); /* Smaller subtitle */
+        font-size: 0.9rem;
+        margin-top: 0.3rem;
     }
 
-    .modal-body {
-        margin-bottom: 1rem; /* Reduced margin */
+    .feature-grid {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+        margin: 1rem 0;
     }
 
     .feature-item {
-        padding: 0.5rem; /* Tighter padding */
+        padding: 1rem 0.8rem;
+        text-align: center;
     }
 
     .feature-icon {
-        font-size: 1.3rem; /* Smaller icon */
+        font-size: 1.5rem;
     }
 
     .feature-item h3 {
-        font-size: 0.9rem; /* Smaller title */
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
     }
 
     .feature-item p {
-        font-size: 0.7rem; /* Smaller text */
+        font-size: 0.85rem;
     }
 
     .security-tip {
-        padding: 0.5rem; /* Tighter padding */
-        font-size: 0.7rem; /* Smaller text */
+        font-size: 0.8rem;
+        padding: 0.8rem;
     }
 
     .modal-actions {
-        gap: 0.5rem; /* Tighter gap */
+        gap: 0.8rem;
     }
 
-    .btn-primary {
-        min-width: 120px; /* Reduced from 150px */
-        padding: 0.6rem 1rem; /* Tighter padding */
-        font-size: 0.9rem; /* Smaller text */
+    .modal-actions .btn-primary {
+        width: 100%;
+        padding: 0.8rem;
+        font-size: 1rem;
     }
 
     .disable-toggle {
-        font-size: 0.7rem; /* Smaller text */
+        font-size: 0.8rem;
     }
 
     .close-modal {
-        font-size: 1.2rem;
-        top: 0.5rem;
-        right: 0.5rem;
+        top: 0.8rem;
+        right: 0.8rem;
+        font-size: 1.8rem;
+    }
+
+    .modal-body {
+        font-size: 0.9rem;
+        line-height: 1.4;
     }
 }
 
