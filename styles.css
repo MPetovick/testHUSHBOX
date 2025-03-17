@@ -127,7 +127,7 @@ body {
 
 /* Estilos específicos para el campo passphrase */
 .input-group #passphrase ~ .fa-key {
-    right: 2.8rem;
+    right: 3rem;
 }
 
 .input-group #passphrase ~ .fa-dice {
