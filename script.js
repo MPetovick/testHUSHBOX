@@ -42,87 +42,45 @@ const domElements = {
 
 // Función mejorada para generar contraseñas seguras que cumplan con las reglas de validación
 function generateSecurePassphrase(length = 16) {
-    // Asegurar que la longitud sea al menos la mínima requerida
     length = Math.max(length, CONFIG.MIN_PASSPHRASE_LENGTH);
-
-    // Conjunto de caracteres permitidos (sin <>'"&\/)
     const charSets = {
         uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
         lowercase: 'abcdefghijklmnopqrstuvwxyz',
         digits: '0123456789',
-        symbols: '!@#$%^&*()_+-=[]{}|;:,.?' // Símbolos seguros, excluyendo caracteres peligrosos
+        symbols: '!@#$%^&*()_+-=[]{}|;:,.?'
     };
-
     const allChars = charSets.uppercase + charSets.lowercase + charSets.digits + charSets.symbols;
-
-    // Función para obtener un carácter aleatorio seguro
     const getRandomChar = (str) => str[crypto.getRandomValues(new Uint32Array(1))[0] % str.length];
-
-    // Garantizar al menos un carácter de cada tipo (4 caracteres iniciales)
     let passphraseArray = [
         getRandomChar(charSets.uppercase),
         getRandomChar(charSets.lowercase),
         getRandomChar(charSets.digits),
         getRandomChar(charSets.symbols)
     ];
-
-    // Añadir un quinto carácter único para cumplir con el requisito de 5 caracteres distintos
     let fifthChar;
     do {
         fifthChar = getRandomChar(allChars);
     } while (passphraseArray.includes(fifthChar));
     passphraseArray.push(fifthChar);
-
-    // Rellenar el resto con caracteres aleatorios seguros
     const remainingLength = length - passphraseArray.length;
     const randomValues = new Uint8Array(remainingLength);
     crypto.getRandomValues(randomValues);
-
     for (let i = 0; i < remainingLength; i++) {
         passphraseArray.push(allChars[randomValues[i] % allChars.length]);
     }
-
-    // Mezclar el resultado para evitar patrones predecibles
     for (let i = passphraseArray.length - 1; i > 0; i--) {
         const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1);
         [passphraseArray[i], passphraseArray[j]] = [passphraseArray[j], passphraseArray[i]];
     }
-
     const passphrase = passphraseArray.join('');
-
-    // Validar que cumple con las reglas (aunque debería hacerlo por diseño)
     try {
         cryptoUtils.validatePassphrase(passphrase);
         return passphrase;
     } catch (error) {
-        // En caso extremo de fallo (muy improbable), regenerar
         console.warn('Generated passphrase failed validation, regenerating:', error.message);
-        return generateSecurePassphrase(length); // Recursión para asegurar cumplimiento
+        return generateSecurePassphrase(length);
     }
 }
-
-// Generar contraseña al hacer clic en el ícono
-document.querySelector('.generate-password').addEventListener('click', () => {
-    const passphraseField = domElements.passphraseInput;
-    const securePassphrase = generateSecurePassphrase(16);
-    passphraseField.value = securePassphrase;
-    passphraseField.dispatchEvent(new Event('input')); // Disparar evento para validar visualmente
-});
-
-// charCounter
-const charCounter = document.getElementById('char-counter');
-domElements.messageInput.addEventListener('input', () => {
-    const currentLength = domElements.messageInput.value.length;
-    const maxLength = domElements.messageInput.getAttribute('maxlength');
-    charCounter.textContent = `${currentLength}/${maxLength}`;
-
-    // Cambiar el color del contador si se acerca al límite
-    if (currentLength >= maxLength * 0.9) {
-        charCounter.style.color = 'var(--error-color)';
-    } else {
-        charCounter.style.color = 'rgba(160, 160, 160, 0.8)';
-    }
-});
 
 // Input oculto para la carga de imágenes
 const fileInput = document.createElement('input');
@@ -184,34 +142,6 @@ const showComingSoonMessage = () => {
         domElements.comingSoonMessage.classList.remove('visible');
     }, 2000);
 };
-
-// Event listeners
-document.addEventListener('DOMContentLoaded', showTutorialModal);
-domElements.closeTutorial.addEventListener('click', closeTutorialModal);
-domElements.closeModalButton.addEventListener('click', closeTutorialModal);
-domElements.dontShowAgain.addEventListener('click', setDontShowAgain);
-
-// Event listeners para los botones de "Coming Soon"
-domElements.scanButton.addEventListener('click', showComingSoonMessage);
-domElements.imageButton.addEventListener('click', showComingSoonMessage);
-domElements.pdfButton.addEventListener('click', showComingSoonMessage);
-
-// Habilitar botones dinámicamente
-domElements.scanButton.disabled = false;
-domElements.imageButton.disabled = false;
-domElements.pdfButton.disabled = false;
-
-// Deshabilitar decodeButton inicialmente
-domElements.decodeButton.disabled = true;
-
-// Habilitar decodeButton cuando se cargue un archivo
-fileInput.addEventListener('change', () => {
-    if (fileInput.files.length > 0) {
-        domElements.decodeButton.disabled = false;
-    } else {
-        domElements.decodeButton.disabled = true;
-    }
-});
 
 // Utilidades criptográficas
 const cryptoUtils = {
@@ -421,6 +351,7 @@ const uiController = {
 
         messagesDiv.appendChild(messageEl);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        return messageEl; // Devolver el elemento para poder eliminarlo más tarde
     },
 
     generateQR: async (data) => {
@@ -667,31 +598,93 @@ const handlers = {
     }
 };
 
-// Event listeners
-domElements.uploadArrowButton.addEventListener('click', handlers.handleUploadArrow);
-domElements.sendButton.addEventListener('click', handlers.handleEncrypt);
-domElements.decodeButton.addEventListener('click', handlers.handleDecrypt);
-domElements.downloadButton.addEventListener('click', handlers.handleDownload);
-domElements.shareButton.addEventListener('click', handlers.handleShare);
-fileInput.addEventListener('change', handlers.handleDecrypt);
+// Event listeners cargados después del DOM
+document.addEventListener('DOMContentLoaded', () => {
+    // Generar contraseña al hacer clic en el ícono
+    const generateButton = document.querySelector('.generate-password');
+    if (generateButton) {
+        generateButton.addEventListener('click', () => {
+            const passphraseField = domElements.passphraseInput;
+            const securePassphrase = generateSecurePassphrase(16);
+            passphraseField.value = securePassphrase;
+            passphraseField.dispatchEvent(new Event('input'));
 
-// Validación visual de la passphrase
-domElements.passphraseInput.addEventListener('input', (e) => {
-    const passphrase = e.target.value;
-    const keyIcon = domElements.passphraseInput.parentElement.querySelector('.fa-key');
-
-    if (passphrase.length === 0) {
-        keyIcon.style.color = 'rgba(160, 160, 160, 0.6)';
-    } else if (passphrase.length < CONFIG.MIN_PASSPHRASE_LENGTH) {
-        keyIcon.style.color = 'var(--error-color)';
+            // Mostrar la contraseña en el log y eliminarla después de 10 segundos
+            const messageEl = uiController.displayMessage(`Generated: ${securePassphrase}`, true);
+            setTimeout(() => {
+                if (messageEl && messageEl.parentNode) {
+                    messageEl.parentNode.removeChild(messageEl);
+                }
+            }, 10000); // 10 segundos
+        });
     } else {
-        try {
-            cryptoUtils.validatePassphrase(passphrase);
-            keyIcon.style.color = 'var(--success-color)';
-        } catch (error) {
-            keyIcon.style.color = 'var(--error-color)';
-        }
+        console.error('Element with class "generate-password" not found');
     }
+
+    // charCounter
+    const charCounter = document.getElementById('char-counter');
+    domElements.messageInput.addEventListener('input', () => {
+        const currentLength = domElements.messageInput.value.length;
+        const maxLength = domElements.messageInput.getAttribute('maxlength');
+        charCounter.textContent = `${currentLength}/${maxLength}`;
+        if (currentLength >= maxLength * 0.9) {
+            charCounter.style.color = 'var(--error-color)';
+        } else {
+            charCounter.style.color = 'rgba(160, 160, 160, 0.8)';
+        }
+    });
+
+    // Otros eventos
+    domElements.uploadArrowButton.addEventListener('click', handlers.handleUploadArrow);
+    domElements.sendButton.addEventListener('click', handlers.handleEncrypt);
+    domElements.decodeButton.addEventListener('click', handlers.handleDecrypt);
+    domElements.downloadButton.addEventListener('click', handlers.handleDownload);
+    domElements.shareButton.addEventListener('click', handlers.handleShare);
+    fileInput.addEventListener('change', handlers.handleDecrypt);
+
+    // Validación visual de la passphrase
+    domElements.passphraseInput.addEventListener('input', (e) => {
+        const passphrase = e.target.value;
+        const keyIcon = domElements.passphraseInput.parentElement.querySelector('.fa-key');
+        if (passphrase.length === 0) {
+            keyIcon.style.color = 'rgba(160, 160, 160, 0.6)';
+        } else if (passphrase.length < CONFIG.MIN_PASSPHRASE_LENGTH) {
+            keyIcon.style.color = 'var(--error-color)';
+        } else {
+            try {
+                cryptoUtils.validatePassphrase(passphrase);
+                keyIcon.style.color = 'var(--success-color)';
+            } catch (error) {
+                keyIcon.style.color = 'var(--error-color)';
+            }
+        }
+    });
+
+    // Eventos del tutorial y "Coming Soon"
+    showTutorialModal();
+    domElements.closeTutorial.addEventListener('click', closeTutorialModal);
+    domElements.closeModalButton.addEventListener('click', closeTutorialModal);
+    domElements.dontShowAgain.addEventListener('click', setDontShowAgain);
+    domElements.scanButton.addEventListener('click', showComingSoonMessage);
+    domElements.imageButton.addEventListener('click', showComingSoonMessage);
+    domElements.pdfButton.addEventListener('click', showComingSoonMessage);
+
+    // Habilitar botones dinámicamente
+    domElements.scanButton.disabled = false;
+    domElements.imageButton.disabled = false;
+    domElements.pdfButton.disabled = false;
+
+    // Deshabilitar decodeButton inicialmente
+    domElements.decodeButton.disabled = true;
+
+    // Habilitar decodeButton cuando se cargue un archivo
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+            domElements.decodeButton.disabled = false;
+        } else {
+            domElements.decodeButton.disabled = true;
+        }
+    });
 });
 
 // Detener la cámara al salir de la página si está activa
