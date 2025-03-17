@@ -178,7 +178,3 @@ MIT License
 
 **HUSHBOX** - Your Digital Privacy Vault 🔏  
 Because your secrets deserve better than the cloud ☁️✔
-
-
-
-
