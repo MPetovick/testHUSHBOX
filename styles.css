@@ -418,6 +418,7 @@ body {
     justify-content: center;
     align-items: center;
     animation: fadeIn 0.3s ease;
+    overflow-y: auto; /* Allow scrolling if content overflows */
 }
 
 .modal-content {
@@ -429,8 +430,8 @@ body {
     text-align: center;
     position: relative;
     box-shadow: 0 10px 40px rgba(0, 204, 153, 0.2);
-    border: 1px solid var(--primary-color);
-    overflow: hidden;
+    border: 1pxuliflower solid var(--primary-color);
+    overflow-y: auto; /* Enable scrolling within modal */
 }
 
 .modal-header {
@@ -535,6 +536,7 @@ body {
     font-size: 1.5rem;
     cursor: pointer;
     color: var(--primary-color);
+    z-index: 1001; /* Ensure it’s above content */
 }
 
 .close-modal:hover {
@@ -610,66 +612,77 @@ body {
 
     .feature-grid {
         grid-template-columns: 1fr;
-        gap: 0.75rem; /* Reduced gap for tighter spacing */
+        gap: 0.5rem; /* Tighter gap */
     }
 
     /* Modal optimizations for smartphones */
+    .modal {
+        padding: 1rem; /* Add padding to prevent edge-to-edge */
+    }
+
     .modal-content {
-        max-width: 340px; /* Reduced from 600px for smaller screens */
-        padding: 1rem; /* Reduced padding */
+        max-width: 300px; /* Further reduced from 340px */
+        max-height: 80vh; /* Limit height to 80% of viewport */
+        padding: 1rem;
+        margin: 1rem 0; /* Add vertical margin for spacing */
+        overflow-y: auto; /* Ensure scrolling within modal */
+    }
+
+    .modal-header {
+        margin-bottom: 1rem;
     }
 
     .modal-header h2 {
-        font-size: clamp(1.2rem, 3vw, 1.5rem); /* Smaller header */
+        font-size: clamp(1.1rem, 3vw, 1.3rem); /* Even smaller header */
     }
 
     .modal-subtitle {
-        font-size: clamp(0.8rem, 2vw, 0.9rem); /* Smaller subtitle */
+        font-size: clamp(0.7rem, 2vw, 0.8rem); /* Smaller subtitle */
     }
 
     .modal-body {
-        margin-bottom: 1.5rem; /* Slightly reduced margin */
+        margin-bottom: 1rem; /* Reduced margin */
     }
 
     .feature-item {
-        padding: 0.75rem; /* Reduced padding */
+        padding: 0.5rem; /* Tighter padding */
     }
 
     .feature-icon {
-        font-size: 1.5rem; /* Smaller icon */
+        font-size: 1.3rem; /* Smaller icon */
     }
 
     .feature-item h3 {
-        font-size: 1rem; /* Slightly smaller title */
+        font-size: 0.9rem; /* Smaller title */
     }
 
     .feature-item p {
-        font-size: 0.8rem; /* Smaller text */
+        font-size: 0.7rem; /* Smaller text */
     }
 
     .security-tip {
-        padding: 0.75rem; /* Reduced padding */
-        font-size: 0.8rem; /* Smaller text */
+        padding: 0.5rem; /* Tighter padding */
+        font-size: 0.7rem; /* Smaller text */
     }
 
     .modal-actions {
-        gap: 0.75rem; /* Reduced gap */
+        gap: 0.5rem; /* Tighter gap */
     }
 
     .btn-primary {
-        min-width: 150px; /* Reduced from 200px */
-        padding: 0.75rem 1.5rem; /* Adjusted padding */
-        font-size: 1rem; /* Consistent smaller size */
+        min-width: 120px; /* Reduced from 150px */
+        padding: 0.6rem 1rem; /* Tighter padding */
+        font-size: 0.9rem; /* Smaller text */
     }
 
     .disable-toggle {
-        font-size: 0.8rem; /* Smaller text */
+        font-size: 0.7rem; /* Smaller text */
     }
 
     .close-modal {
-        font-size: 1.2rem; /* Smaller close button */
-        top: 0.75rem;
-        right: 0.75rem;
+        font-size: 1.2rem;
+        top: 0.5rem;
+        right: 0.5rem;
     }
 }
 
