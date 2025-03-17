@@ -37,16 +37,83 @@ const domElements = {
     dontShowAgain: document.getElementById('dont-show-again'),
     closeModalButton: document.querySelector('.close-modal'),
     comingSoonMessage: document.getElementById('coming-soon-message'),
-    loginIcon: document.getElementById('login-icon') // Nuevo ícono de login
+    loginIcon: document.getElementById('login-icon')
 };
 
-//charCounter
-const messageInput = document.getElementById('message-input');
-const charCounter = document.getElementById('char-counter');
+// Función mejorada para generar contraseñas seguras que cumplan con las reglas de validación
+function generateSecurePassphrase(length = 16) {
+    // Asegurar que la longitud sea al menos la mínima requerida
+    length = Math.max(length, CONFIG.MIN_PASSPHRASE_LENGTH);
 
-messageInput.addEventListener('input', () => {
-    const currentLength = messageInput.value.length;
-    const maxLength = messageInput.getAttribute('maxlength');
+    // Conjunto de caracteres permitidos (sin <>'"&\/)
+    const charSets = {
+        uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        lowercase: 'abcdefghijklmnopqrstuvwxyz',
+        digits: '0123456789',
+        symbols: '!@#$%^&*()_+-=[]{}|;:,.?' // Símbolos seguros, excluyendo caracteres peligrosos
+    };
+
+    const allChars = charSets.uppercase + charSets.lowercase + charSets.digits + charSets.symbols;
+
+    // Función para obtener un carácter aleatorio seguro
+    const getRandomChar = (str) => str[crypto.getRandomValues(new Uint32Array(1))[0] % str.length];
+
+    // Garantizar al menos un carácter de cada tipo (4 caracteres iniciales)
+    let passphraseArray = [
+        getRandomChar(charSets.uppercase),
+        getRandomChar(charSets.lowercase),
+        getRandomChar(charSets.digits),
+        getRandomChar(charSets.symbols)
+    ];
+
+    // Añadir un quinto carácter único para cumplir con el requisito de 5 caracteres distintos
+    let fifthChar;
+    do {
+        fifthChar = getRandomChar(allChars);
+    } while (passphraseArray.includes(fifthChar));
+    passphraseArray.push(fifthChar);
+
+    // Rellenar el resto con caracteres aleatorios seguros
+    const remainingLength = length - passphraseArray.length;
+    const randomValues = new Uint8Array(remainingLength);
+    crypto.getRandomValues(randomValues);
+
+    for (let i = 0; i < remainingLength; i++) {
+        passphraseArray.push(allChars[randomValues[i] % allChars.length]);
+    }
+
+    // Mezclar el resultado para evitar patrones predecibles
+    for (let i = passphraseArray.length - 1; i > 0; i--) {
+        const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1);
+        [passphraseArray[i], passphraseArray[j]] = [passphraseArray[j], passphraseArray[i]];
+    }
+
+    const passphrase = passphraseArray.join('');
+
+    // Validar que cumple con las reglas (aunque debería hacerlo por diseño)
+    try {
+        cryptoUtils.validatePassphrase(passphrase);
+        return passphrase;
+    } catch (error) {
+        // En caso extremo de fallo (muy improbable), regenerar
+        console.warn('Generated passphrase failed validation, regenerating:', error.message);
+        return generateSecurePassphrase(length); // Recursión para asegurar cumplimiento
+    }
+}
+
+// Generar contraseña al hacer clic en el ícono
+document.querySelector('.generate-password').addEventListener('click', () => {
+    const passphraseField = domElements.passphraseInput;
+    const securePassphrase = generateSecurePassphrase(16);
+    passphraseField.value = securePassphrase;
+    passphraseField.dispatchEvent(new Event('input')); // Disparar evento para validar visualmente
+});
+
+// charCounter
+const charCounter = document.getElementById('char-counter');
+domElements.messageInput.addEventListener('input', () => {
+    const currentLength = domElements.messageInput.value.length;
+    const maxLength = domElements.messageInput.getAttribute('maxlength');
     charCounter.textContent = `${currentLength}/${maxLength}`;
 
     // Cambiar el color del contador si se acerca al límite
@@ -77,11 +144,9 @@ let cameraTimeoutId = null;
 // Función para limpiar un ArrayBuffer o Uint8Array
 const clearBuffer = (buffer) => {
     if (buffer instanceof ArrayBuffer) {
-        // Si es un ArrayBuffer, creamos un Uint8Array para sobrescribirlo
         const zeros = new Uint8Array(buffer.byteLength);
         new Uint8Array(buffer).set(zeros);
     } else if (buffer instanceof Uint8Array || buffer instanceof Int32Array || buffer instanceof Float32Array) {
-        // Si es un TypedArray, lo sobrescribimos con ceros
         buffer.fill(0);
     } else {
         console.warn("clearBuffer: El objeto no es un ArrayBuffer ni un TypedArray. No se puede limpiar.");
@@ -221,7 +286,7 @@ const cryptoUtils = {
             ['sign', 'verify']
         );
 
-        clearBuffer(derivedBitsArray); // Limpiar la memoria
+        clearBuffer(derivedBitsArray);
         return { aesKey, hmacKey };
     },
 
@@ -268,11 +333,10 @@ const cryptoUtils = {
         } catch (error) {
             throw new Error('Encryption failed: ' + error.message);
         } finally {
-            // Limpiar buffers sensibles
             if (dataToEncrypt) clearBuffer(dataToEncrypt);
             if (salt) clearBuffer(salt);
             if (iv) clearBuffer(iv);
-            passphrase = null; // Eliminar la referencia a la passphrase
+            passphrase = null;
         }
     },
 
@@ -327,11 +391,10 @@ const cryptoUtils = {
             await new Promise(resolve => setTimeout(resolve, decryptAttempts * CONFIG.DECRYPT_DELAY_INCREMENT));
             throw new Error('Decryption failed: ' + error.message);
         } finally {
-            // Limpiar buffers sensibles
             if (salt) clearBuffer(salt);
             if (iv) clearBuffer(iv);
             if (decrypted) clearBuffer(decrypted);
-            passphrase = null; // Eliminar la referencia a la passphrase
+            passphrase = null;
         }
     }
 };
@@ -347,20 +410,17 @@ const uiController = {
             <div class="message-time">${new Date().toLocaleTimeString()}</div>
         `;
 
-        // Eliminar el placeholder si existe y es el primer mensaje
         if (!isSent && messagesDiv.children.length === 0) {
             messagesDiv.querySelector('.message-placeholder')?.remove();
         }
 
-        // Limitar a 7 mensajes
         const maxMessages = 7;
         if (messagesDiv.children.length >= maxMessages) {
-            messagesDiv.removeChild(messagesDiv.firstChild); // Eliminar el mensaje más antiguo
+            messagesDiv.removeChild(messagesDiv.firstChild);
         }
 
-        // Agregar el nuevo mensaje
         messagesDiv.appendChild(messageEl);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight; // Desplazar al final
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
     },
 
     generateQR: async (data) => {
@@ -618,7 +678,7 @@ fileInput.addEventListener('change', handlers.handleDecrypt);
 // Validación visual de la passphrase
 domElements.passphraseInput.addEventListener('input', (e) => {
     const passphrase = e.target.value;
-    const keyIcon = domElements.passphraseInput.parentElement.querySelector('.icon');
+    const keyIcon = domElements.passphraseInput.parentElement.querySelector('.fa-key');
 
     if (passphrase.length === 0) {
         keyIcon.style.color = 'rgba(160, 160, 160, 0.6)';
