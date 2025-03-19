@@ -44,6 +44,19 @@ body {
     text-shadow: 0 0 10px var(--glow-color);
     animation: pulseGlow 4s infinite;
     position: relative;
+    display: flex; /* Añadido para alinear texto e ícono */
+    align-items: center; /* Centra verticalmente el texto y el ícono */
+}
+
+.white-text {
+    color: white; /* "B" y "X" en blanco */
+}
+
+.qr-icon {
+    color: white; /* Ícono QR en blanco */
+    font-size: inherit; /* Mismo tamaño que el texto de .logo */
+    vertical-align: middle; /* Alineación con el texto */
+    margin: 0 2px; /* Espacio pequeño entre "B" y "X" */
 }
 
 .lock-icon {
@@ -401,52 +414,22 @@ body {
     box-shadow: 0 4px 8px var(--glow-color);
 }
 
-/* Estilo del contenedor de la webcam */
 #camera-container {
     display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: var(--section-bg);
-    border-radius: 15px;
-    padding: 1rem;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(10px);
-    z-index: 1000;
-    width: 90%;
-    max-width: 400px;
-    border: 2px solid var(--primary-color);
+    margin-bottom: 1rem;
+    text-align: center;
 }
 
-#camera-container:not(.hidden) {
-    display: block;
+#camera-container.hidden {
+    display: none;
 }
 
 #camera-preview {
     width: 100%;
-    height: auto;
-    max-height: 300px;
-    border-radius: 10px;
-    border: 1px solid var(--primary-color);
+    max-width: 300px;
+    border-radius: 12px;
+    border: 2px solid var(--primary-color);
     background: var(--secondary-color);
-    object-fit: cover;
-}
-
-#close-camera {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: var(--primary-color);
-    background: none;
-    border: none;
-    transition: color 0.3s ease;
-}
-
-#close-camera:hover {
-    color: #00b386;
 }
 
 .action-buttons {
@@ -612,6 +595,33 @@ body {
     to { opacity: 1; }
 }
 
+/* Estilos para el mensaje "Coming Soon" */
+#coming-soon-message {
+    position: absolute;
+    bottom: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--section-bg);
+    color: var(--primary-color);
+    padding: 10px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    font-size: 1rem;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    z-index: 1000;
+}
+
+#coming-soon-message.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-10px);
+}
+
+#coming-soon-message p {
+    margin: 0;
+}
+
 /* Media Queries para móviles */
 @media (max-width: 768px) {
     .main-grid {
@@ -633,6 +643,11 @@ body {
 
     #qr-canvas {
         max-height: 250px;
+    }
+
+    #coming-soon-message {
+        font-size: 0.9rem;
+        padding: 8px 16px;
     }
 
     /* Optimización específica para el modal en móviles */
@@ -701,28 +716,18 @@ body {
     .qr-header {
         gap: 0.75rem;
     }
-    
+
     .qr-header h3 {
         font-size: 1.1rem;
     }
-    
+
     .btn-secondary {
         width: 28px;
         height: 28px;
     }
-    
+
     .btn-secondary i {
         font-size: 0.9rem;
-    }
-
-    /* Ajuste del contenedor de la webcam en móviles */
-    #camera-container {
-        width: 95%;
-        max-width: 320px;
-    }
-
-    #camera-preview {
-        max-height: 250px;
     }
 }
 
@@ -731,7 +736,7 @@ body {
         width: 26px;
         height: 26px;
     }
-    
+
     .btn-secondary i {
         font-size: 0.85rem;
     }
@@ -818,6 +823,17 @@ body {
 
 .copy-icon:hover {
     color: #00b386;
+}
+
+/* Ajuste para el contenedor del mensaje con ícono */
+.message-content {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 204, 153, 0.1);
+    border-radius: 8px;
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    word-break: break-all;
 }
 
 /* Asegurar que el texto de la contraseña no se desborde */
