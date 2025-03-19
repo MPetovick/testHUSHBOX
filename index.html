@@ -1,156 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Meta Tags -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HushBox - Secure Messaging</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <meta name="description" content="HUSHBOX is a privacy-focused tool for secure messaging using advanced encryption and QR codes. Simple and functional, it requires both users to share a password externally for secure transmission. Built upon SHUMZU.">
+
+    <!-- Title and Icons -->
+    <title>HushBox - Secure Messaging with QR</title>
+    <link rel="icon" href="/HUSHBOX/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/HUSHBOX/assets/favicon.png" type="image/png" sizes="any">
+    <link rel="icon" href="/HUSHBOX/assets/icons/android-icon-192x192.png" type="image/png" sizes="192x192">
+    <link rel="apple-touch-icon" href="/HUSHBOX/assets/apple-touch-icon-180x180.png" sizes="180x180">
+    <link rel="apple-touch-icon" href="/HUSHBOX/assets/apple-touch-icon-152x152.png" sizes="152x152">
+    <link rel="apple-touch-icon" href="/HUSHBOX/assets/apple-touch-icon-120x120.png" sizes="120x120">
+    <link rel="manifest" href="/HUSHBOX/manifest.json">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Header -->
+    <header class="header">
+        <h1 class="logo">
+            <a href="https://github.com/MPetovick/HUSHBOX/blob/main/README.md" target="_blank" class="lock-icon" title="Learn more about HushBox">
+                <i class="fas fa-lock"></i>
+            </a> 
+            HUSH<span class="white-text">B</span><i class="fas fa-qrcode qr-icon"></i><span class="white-text">X</span>
+        </h1>
+        <a href="#" id="login-icon" class="login-icon" title="Login">
+            <i class="fas fa-user-circle"></i>
+        </a>
+    </header>
+
+    <!-- Contenido Principal -->
     <div class="container">
-        <header class="header">
-            <h1 class="logo">
-                <a href="https://github.com/MPetovick/HUSHBOX/blob/main/README.md" target="_blank" class="lock-icon" title="Learn more about HushBox">
-                    <i class="fas fa-lock"></i>
-                    <span style="color: var(--primary-color);">HUSH</span><span style="color: #fff;">BOX</span>
-                </a>
-            </h1>
-            <a href="#" id="login-icon" class="login-icon" title="Login">
-                <i class="fas fa-user-circle"></i>
-            </a>
-        </header>
-
         <div class="main-grid">
-            <section class="encrypt-section section">
+            <!-- Sección de Cifrado -->
+            <div class="section encrypt-section">
                 <div class="input-group">
-                    <input type="text" id="passphrase" placeholder="Enter your passphrase" autocomplete="off">
+                    <input type="password" id="passphrase" placeholder="Enter your secret passphrase" required>
                     <i class="fas fa-key icon"></i>
-                    <i class="fas fa-dice icon generate-password"></i>
+                    <i class="fas fa-dice icon generate-password" title="Generate secure passphrase"></i>
                 </div>
                 <div class="input-group">
-                    <textarea id="message-input" maxlength="4000" placeholder="Type your secret message here..."></textarea>
+                    <textarea id="message-input" placeholder="Write your secure message..." rows="4" maxlength="4000"></textarea>
                     <i class="fas fa-comment-dots icon"></i>
-                    <span id="char-counter">0/4000</span>
+                    <div id="char-counter" class="char-counter">0/4000</div>
                 </div>
-                <button id="send-button" class="btn-primary">
-                    <i class="fas fa-lock"></i> Encrypt
-                </button>
-                <div id="qr-container" class="hidden">
-                    <div class="qr-header">
-                        <h3><i class="fas fa-qrcode"></i> Your Secure QR</h3>
-                        <div class="qr-actions">
-                            <button id="download-button" class="btn-secondary" title="Download QR">
-                                <i class="fas fa-download"></i>
-                            </button>
-                            <button id="share-button" class="btn-secondary" title="Share QR">
-                                <i class="fas fa-share-alt"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <canvas id="qr-canvas"></canvas>
-                </div>
-            </section>
 
-            <section class="decrypt-section section">
+                <!-- Botones de acción con íconos -->
                 <div class="button-group">
+                    <button id="upload-arrow-button" class="btn-icon" title="Upload Image">
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
                     <button id="scan-button" class="btn-icon" title="Scan QR">
                         <i class="fas fa-camera"></i>
                     </button>
-                    <button id="image-button" class="btn-icon" title="Upload Image" disabled>
+                    <button id="image-button" class="btn-icon" title="Upload QR Image" disabled>
                         <i class="fas fa-image"></i>
                     </button>
                     <button id="pdf-button" class="btn-icon" title="Upload PDF" disabled>
                         <i class="fas fa-file-pdf"></i>
                     </button>
-                    <button id="upload-arrow-button" class="btn-icon" title="Upload QR">
-                        <i class="fas fa-arrow-up"></i>
-                    </button>
-                </div>
-                <div id="camera-container" class="hidden">
-                    <video id="camera-preview" autoplay playsinline></video>
-                    <button id="close-camera" class="close-modal">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="message-container">
-                    <div id="messages" class="messages">
-                        <div class="message-placeholder">Messages will appear here...</div>
+                    <!-- Mensaje "Coming Soon" -->
+                    <div id="coming-soon-message" class="hidden">
+                        <p>Coming Soon!</p>
                     </div>
                 </div>
+
+                <!-- Área de la cámara -->
+                <div id="camera-container" class="hidden">
+                    <video id="camera-preview" autoplay></video>
+                </div>
+
+                <!-- Botones Encrypt y Decrypt en la misma fila -->
                 <div class="action-buttons">
-                    <button id="decode-button" class="btn-primary">
+                    <button id="send-button" class="btn-primary" aria-label="Encrypt message">
+                        <i class="fas fa-lock"></i> Encrypt
+                    </button>
+                    <button id="decode-button" class="btn-primary" aria-label="Decrypt message" disabled>
                         <i class="fas fa-unlock"></i> Decrypt
                     </button>
                 </div>
-            </section>
-        </div>
 
-        <!-- Tutorial Modal -->
-        <div id="tutorial-modal" class="modal">
-            <div class="modal-content">
-                <span class="close-modal">×</span>
-                <div class="modal-header">
-                    <h2><i class="fas fa-lock"></i>HUSHBOX</h2>
-                    <p class="modal-subtitle">Your Digital Privacy Vault</p>
-                </div>
-                <div class="modal-body">
-                    <div class="feature-grid">
-                        <div class="feature-item">
-                            <i class="fas fa-shield-alt feature-icon"></i>
-                            <h3>Zero-Server Security</h3>
-                            <p>Messages never touch external servers, ensuring true privacy.</p>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-qrcode feature-icon"></i>
-                            <h3>QR Encryption</h3>
-                            <p>Advanced AES-256-GCM encryption with QR code delivery.</p>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-mobile-alt feature-icon"></i>
-                            <h3>Mobile-Ready</h3>
-                            <p>Install as a PWA for seamless use on any device.</p>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-user-secret feature-icon"></i>
-                            <h3>Complete Anonymity</h3>
-                            <p>No metadata or tracking—your identity stays hidden.</p>
+                <!-- Contenedor del QR -->
+                <div id="qr-container" class="hidden">
+                    <div class="qr-header">
+                        <h3><i class="fas fa-qrcode"></i> Secure QR</h3>
+                        <div class="qr-actions">
+                            <button id="download-button" class="btn-secondary" aria-label="Download QR code">
+                                <i class="fas fa-arrow-down"></i>
+                            </button>
+                            <button id="share-button" class="btn-secondary" aria-label="Share QR code">
+                                <i class="fas fa-share-alt"></i>
+                            </button>
                         </div>
                     </div>
-                    <div class="security-tip">
-                        <i class="fas fa-info-circle"></i>
-                        <p><strong>Pro Tip:</strong> Share your passphrase via a secure channel (e.g., Signal) separately from the QR code for maximum security.</p>
-                    </div>
+                    <canvas id="qr-canvas" aria-label="Generated QR code with encrypted message"></canvas>
                 </div>
-                <div class="modal-actions">
-                    <button id="close-tutorial" class="btn-primary">Start Securing Now</button>
-                    <label class="disable-toggle">
-                        <input type="checkbox" id="dont-show-again-checkbox">
-                        Don’t show this again
-                    </label>
-                    <button id="dont-show-again" class="btn-secondary hidden">Save Preference</button>
+            </div>
+
+            <!-- Sección de Descifrado -->
+            <div class="section decrypt-section">
+                <div id="messages" class="message-container">
+                    <div class="message-placeholder">
+                        <i class="fas fa-comments"></i>
+                        <p>Encrypted & Decrypted messages appear here</p>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <div class="social-icons">
-                <a href="https://t.me/HUSHBOX_QR" target="_blank" class="btn-icon social-icon telegram" title="Telegram">
-                    <i class="fab fa-telegram-plane"></i>
-                </a>
-                <a href="https://twitter.com/HUSHBOXonline" target="_blank" class="btn-icon social-icon twitter" title="Twitter">
-                    <i class="fab fa-twitter"></i>
-                </a>
-            </div>
-            <p>© 2025 HushBox. All rights reserved.</p>
-            <a href="#" target="_blank">Privacy Policy</a>
-        </footer>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="social-icons">
+            <a href="https://t.me/HUSHBOX_QR" target="_blank" class="btn-icon social-icon telegram" title="Telegram">
+                <i class="fab fa-telegram-plane"></i>
+            </a>
+            <a href="https://twitter.com/HUSHBOXonline" target="_blank" class="btn-icon social-icon twitter" title="Twitter">
+                <i class="fab fa-twitter"></i>
+            </a>
+        </div>
+        <p>© 2025 HushBox. All rights reserved.</p>
+        <a href="#" target="_blank">Privacy Policy</a>
+    </footer>
+
+    <!-- Modal de tutorial -->
+    <div id="tutorial-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">×</span>
+            <div class="modal-header">
+                <h2><i class="fas fa-lock"></i>HUSHBOX</h2>
+                <p class="modal-subtitle">Your Digital Privacy Vault</p>
+            </div>
+            <div class="modal-body">
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <i class="fas fa-shield-alt feature-icon"></i>
+                        <h3>Zero-Server Security</h3>
+                        <p>Messages never touch external servers, ensuring true privacy.</p>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-qrcode feature-icon"></i>
+                        <h3>QR Encryption</h3>
+                        <p>Advanced AES-256-GCM encryption with QR code delivery.</p>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-mobile-alt feature-icon"></i>
+                        <h3>Mobile-Ready</h3>
+                        <p>Install as a PWA for seamless use on any device.</p>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-user-secret feature-icon"></i>
+                        <h3>Complete Anonymity</h3>
+                        <p>No metadata or tracking—your identity stays hidden.</p>
+                    </div>
+                </div>
+                <div class="security-tip">
+                    <i class="fas fa-info-circle"></i>
+                    <p><strong>Pro Tip:</strong> Share your passphrase via a secure channel (e.g., Signal) separately from the QR code for maximum security.</p>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="close-tutorial" class="btn-primary">Start Securing Now</button>
+                <label class="disable-toggle">
+                    <input type="checkbox" id="dont-show-again-checkbox">
+                    Don’t show this again
+                </label>
+                <button id="dont-show-again" class="btn-secondary hidden">Save Preference</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
