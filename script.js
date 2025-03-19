@@ -331,14 +331,44 @@ const cryptoUtils = {
 
 // Controlador de la interfaz de usuario
 const uiController = {
-    displayMessage: (content, isSent = false) => {
+    displayMessage: (content, isSent = false, isPassphrase = false) => {
         const messagesDiv = domElements.messagesDiv;
         const messageEl = document.createElement('div');
         messageEl.className = `message ${isSent ? 'sent' : ''}`;
-        messageEl.innerHTML = `
-            <div class="message-content">${content}</div>
-            <div class="message-time">${new Date().toLocaleTimeString()}</div>
-        `;
+        
+        // Si es una contraseña, agregar el ícono de copiar
+        if (isPassphrase) {
+            messageEl.innerHTML = `
+                <div class="message-content">
+                    <span class="passphrase-text">${content}</span>
+                    <i class="fas fa-copy copy-icon" title="Copy to clipboard"></i>
+                </div>
+                <div class="message-time">${new Date().toLocaleTimeString()}</div>
+            `;
+            const copyIcon = messageEl.querySelector('.copy-icon');
+            copyIcon.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(content);
+                    uiController.displayMessage('Passphrase copied to clipboard!', false);
+                    // Opcional: Evitar que el mensaje desaparezca si se copia
+                    clearTimeout(messageEl.timeoutId);
+                } catch (error) {
+                    console.error('Failed to copy passphrase:', error);
+                    uiController.displayMessage('Failed to copy passphrase.', false);
+                }
+            });
+            // Configurar temporizador para eliminar el mensaje después de 10 segundos
+            messageEl.timeoutId = setTimeout(() => {
+                if (messageEl && messageEl.parentNode) {
+                    messageEl.parentNode.removeChild(messageEl);
+                }
+            }, 10000); // 10 segundos
+        } else {
+            messageEl.innerHTML = `
+                <div class="message-content">${content}</div>
+                <div class="message-time">${new Date().toLocaleTimeString()}</div>
+            `;
+        }
 
         if (!isSent && messagesDiv.children.length === 0) {
             messagesDiv.querySelector('.message-placeholder')?.remove();
@@ -351,7 +381,7 @@ const uiController = {
 
         messagesDiv.appendChild(messageEl);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        return messageEl; // Devolver el elemento para poder eliminarlo más tarde
+        return messageEl;
     },
 
     generateQR: async (data) => {
@@ -609,13 +639,8 @@ document.addEventListener('DOMContentLoaded', () => {
             passphraseField.value = securePassphrase;
             passphraseField.dispatchEvent(new Event('input'));
 
-            // Mostrar la contraseña en el log y eliminarla después de 10 segundos
-            const messageEl = uiController.displayMessage(`Generated: ${securePassphrase}`, true);
-            setTimeout(() => {
-                if (messageEl && messageEl.parentNode) {
-                    messageEl.parentNode.removeChild(messageEl);
-                }
-            }, 10000); // 10 segundos
+            // Mostrar la contraseña en el log con ícono de copiar y temporizador de 10 segundos
+            uiController.displayMessage(securePassphrase, true, true);
         });
     } else {
         console.error('Element with class "generate-password" not found');
