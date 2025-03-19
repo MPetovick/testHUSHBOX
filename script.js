@@ -24,7 +24,6 @@ const domElements = {
     pdfButton: document.getElementById('pdf-button'),
     cameraContainer: document.getElementById('camera-container'),
     cameraPreview: document.getElementById('camera-preview'),
-    closeCameraButton: document.getElementById('close-camera'),
     messagesDiv: document.getElementById('messages'),
     passphraseInput: document.getElementById('passphrase'),
     messageInput: document.getElementById('message-input'),
@@ -37,7 +36,9 @@ const domElements = {
     tutorialModal: document.getElementById('tutorial-modal'),
     closeTutorial: document.getElementById('close-tutorial'),
     dontShowAgain: document.getElementById('dont-show-again'),
-    closeModalButton: document.querySelector('.close-modal')
+    closeModalButton: document.querySelector('.close-modal'),
+    comingSoonMessage: document.getElementById('coming-soon-message'),
+    loginIcon: document.getElementById('login-icon')
 };
 
 // Función mejorada para generar contraseñas seguras que cumplan con las reglas de validación
@@ -95,10 +96,9 @@ const scanContext = scanCanvas.getContext('2d');
 scanCanvas.style.display = 'none';
 document.body.appendChild(scanCanvas);
 
-// Variables para protección contra fuerza bruta y escaneo
+// Variables para protección contra fuerza bruta
 let decryptAttempts = 0;
 let cameraTimeoutId = null;
-let lastScannedData = null; // Para evitar procesar el mismo QR repetidamente
 
 // Función para limpiar un ArrayBuffer o Uint8Array
 const clearBuffer = (buffer) => {
@@ -134,6 +134,14 @@ const closeTutorialModal = () => {
 const setDontShowAgain = () => {
     localStorage.setItem('dontShowAgain', 'true');
     closeTutorialModal();
+};
+
+// Función para mostrar y ocultar el mensaje "Coming Soon"
+const showComingSoonMessage = () => {
+    domElements.comingSoonMessage.classList.add('visible');
+    setTimeout(() => {
+        domElements.comingSoonMessage.classList.remove('visible');
+    }, 2000);
 };
 
 // Utilidades criptográficas
@@ -328,7 +336,7 @@ const uiController = {
         const messagesDiv = domElements.messagesDiv;
         const messageEl = document.createElement('div');
         messageEl.className = `message ${isSent ? 'sent' : ''}`;
-        
+
         // Determinar el tipo de mensaje
         const isEncrypted = content.startsWith('Encrypted:');
         const isDecrypted = content.startsWith('Decrypted:');
@@ -349,7 +357,7 @@ const uiController = {
                 try {
                     await navigator.clipboard.writeText(content);
                     uiController.displayMessage('Passphrase copied to clipboard!', false);
-                    clearTimeout(messageEl.timeoutId); // Cancelar temporizador si se copia
+                    clearTimeout(messageEl.timeoutId);
                 } catch (error) {
                     console.error('Failed to copy passphrase:', error);
                     uiController.displayMessage('Failed to copy passphrase.', false);
@@ -391,11 +399,6 @@ const uiController = {
 
     generateQR: async (data) => {
         return new Promise((resolve, reject) => {
-            if (typeof QRCode === 'undefined') {
-                reject(new Error('QRCode library is not loaded. Please check your internet connection or script inclusion.'));
-                return;
-            }
-
             const dataLength = data.length;
             const qrSize = Math.min(CONFIG.MAX_QR_SIZE, Math.max(CONFIG.QR_SIZE, Math.ceil(dataLength / 20) * 10 + 150));
 
@@ -452,45 +455,6 @@ const uiController = {
     resetButton: (button, originalHTML) => {
         button.innerHTML = originalHTML;
         button.disabled = false;
-    },
-
-    startCamera: async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment' } // Cámara trasera en móviles
-            });
-            domElements.cameraPreview.srcObject = stream;
-            domElements.cameraContainer.classList.remove('hidden');
-            uiController.scanQR();
-            cameraTimeoutId = setTimeout(() => {
-                handlers.stopCamera();
-                uiController.displayMessage('Camera timed out after 30 seconds.', false);
-            }, CONFIG.CAMERA_TIMEOUT);
-        } catch (error) {
-            console.error('Camera access error:', error);
-            uiController.displayMessage('Failed to access camera. Please allow camera permissions.', false);
-        }
-    },
-
-    scanQR: () => {
-        const video = domElements.cameraPreview;
-        if (!video.srcObject) return;
-
-        scanCanvas.width = video.videoWidth;
-        scanCanvas.height = video.videoHeight;
-        scanContext.drawImage(video, 0, 0, scanCanvas.width, scanCanvas.height);
-
-        const imageData = scanContext.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
-        const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
-
-        if (qrCode && qrCode.data && qrCode.data !== lastScannedData) {
-            lastScannedData = qrCode.data;
-            uiController.displayMessage(`Scanned QR: ${qrCode.data.slice(0, 40)}...`, false);
-            handlers.stopCamera();
-            return;
-        }
-
-        requestAnimationFrame(uiController.scanQR);
     }
 };
 
@@ -674,10 +638,6 @@ const handlers = {
 
     handleUploadArrow: () => {
         fileInput.click();
-    },
-
-    handleScan: () => {
-        uiController.startCamera();
     }
 };
 
@@ -716,8 +676,6 @@ document.addEventListener('DOMContentLoaded', () => {
     domElements.decodeButton.addEventListener('click', handlers.handleDecrypt);
     domElements.downloadButton.addEventListener('click', handlers.handleDownload);
     domElements.shareButton.addEventListener('click', handlers.handleShare);
-    domElements.scanButton.addEventListener('click', handlers.handleScan);
-    domElements.closeCameraButton.addEventListener('click', handlers.stopCamera);
     fileInput.addEventListener('change', handlers.handleDecrypt);
 
     // Validación visual de la passphrase
@@ -738,11 +696,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Eventos del tutorial
+    // Eventos del tutorial y "Coming Soon"
     showTutorialModal();
     domElements.closeTutorial.addEventListener('click', closeTutorialModal);
     domElements.closeModalButton.addEventListener('click', closeTutorialModal);
     domElements.dontShowAgain.addEventListener('click', setDontShowAgain);
+    domElements.scanButton.addEventListener('click', showComingSoonMessage);
+    domElements.imageButton.addEventListener('click', showComingSoonMessage);
+    domElements.pdfButton.addEventListener('click', showComingSoonMessage);
+
+    // Habilitar solo el botón de escaneo para "Coming Soon", dejar image y pdf desactivados
+    domElements.scanButton.disabled = false;
 
     // Deshabilitar decodeButton inicialmente
     domElements.decodeButton.disabled = true;
