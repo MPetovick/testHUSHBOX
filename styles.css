@@ -189,7 +189,7 @@ body {
     letter-spacing: 1px;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
     background: #00b386;
     transform: translateY(-2px);
     box-shadow: 0 4px 16px var(--glow-color);
@@ -197,9 +197,10 @@ body {
 
 .btn-primary:disabled {
     background: #666;
-    cursor: not-allowed;
+    cursor: default;
     transform: none;
     box-shadow: none;
+    opacity: 0.7;
 }
 
 .btn-secondary {
@@ -348,14 +349,35 @@ body {
     height: 40px;
 }
 
-.btn-icon:hover {
+.btn-icon:hover:not(:disabled) {
     background: var(--primary-color);
     color: #1a1a1a;
     box-shadow: 0 2px 8px var(--glow-color);
 }
 
+.btn-icon:disabled {
+    background: rgba(102, 102, 102, 0.3); /* Gris apagado */
+    border: 1px solid rgba(160, 160, 160, 0.3); /* Borde menos prominente */
+    color: rgba(160, 160, 160, 0.5); /* Color desvaído */
+    cursor: default; /* Cursor normal, no pointer */
+    box-shadow: none; /* Sin sombra */
+    opacity: 0.6; /* Ligeramente transparente */
+    pointer-events: auto; /* Permitir clics para "Coming Soon" */
+}
+
+.btn-icon:disabled:hover {
+    background: rgba(102, 102, 102, 0.3); /* Sin cambio al hover */
+    color: rgba(160, 160, 160, 0.5);
+    box-shadow: none;
+    transform: none; /* Sin animación */
+}
+
 .btn-icon i {
     font-size: 1.2rem;
+}
+
+.btn-icon:disabled i {
+    color: rgba(160, 160, 160, 0.5);
 }
 
 .social-icon {
