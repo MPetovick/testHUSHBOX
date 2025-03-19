@@ -669,10 +669,8 @@ document.addEventListener('DOMContentLoaded', () => {
     domElements.imageButton.addEventListener('click', showComingSoonMessage);
     domElements.pdfButton.addEventListener('click', showComingSoonMessage);
 
-    // Habilitar botones dinámicamente
+    // Habilitar solo el botón de escaneo para "Coming Soon", dejar image y pdf desactivados
     domElements.scanButton.disabled = false;
-    domElements.imageButton.disabled = false;
-    domElements.pdfButton.disabled = false;
 
     // Deshabilitar decodeButton inicialmente
     domElements.decodeButton.disabled = true;
