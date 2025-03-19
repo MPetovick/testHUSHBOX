@@ -12,7 +12,8 @@ const CONFIG = {
     CAMERA_TIMEOUT: 30000,
     DECRYPT_DELAY_INCREMENT: 100,
     MAX_DECRYPT_ATTEMPTS: 5,
-    DECRYPT_COOLDOWN: 5 * 60 * 1000 // 5 minutos
+    DECRYPT_COOLDOWN: 5 * 60 * 1000, // 5 minutos
+    NOTICE_TIMEOUT: 10000 // 10 segundos para mensajes de tipo "notice"
 };
 
 // Elementos del DOM
@@ -336,6 +337,12 @@ const uiController = {
         const messageEl = document.createElement('div');
         messageEl.className = `message ${isSent ? 'sent' : ''}`;
         
+        // Determinar el tipo de mensaje
+        const isEncrypted = content.startsWith('Encrypted:');
+        const isDecrypted = content.startsWith('Decrypted:');
+        const messageType = isEncrypted ? 'encrypted' : isDecrypted ? 'decrypted' : 'notice';
+        messageEl.dataset.messageType = messageType;
+
         // Si es una contraseña, agregar el ícono de copiar
         if (isPassphrase) {
             messageEl.innerHTML = `
@@ -350,24 +357,30 @@ const uiController = {
                 try {
                     await navigator.clipboard.writeText(content);
                     uiController.displayMessage('Passphrase copied to clipboard!', false);
-                    // Opcional: Evitar que el mensaje desaparezca si se copia
                     clearTimeout(messageEl.timeoutId);
                 } catch (error) {
                     console.error('Failed to copy passphrase:', error);
                     uiController.displayMessage('Failed to copy passphrase.', false);
                 }
             });
-            // Configurar temporizador para eliminar el mensaje después de 10 segundos
             messageEl.timeoutId = setTimeout(() => {
                 if (messageEl && messageEl.parentNode) {
                     messageEl.parentNode.removeChild(messageEl);
                 }
-            }, 10000); // 10 segundos
+            }, CONFIG.NOTICE_TIMEOUT); // 10 segundos
         } else {
             messageEl.innerHTML = `
                 <div class="message-content">${content}</div>
                 <div class="message-time">${new Date().toLocaleTimeString()}</div>
             `;
+            // Si es un mensaje de tipo "notice", agregar temporizador individual
+            if (messageType === 'notice') {
+                messageEl.timeoutId = setTimeout(() => {
+                    if (messageEl && messageEl.parentNode) {
+                        messageEl.parentNode.removeChild(messageEl);
+                    }
+                }, CONFIG.NOTICE_TIMEOUT); // 10 segundos
+            }
         }
 
         if (!isSent && messagesDiv.children.length === 0) {
@@ -638,8 +651,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const securePassphrase = generateSecurePassphrase(16);
             passphraseField.value = securePassphrase;
             passphraseField.dispatchEvent(new Event('input'));
-
-            // Mostrar la contraseña en el log con ícono de copiar y temporizador de 10 segundos
             uiController.displayMessage(securePassphrase, true, true);
         });
     } else {
