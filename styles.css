@@ -431,24 +431,34 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.85); /* Fondo más claro para mejor contraste */
     z-index: 1000;
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: all 0.3s ease;
+    transition: opacity 0.3s ease; /* Transición solo en opacidad */
     padding: 1rem;
+    opacity: 0; /* Inicialmente invisible */
 }
 
 .camera-modal.hidden {
-    display: none; /* Oculta el modal por defecto */
+    display: none; /* Oculta completamente cuando tiene clase hidden */
+}
+
+.camera-modal:not(.hidden) {
+    opacity: 1; /* Visible cuando no tiene hidden */
+    animation: fadeIn 0.3s ease; /* Animación más simple */
+}
+
+.camera-modal.active {
+    background: rgba(0, 0, 0, 0.95); /* Fondo más oscuro cuando está activa */
 }
 
 .camera-modal-content {
     background: var(--section-bg);
     border-radius: 15px;
     padding: 1.5rem;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); /* Sombra más pronunciada */
     backdrop-filter: blur(10px);
     width: 100%;
     max-width: 500px;
@@ -457,6 +467,11 @@ body {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    transition: transform 0.3s ease; /* Transición para efecto activo */
+}
+
+.camera-modal.active .camera-modal-content {
+    transform: scale(1.02); /* Ligero aumento cuando está activo */
 }
 
 .camera-header {
@@ -479,6 +494,7 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
+    align-items: center;
 }
 
 #camera-preview {
@@ -488,6 +504,7 @@ body {
     border-radius: 12px;
     border: 2px solid var(--primary-color);
     margin-bottom: 1rem;
+    object-fit: contain; /* Asegura que el video se ajuste bien */
 }
 
 .camera-actions {
@@ -657,6 +674,7 @@ body {
     cursor: pointer;
     color: var(--primary-color);
     z-index: 1001;
+    transition: color 0.3s ease; /* Añadida transición */
 }
 
 .close-modal:hover {
@@ -675,10 +693,7 @@ body {
     to { opacity: 1; }
 }
 
-@keyframes modalSlideIn {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
+/* Eliminado modalSlideIn para simplificar y usar fadeIn */
 
 /* Estilos para el mensaje "Coming Soon" */
 #coming-soon-message {
@@ -953,8 +968,4 @@ body {
 .passphrase-text {
     flex-grow: 1;
     word-break: break-all;
-}
-
-.camera-modal:not(.hidden) {
-    animation: modalSlideIn 0.3s ease;
 }
