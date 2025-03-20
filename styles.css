@@ -426,10 +426,22 @@ body {
 
 /* Modal de Cámara */
 .camera-modal {
-    position: relative;
-    flex: 1;
-    max-width: 400px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     transition: all 0.3s ease;
+    padding: 1rem;
+}
+
+.camera-modal.hidden {
+    display: none; /* Oculta el modal por defecto */
 }
 
 .camera-modal-content {
@@ -438,9 +450,13 @@ body {
     padding: 1.5rem;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(10px);
-    height: 100%;
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    max-height: 90vh;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
 }
 
 .camera-header {
@@ -453,6 +469,7 @@ body {
 .camera-header h3 {
     font-size: 1.2rem;
     margin: 0;
+    color: var(--text-color);
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -465,24 +482,47 @@ body {
 }
 
 #camera-preview {
-    flex: 1;
+    width: 100%;
+    max-height: 60vh;
     background: var(--secondary-color);
     border-radius: 12px;
     border: 2px solid var(--primary-color);
     margin-bottom: 1rem;
-    width: 100%;
 }
 
 .camera-actions {
     display: flex;
     gap: 1rem;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
 .upload-label {
     cursor: pointer;
     position: relative;
     overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.8rem 1.2rem;
+    background: var(--primary-color);
+    color: #1a1a1a;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.upload-label:hover {
+    background: #00b386;
+    box-shadow: 0 4px 16px var(--glow-color);
+}
+
+.upload-label input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
 }
 
 /* Modal Enhancements */
@@ -773,30 +813,17 @@ body {
         font-size: 0.9rem;
     }
 
-    .camera-modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.9);
-        z-index: 1000;
-        max-width: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .camera-modal-content {
+        max-width: 90%;
         padding: 1rem;
     }
-    
-    .camera-modal-content {
-        width: 100%;
-        max-width: 500px;
-        height: auto;
-        max-height: 90vh;
-    }
-    
+
     #camera-preview {
         max-height: 50vh;
+    }
+
+    .camera-header h3 {
+        font-size: 1.1rem;
     }
 }
 
@@ -819,6 +846,24 @@ body {
         width: 100%;
         max-width: none;
         padding: 0.8rem;
+        font-size: 0.9rem;
+    }
+
+    .camera-modal-content {
+        max-width: 95%;
+        padding: 0.8rem;
+    }
+
+    #camera-preview {
+        max-height: 40vh;
+    }
+
+    .camera-header h3 {
+        font-size: 1rem;
+    }
+
+    .upload-label {
+        padding: 0.6rem 1rem;
         font-size: 0.9rem;
     }
 }
