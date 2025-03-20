@@ -38,7 +38,8 @@ const domElements = {
     dontShowAgain: document.getElementById('dont-show-again'),
     closeModalButton: document.querySelector('.close-modal'),
     comingSoonMessage: document.getElementById('coming-soon-message'),
-    loginIcon: document.getElementById('login-icon')
+    loginIcon: document.getElementById('login-icon'),
+    captureBtn: document.getElementById('capture-btn') // Botón para capturar desde la cámara
 };
 
 // Función mejorada para generar contraseñas seguras que cumplan con las reglas de validación
@@ -96,9 +97,10 @@ const scanContext = scanCanvas.getContext('2d');
 scanCanvas.style.display = 'none';
 document.body.appendChild(scanCanvas);
 
-// Variables para protección contra fuerza bruta
+// Variables para protección contra fuerza bruta y cámara
 let decryptAttempts = 0;
 let cameraTimeoutId = null;
+let cameraStream = null;
 
 // Función para limpiar un ArrayBuffer o Uint8Array
 const clearBuffer = (buffer) => {
@@ -337,13 +339,11 @@ const uiController = {
         const messageEl = document.createElement('div');
         messageEl.className = `message ${isSent ? 'sent' : ''}`;
 
-        // Determinar el tipo de mensaje
         const isEncrypted = content.startsWith('Encrypted:');
         const isDecrypted = content.startsWith('Decrypted:');
         const messageType = isEncrypted ? 'encrypted' : isDecrypted ? 'decrypted' : 'notice';
         messageEl.dataset.messageType = messageType;
 
-        // Si es una contraseña, agregar el ícono de copiar
         if (isPassphrase) {
             messageEl.innerHTML = `
                 <div class="message-content">
@@ -367,19 +367,18 @@ const uiController = {
                 if (messageEl && messageEl.parentNode) {
                     messageEl.parentNode.removeChild(messageEl);
                 }
-            }, CONFIG.NOTICE_TIMEOUT); // 10 segundos
+            }, CONFIG.NOTICE_TIMEOUT);
         } else {
             messageEl.innerHTML = `
                 <div class="message-content">${content}</div>
                 <div class="message-time">${new Date().toLocaleTimeString()}</div>
             `;
-            // Si es un mensaje de tipo "notice", agregar temporizador individual
             if (messageType === 'notice') {
                 messageEl.timeoutId = setTimeout(() => {
                     if (messageEl && messageEl.parentNode) {
                         messageEl.parentNode.removeChild(messageEl);
                     }
-                }, CONFIG.NOTICE_TIMEOUT); // 10 segundos
+                }, CONFIG.NOTICE_TIMEOUT);
             }
         }
 
@@ -460,6 +459,75 @@ const uiController = {
 
 // Manejadores de eventos
 const handlers = {
+    startCamera: async () => {
+        try {
+            cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "environment", width: 1280, height: 720 } 
+            });
+            domElements.cameraPreview.srcObject = cameraStream;
+            domElements.cameraContainer.classList.remove('hidden');
+
+            const scanFrame = () => {
+                if (domElements.cameraPreview.readyState === HTMLMediaElement.HAVE_ENOUGH_DATA) {
+                    scanCanvas.width = domElements.cameraPreview.videoWidth;
+                    scanCanvas.height = domElements.cameraPreview.videoHeight;
+                    scanContext.drawImage(domElements.cameraPreview, 0, 0);
+                    
+                    const imageData = scanContext.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+                    const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
+                    
+                    if (qrCode) {
+                        handlers.stopCamera();
+                        domElements.messageInput.value = qrCode.data;
+                        uiController.displayMessage('QR scanned successfully!', false);
+                        // Opcional: desencadenar el descifrado automáticamente
+                        // handlers.handleDecrypt();
+                    }
+                }
+                requestAnimationFrame(scanFrame);
+            };
+            scanFrame();
+
+            cameraTimeoutId = setTimeout(() => {
+                handlers.stopCamera();
+                uiController.displayMessage('Camera timed out.', false);
+            }, CONFIG.CAMERA_TIMEOUT);
+        } catch (error) {
+            console.error('Camera error:', error);
+            uiController.displayMessage('Camera access denied or unavailable!', false);
+            domElements.cameraContainer.classList.add('hidden');
+        }
+    },
+
+    stopCamera: () => {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            domElements.cameraPreview.srcObject = null;
+            cameraStream = null;
+        }
+        domElements.cameraContainer.classList.add('hidden');
+        if (cameraTimeoutId) {
+            clearTimeout(cameraTimeoutId);
+            cameraTimeoutId = null;
+        }
+    },
+
+    handleCapture: () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = domElements.cameraPreview.videoWidth;
+        canvas.height = domElements.cameraPreview.videoHeight;
+        canvas.getContext('2d').drawImage(domElements.cameraPreview, 0, 0);
+        
+        canvas.toBlob(blob => {
+            const file = new File([blob], 'captured-qr.png', { type: 'image/png' });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            fileInput.files = dataTransfer.files;
+            handlers.handleDecrypt();
+            handlers.stopCamera();
+        }, 'image/png');
+    },
+
     handleEncrypt: async () => {
         const message = domElements.messageInput.value.trim();
         const passphrase = domElements.passphraseInput.value.trim();
@@ -623,19 +691,6 @@ const handlers = {
         }
     },
 
-    stopCamera: () => {
-        const stream = domElements.cameraPreview.srcObject;
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-            domElements.cameraPreview.srcObject = null;
-            domElements.cameraContainer.classList.add('hidden');
-            if (cameraTimeoutId) {
-                clearTimeout(cameraTimeoutId);
-                cameraTimeoutId = null;
-            }
-        }
-    },
-
     handleUploadArrow: () => {
         fileInput.click();
     }
@@ -643,7 +698,6 @@ const handlers = {
 
 // Event listeners cargados después del DOM
 document.addEventListener('DOMContentLoaded', () => {
-    // Generar contraseña al hacer clic en el ícono
     const generateButton = document.querySelector('.generate-password');
     if (generateButton) {
         generateButton.addEventListener('click', () => {
@@ -657,7 +711,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Element with class "generate-password" not found');
     }
 
-    // charCounter
     const charCounter = document.getElementById('char-counter');
     domElements.messageInput.addEventListener('input', () => {
         const currentLength = domElements.messageInput.value.length;
@@ -670,7 +723,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Otros eventos
     domElements.uploadArrowButton.addEventListener('click', handlers.handleUploadArrow);
     domElements.sendButton.addEventListener('click', handlers.handleEncrypt);
     domElements.decodeButton.addEventListener('click', handlers.handleDecrypt);
@@ -678,7 +730,13 @@ document.addEventListener('DOMContentLoaded', () => {
     domElements.shareButton.addEventListener('click', handlers.handleShare);
     fileInput.addEventListener('change', handlers.handleDecrypt);
 
-    // Validación visual de la passphrase
+    domElements.scanButton.addEventListener('click', handlers.startCamera);
+    if (domElements.captureBtn) {
+        domElements.captureBtn.addEventListener('click', handlers.handleCapture);
+    } else {
+        console.warn('Capture button not found in DOM');
+    }
+
     domElements.passphraseInput.addEventListener('input', (e) => {
         const passphrase = e.target.value;
         const keyIcon = domElements.passphraseInput.parentElement.querySelector('.fa-key');
@@ -696,22 +754,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Eventos del tutorial y "Coming Soon"
     showTutorialModal();
     domElements.closeTutorial.addEventListener('click', closeTutorialModal);
     domElements.closeModalButton.addEventListener('click', closeTutorialModal);
     domElements.dontShowAgain.addEventListener('click', setDontShowAgain);
-    domElements.scanButton.addEventListener('click', showComingSoonMessage);
     domElements.imageButton.addEventListener('click', showComingSoonMessage);
     domElements.pdfButton.addEventListener('click', showComingSoonMessage);
 
-    // Habilitar solo el botón de escaneo para "Coming Soon", dejar image y pdf desactivados
-    domElements.scanButton.disabled = false;
-
-    // Deshabilitar decodeButton inicialmente
     domElements.decodeButton.disabled = true;
-
-    // Habilitar decodeButton cuando se cargue un archivo
     fileInput.addEventListener('change', () => {
         if (fileInput.files.length > 0) {
             domElements.decodeButton.disabled = false;
@@ -721,7 +771,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Detener la cámara al salir de la página si está activa
 window.addEventListener('beforeunload', (e) => {
     if (domElements.cameraPreview.srcObject) {
         e.preventDefault();
