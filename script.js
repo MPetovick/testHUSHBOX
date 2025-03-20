@@ -22,7 +22,7 @@ const domElements = {
     scanButton: document.getElementById('scan-button'),
     imageButton: document.getElementById('image-button'),
     pdfButton: document.getElementById('pdf-button'),
-    cameraContainer: document.getElementById('camera-container'),
+    cameraModal: document.getElementById('camera-modal'),
     cameraPreview: document.getElementById('camera-preview'),
     messagesDiv: document.getElementById('messages'),
     passphraseInput: document.getElementById('passphrase'),
@@ -34,12 +34,13 @@ const domElements = {
     shareButton: document.getElementById('share-button'),
     qrContainer: document.getElementById('qr-container'),
     tutorialModal: document.getElementById('tutorial-modal'),
-    closeTutorial: document.getElementById('close-tutorial'),
+    closeTutorialBtn: document.getElementById('close-tutorial-btn'), // Corregido a close-tutorial-btn
     dontShowAgain: document.getElementById('dont-show-again'),
     closeModalButton: document.querySelector('.close-modal'),
     comingSoonMessage: document.getElementById('coming-soon-message'),
     loginIcon: document.getElementById('login-icon'),
-    captureBtn: document.getElementById('capture-btn') // Botón para capturar desde la cámara
+    captureBtn: document.getElementById('capture-btn'),
+    closeCamera: document.getElementById('close-camera')
 };
 
 // Función mejorada para generar contraseñas seguras que cumplan con las reglas de validación
@@ -99,8 +100,8 @@ document.body.appendChild(scanCanvas);
 
 // Variables para protección contra fuerza bruta y cámara
 let decryptAttempts = 0;
-let cameraTimeoutId = null;
 let cameraStream = null;
+let scanning = false;
 
 // Función para limpiar un ArrayBuffer o Uint8Array
 const clearBuffer = (buffer) => {
@@ -459,73 +460,112 @@ const uiController = {
 
 // Manejadores de eventos
 const handlers = {
+    init() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            uiController.displayMessage('Este navegador no soporta acceso a la cámara.', true);
+            return;
+        }
+    },
+
     startCamera: async () => {
         try {
-            cameraStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "environment", width: 1280, height: 720 } 
-            });
-            domElements.cameraPreview.srcObject = cameraStream;
-            domElements.cameraContainer.classList.remove('hidden');
-
-            const scanFrame = () => {
-                if (domElements.cameraPreview.readyState === HTMLMediaElement.HAVE_ENOUGH_DATA) {
-                    scanCanvas.width = domElements.cameraPreview.videoWidth;
-                    scanCanvas.height = domElements.cameraPreview.videoHeight;
-                    scanContext.drawImage(domElements.cameraPreview, 0, 0);
-                    
-                    const imageData = scanContext.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
-                    const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
-                    
-                    if (qrCode) {
-                        handlers.stopCamera();
-                        domElements.messageInput.value = qrCode.data;
-                        uiController.displayMessage('QR scanned successfully!', false);
-                        // Opcional: desencadenar el descifrado automáticamente
-                        // handlers.handleDecrypt();
-                    }
+            if (!domElements.cameraModal) {
+                throw new Error('Camera modal element not found in DOM');
+            }
+            domElements.cameraModal.classList.add('active');
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: 'environment',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
                 }
-                requestAnimationFrame(scanFrame);
-            };
-            scanFrame();
+            });
 
-            cameraTimeoutId = setTimeout(() => {
-                handlers.stopCamera();
-                uiController.displayMessage('Camera timed out.', false);
+            domElements.cameraPreview.srcObject = cameraStream;
+
+            await new Promise((resolve) => {
+                domElements.cameraPreview.onloadedmetadata = () => {
+                    domElements.cameraPreview.play().then(resolve).catch(err => {
+                        throw new Error('Error playing video stream: ' + err.message);
+                    });
+                };
+            });
+
+            domElements.cameraModal.classList.remove('hidden');
+            scanning = true;
+            handlers.scan();
+
+            setTimeout(() => {
+                if (scanning) {
+                    handlers.stopCamera();
+                    uiController.displayMessage('Tiempo de escaneo agotado.', false);
+                }
             }, CONFIG.CAMERA_TIMEOUT);
-        } catch (error) {
-            console.error('Camera error:', error);
-            uiController.displayMessage('Camera access denied or unavailable!', false);
-            domElements.cameraContainer.classList.add('hidden');
+        } catch (err) {
+            console.error('Error al acceder a la cámara:', err);
+            domElements.cameraModal.classList.remove('active');
+            domElements.cameraModal.classList.add('hidden');
+            uiController.displayMessage(`No se pudo acceder a la cámara: ${err.message}`, true);
         }
     },
 
     stopCamera: () => {
         if (cameraStream) {
             cameraStream.getTracks().forEach(track => track.stop());
-            domElements.cameraPreview.srcObject = null;
             cameraStream = null;
         }
-        domElements.cameraContainer.classList.add('hidden');
-        if (cameraTimeoutId) {
-            clearTimeout(cameraTimeoutId);
-            cameraTimeoutId = null;
+        scanning = false;
+        domElements.cameraPreview.srcObject = null;
+        domElements.cameraModal.classList.remove('active');
+        domElements.cameraModal.classList.add('hidden');
+    },
+
+    scan: () => {
+        if (!scanning) return;
+
+        if (domElements.cameraPreview.videoWidth === 0 || domElements.cameraPreview.videoHeight === 0) {
+            requestAnimationFrame(() => handlers.scan());
+            return;
+        }
+
+        scanCanvas.width = domElements.cameraPreview.videoWidth;
+        scanCanvas.height = domElements.cameraPreview.videoHeight;
+        scanContext.drawImage(domElements.cameraPreview, 0, 0, scanCanvas.width, scanCanvas.height);
+        const imageData = scanContext.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+        const qrCode = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: 'dontInvert'
+        });
+
+        if (qrCode) {
+            handlers.handleQRCode(qrCode.data);
+        }
+
+        setTimeout(() => handlers.scan(), 100); // 10 FPS para reducir carga
+    },
+
+    handleQRCode: (data) => {
+        try {
+            domElements.messageInput.value = data;
+            uiController.displayMessage('Código QR escaneado exitosamente!', false);
+            handlers.stopCamera();
+        } catch (error) {
+            console.error('Error al procesar QR:', error);
+            uiController.displayMessage('Error al procesar el código QR.', true);
         }
     },
 
     handleCapture: () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = domElements.cameraPreview.videoWidth;
-        canvas.height = domElements.cameraPreview.videoHeight;
-        canvas.getContext('2d').drawImage(domElements.cameraPreview, 0, 0);
-        
-        canvas.toBlob(blob => {
-            const file = new File([blob], 'captured-qr.png', { type: 'image/png' });
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(file);
-            fileInput.files = dataTransfer.files;
-            handlers.handleDecrypt();
-            handlers.stopCamera();
-        }, 'image/png');
+        if (!scanning) return;
+        scanCanvas.width = domElements.cameraPreview.videoWidth;
+        scanCanvas.height = domElements.cameraPreview.videoHeight;
+        scanContext.drawImage(domElements.cameraPreview, 0, 0);
+        const imageData = scanContext.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+        const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
+        if (qrCode) {
+            handlers.handleQRCode(qrCode.data);
+        } else {
+            uiController.displayMessage('No se detectó un código QR en la captura.', true);
+        }
     },
 
     handleEncrypt: async () => {
@@ -693,11 +733,17 @@ const handlers = {
 
     handleUploadArrow: () => {
         fileInput.click();
+    },
+
+    cleanup: () => {
+        handlers.stopCamera();
     }
 };
 
 // Event listeners cargados después del DOM
 document.addEventListener('DOMContentLoaded', () => {
+    handlers.init();
+
     const generateButton = document.querySelector('.generate-password');
     if (generateButton) {
         generateButton.addEventListener('click', () => {
@@ -736,6 +782,11 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         console.warn('Capture button not found in DOM');
     }
+    if (domElements.closeCamera) {
+        domElements.closeCamera.addEventListener('click', handlers.stopCamera);
+    } else {
+        console.warn('Close camera button not found in DOM');
+    }
 
     domElements.passphraseInput.addEventListener('input', (e) => {
         const passphrase = e.target.value;
@@ -754,10 +805,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Modal de tutorial
     showTutorialModal();
-    domElements.closeTutorial.addEventListener('click', closeTutorialModal);
-    domElements.closeModalButton.addEventListener('click', closeTutorialModal);
-    domElements.dontShowAgain.addEventListener('click', setDontShowAgain);
+    if (domElements.closeTutorialBtn) {
+        domElements.closeTutorialBtn.addEventListener('click', closeTutorialModal);
+    } else {
+        console.warn('Close tutorial button not found in DOM');
+    }
+    if (domElements.closeModalButton) {
+        domElements.closeModalButton.addEventListener('click', closeTutorialModal);
+    } else {
+        console.warn('Close modal button not found in DOM');
+    }
+    if (domElements.dontShowAgain) {
+        domElements.dontShowAgain.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                setDontShowAgain();
+            }
+        });
+    } else {
+        console.warn('Dont show again checkbox not found in DOM');
+    }
     domElements.imageButton.addEventListener('click', showComingSoonMessage);
     domElements.pdfButton.addEventListener('click', showComingSoonMessage);
 
@@ -772,13 +840,13 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.addEventListener('beforeunload', (e) => {
-    if (domElements.cameraPreview.srcObject) {
+    if (cameraStream) {
         e.preventDefault();
         e.returnValue = 'Camera is active. Are you sure you want to leave?';
-        handlers.stopCamera();
+        handlers.cleanup();
     }
 });
 
 // Inicialización
 domElements.qrContainer.classList.add('hidden');
-domElements.cameraContainer.classList.add('hidden');
+domElements.cameraModal.classList.add('hidden');
