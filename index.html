@@ -29,7 +29,7 @@
             </a> 
             HUSH<span class="white-text">B</span><i class="fas fa-qrcode qr-icon"></i><span class="white-text">X</span>
         </h1>
-        <a href="#" id="login-icon" class="login-icon" title="Login">
+        <a href="#" id="login-icon" class="login-icon" title="Login" aria-label="Login">
             <i class="fas fa-user-circle"></i>
         </a>
     </header>
@@ -40,28 +40,28 @@
             <!-- Sección de Cifrado -->
             <div class="section encrypt-section">
                 <div class="input-group">
-                    <input type="password" id="passphrase" placeholder="Enter your secret passphrase" required>
+                    <input type="password" id="passphrase" placeholder="Enter your secret passphrase" required aria-label="Secret passphrase">
                     <i class="fas fa-key icon"></i>
-                    <i class="fas fa-dice icon generate-password" title="Generate secure passphrase"></i>
+                    <i class="fas fa-dice icon generate-password" title="Generate secure passphrase" role="button" tabindex="0"></i>
                 </div>
                 <div class="input-group">
-                    <textarea id="message-input" placeholder="Write your secure message..." rows="4" maxlength="4000"></textarea>
+                    <textarea id="message-input" placeholder="Write your secure message..." rows="4" maxlength="4000" aria-label="Secure message"></textarea>
                     <i class="fas fa-comment-dots icon"></i>
                     <div id="char-counter" class="char-counter">0/4000</div>
                 </div>
 
                 <!-- Botones de acción con íconos -->
                 <div class="button-group">
-                    <button id="upload-arrow-button" class="btn-icon" title="Upload Image">
+                    <button id="upload-arrow-button" class="btn-icon" title="Upload Image" aria-label="Upload image">
                         <i class="fas fa-arrow-up"></i>
                     </button>
-                    <button id="scan-button" class="btn-icon" title="Scan QR">
+                    <button id="scan-button" class="btn-icon" title="Scan QR" aria-label="Scan QR code">
                         <i class="fas fa-camera"></i>
                     </button>
-                    <button id="image-button" class="btn-icon" title="Upload QR Image" disabled>
+                    <button id="image-button" class="btn-icon" title="Upload QR Image" disabled aria-label="Upload QR image (coming soon)">
                         <i class="fas fa-image"></i>
                     </button>
-                    <button id="pdf-button" class="btn-icon" title="Upload PDF" disabled>
+                    <button id="pdf-button" class="btn-icon" title="Upload PDF" disabled aria-label="Upload PDF (coming soon)">
                         <i class="fas fa-file-pdf"></i>
                     </button>
                     <!-- Mensaje "Coming Soon" -->
@@ -71,23 +71,22 @@
                 </div>
 
                 <!-- Modal de Cámara QR -->
-                <div id="camera-modal" class="camera-modal hidden">
+                <div id="camera-modal" class="camera-modal hidden" role="dialog" aria-labelledby="camera-modal-title">
                     <div class="camera-modal-content">
                         <div class="camera-header">
-                            <h3><i class="fas fa-qrcode"></i> Escanear QR</h3>
-                            <button class="btn-secondary close-camera">
+                            <h3 id="camera-modal-title"><i class="fas fa-qrcode"></i> Escanear QR</h3>
+                            <button id="close-camera" class="btn-secondary close-camera" aria-label="Close camera modal">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
                         <div class="camera-body">
-                            <video id="camera-preview" autoplay playsinline></video>
-                            <canvas id="scan-canvas" style="display: none;"></canvas>
+                            <video id="camera-preview" autoplay playsinline aria-label="Camera preview"></video>
                             <div class="camera-actions">
-                                <button class="btn-primary" id="capture-btn">
+                                <button class="btn-primary" id="capture-btn" aria-label="Capture QR code">
                                     <i class="fas fa-camera"></i> Capturar
                                 </button>
                                 <label class="btn-primary upload-label">
-                                    <input type="file" accept="image/*" hidden>
+                                    <input type="file" accept="image/*" hidden id="qr-upload" aria-label="Upload QR image">
                                     <i class="fas fa-upload"></i> Cargar
                                 </label>
                             </div>
@@ -97,10 +96,10 @@
 
                 <!-- Botones Encrypt y Decrypt en la misma fila -->
                 <div class="action-buttons">
-                    <button id="send-button" class="btn-primary" aria-label="Encrypt message">
+                    <button id="send-button" class="btn-primary">
                         <i class="fas fa-lock"></i> Encrypt
                     </button>
-                    <button id="decode-button" class="btn-primary" aria-label="Decrypt message" disabled>
+                    <button id="decode-button" class="btn-primary" disabled>
                         <i class="fas fa-unlock"></i> Decrypt
                     </button>
                 </div>
@@ -124,7 +123,7 @@
 
             <!-- Sección de Descifrado -->
             <div class="section decrypt-section">
-                <div id="messages" class="message-container">
+                <div id="messages" class="message-container" role="log" aria-live="polite">
                     <div class="message-placeholder">
                         <i class="fas fa-comments"></i>
                         <p>Encrypted & Decrypted messages appear here</p>
@@ -137,10 +136,10 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="social-icons">
-            <a href="https://t.me/HUSHBOX_QR" target="_blank" class="btn-icon social-icon telegram" title="Telegram">
+            <a href="https://t.me/HUSHBOX_QR" target="_blank" class="btn-icon social-icon telegram" title="Telegram" aria-label="Visit HushBox Telegram">
                 <i class="fab fa-telegram-plane"></i>
             </a>
-            <a href="https://twitter.com/HUSHBOXonline" target="_blank" class="btn-icon social-icon twitter" title="Twitter">
+            <a href="https://twitter.com/HUSHBOXonline" target="_blank" class="btn-icon social-icon twitter" title="Twitter" aria-label="Visit HushBox Twitter">
                 <i class="fab fa-twitter"></i>
             </a>
         </div>
@@ -149,11 +148,11 @@
     </footer>
 
     <!-- Modal de tutorial -->
-    <div id="tutorial-modal" class="modal">
+    <div id="tutorial-modal" class="modal" role="dialog" aria-labelledby="tutorial-modal-title">
         <div class="modal-content">
-            <span class="close-modal">×</span>
+            <span class="close-modal" id="close-tutorial" aria-label="Close tutorial modal">×</span>
             <div class="modal-header">
-                <h2><i class="fas fa-lock"></i>HUSHBOX</h2>
+                <h2 id="tutorial-modal-title"><i class="fas fa-lock"></i>HUSHBOX</h2>
                 <p class="modal-subtitle">Your Digital Privacy Vault</p>
             </div>
             <div class="modal-body">
@@ -185,12 +184,11 @@
                 </div>
             </div>
             <div class="modal-actions">
-                <button id="close-tutorial" class="btn-primary">Start Securing Now</button>
+                <button id="close-tutorial-btn" class="btn-primary">Start Securing Now</button>
                 <label class="disable-toggle">
-                    <input type="checkbox" id="dont-show-again-checkbox">
+                    <input type="checkbox" id="dont-show-again" aria-label="Don't show this tutorial again">
                     Don’t show this again
                 </label>
-                <button id="dont-show-again" class="btn-secondary hidden">Save Preference</button>
             </div>
         </div>
     </div>
