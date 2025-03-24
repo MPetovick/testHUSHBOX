@@ -253,11 +253,12 @@ const cryptoUtils = {
         
         let encryptedData, salt, iv, ciphertext, hmac, decrypted;
         try {
-            // Validate base64 input before decoding
-            if (!encryptedBase64 || typeof encryptedBase64 !== 'string' || !/^[A-Za-z0-9+/=]+$/.test(encryptedBase64)) {
-                throw new Error('Invalid QR data: Not a valid base64 string.');
+            // Clean the input to remove any non-base64 characters
+            const cleanedBase64 = encryptedBase64.trim().replace(/[^A-Za-z0-9+/=]/g, '');
+            if (!cleanedBase64 || !/^[A-Za-z0-9+/=]+$/.test(cleanedBase64)) {
+                throw new Error('Invalid QR data: Not a valid base64 string after cleaning.');
             }
-            encryptedData = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
+            encryptedData = Uint8Array.from(atob(cleanedBase64), c => c.charCodeAt(0));
             salt = encryptedData.slice(0, CONFIG.SALT_LENGTH);
             iv = encryptedData.slice(CONFIG.SALT_LENGTH, CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH);
             ciphertext = encryptedData.slice(CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH, -32);
@@ -589,13 +590,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 try {
-                    console.log('Scanned QR Data:', qrData); // Debug QR data
-                    const decrypted = await cryptoUtils.decryptMessage(qrData, passphrase);
+                    console.log('Raw QR Data:', qrData); // Log raw data
+                    const cleanedQRData = qrData.trim().replace(/[^A-Za-z0-9+/=]/g, '');
+                    console.log('Cleaned QR Data:', cleanedQRData); // Log cleaned data
+                    const decrypted = await cryptoUtils.decryptMessage(cleanedQRData, passphrase);
                     uiController.displayMessage(`Decrypted: ${decrypted}`, false);
                     domElements.passphraseInput.value = '';
                     Telegram.WebApp.closeScanQrPopup();
                 } catch (error) {
-                    console.error('Decryption Error:', error.message, 'QR Data:', qrData);
+                    console.error('Decryption Error:', error.message, 'Raw QR Data:', qrData);
                     uiController.displayMessage(error.message || 'Decryption failed. Wrong passphrase or invalid QR?', false);
                     Telegram.WebApp.closeScanQrPopup();
                 }
