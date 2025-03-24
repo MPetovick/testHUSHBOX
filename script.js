@@ -569,23 +569,25 @@ const handlers = {
 
             // Check if running in Telegram WebView
             if (window.Telegram && window.Telegram.WebApp) {
-                // Telegram WebView environment
-                const qrFile = new File([qrBlob], fileName, { type: 'image/png' });
-                
-                // Telegram doesn't support direct downloads in WebView; use clipboard
-                try {
-                    await navigator.clipboard.writeText(qrDataUrl);
-                    uiController.displayMessage(
-                        'QR code copied to clipboard. Paste it in Telegram to save or share.',
-                        false
-                    );
-                } catch (clipError) {
-                    console.error('Clipboard error in Telegram:', clipError);
-                    uiController.displayMessage(
-                        'Clipboard not available in Telegram. Use a browser for full functionality.',
-                        false
-                    );
-                }
+                const webApp = window.Telegram.WebApp;
+                webApp.ready();
+
+                // Convertir el Blob a un Uint8Array para usar con downloadFile
+                const arrayBuffer = await qrBlob.arrayBuffer();
+                const uint8Array = new Uint8Array(arrayBuffer);
+
+                // Usar downloadFile del SDK para iniciar la descarga nativa
+                webApp.downloadFile({
+                    file_name: fileName,
+                    data: uint8Array
+                });
+
+                uiController.displayMessage('Download started via Telegram!', false);
+
+                // Escuchar el evento de solicitud de descarga (opcional)
+                webApp.onEvent('fileDownloadRequested', () => {
+                    uiController.displayMessage('File download requested successfully!', false);
+                });
             } else {
                 // Standard browser environment
                 const link = document.createElement('a');
@@ -616,25 +618,32 @@ const handlers = {
 
             // Check if running in Telegram WebView
             if (window.Telegram && window.Telegram.WebApp) {
-                // Initialize Telegram WebApp
                 const webApp = window.Telegram.WebApp;
                 webApp.ready();
 
-                // Telegram doesn't support direct file sharing via WebView; use clipboard
-                try {
-                    await navigator.clipboard.writeText(qrDataUrl);
-                    uiController.displayMessage(
-                        'QR code copied to clipboard. Paste it in Telegram to share.',
-                        false
-                    );
-                    webApp.expand(); // Expand the Mini App view
-                } catch (clipError) {
-                    console.error('Clipboard error in Telegram:', clipError);
-                    uiController.displayMessage(
-                        'Sharing not fully supported in Telegram. Copy failed.',
-                        false
-                    );
-                }
+                // Convertir el Blob a un Uint8Array para compartir
+                const arrayBuffer = await qrBlob.arrayBuffer();
+                const uint8Array = new Uint8Array(arrayBuffer);
+
+                // Usar shareMessage para compartir directamente
+                webApp.shareMessage({
+                    text: 'Check out this encrypted QR code from HushBox!',
+                    media: {
+                        type: 'photo',
+                        data: uint8Array,
+                        file_name: 'hushbox-qr.png'
+                    }
+                });
+
+                uiController.displayMessage('Sharing QR via Telegram...', false);
+
+                // Escuchar eventos de éxito o fallo (opcional)
+                webApp.onEvent('shareMessageSent', () => {
+                    uiController.displayMessage('QR shared successfully via Telegram!', false);
+                });
+                webApp.onEvent('shareMessageFailed', (error) => {
+                    uiController.displayMessage('Failed to share QR: ' + (error || 'Unknown error'), false);
+                });
             } else {
                 // Standard browser environment
                 if (navigator.share && navigator.canShare({ files: [qrFile] })) {
@@ -768,7 +777,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.Telegram && window.Telegram.WebApp) {
         const webApp = window.Telegram.WebApp;
         webApp.ready();
-        webApp.expand(); // Ensure the Mini App is fully expanded
+        webApp.expand(); // Asegura que la Mini App esté completamente expandida
+        console.log('Telegram WebApp initialized:', webApp.initData);
     }
 });
 
