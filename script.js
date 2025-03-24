@@ -22,7 +22,7 @@ const domElements = {
     scanButton: document.getElementById('scan-button'),
     imageButton: document.getElementById('image-button'),
     pdfButton: document.getElementById('pdf-button'),
-    cameraModal: document.getElementById('camera-modal'),
+    cameraContainer: document.getElementById('camera-container'),
     cameraPreview: document.getElementById('camera-preview'),
     messagesDiv: document.getElementById('messages'),
     passphraseInput: document.getElementById('passphrase'),
@@ -34,13 +34,11 @@ const domElements = {
     shareButton: document.getElementById('share-button'),
     qrContainer: document.getElementById('qr-container'),
     tutorialModal: document.getElementById('tutorial-modal'),
-    closeTutorialBtn: document.getElementById('close-tutorial-btn'), // Corregido a close-tutorial-btn
+    closeTutorial: document.getElementById('close-tutorial'),
     dontShowAgain: document.getElementById('dont-show-again'),
     closeModalButton: document.querySelector('.close-modal'),
     comingSoonMessage: document.getElementById('coming-soon-message'),
-    loginIcon: document.getElementById('login-icon'),
-    captureBtn: document.getElementById('capture-btn'),
-    closeCamera: document.getElementById('close-camera')
+    loginIcon: document.getElementById('login-icon')
 };
 
 // Función mejorada para generar contraseñas seguras que cumplan con las reglas de validación
@@ -98,10 +96,9 @@ const scanContext = scanCanvas.getContext('2d');
 scanCanvas.style.display = 'none';
 document.body.appendChild(scanCanvas);
 
-// Variables para protección contra fuerza bruta y cámara
+// Variables para protección contra fuerza bruta
 let decryptAttempts = 0;
-let cameraStream = null;
-let scanning = false;
+let cameraTimeoutId = null;
 
 // Función para limpiar un ArrayBuffer o Uint8Array
 const clearBuffer = (buffer) => {
@@ -339,12 +336,14 @@ const uiController = {
         const messagesDiv = domElements.messagesDiv;
         const messageEl = document.createElement('div');
         messageEl.className = `message ${isSent ? 'sent' : ''}`;
-
+        
+        // Determinar el tipo de mensaje
         const isEncrypted = content.startsWith('Encrypted:');
         const isDecrypted = content.startsWith('Decrypted:');
         const messageType = isEncrypted ? 'encrypted' : isDecrypted ? 'decrypted' : 'notice';
         messageEl.dataset.messageType = messageType;
 
+        // Si es una contraseña, agregar el ícono de copiar
         if (isPassphrase) {
             messageEl.innerHTML = `
                 <div class="message-content">
@@ -368,18 +367,19 @@ const uiController = {
                 if (messageEl && messageEl.parentNode) {
                     messageEl.parentNode.removeChild(messageEl);
                 }
-            }, CONFIG.NOTICE_TIMEOUT);
+            }, CONFIG.NOTICE_TIMEOUT); // 10 segundos
         } else {
             messageEl.innerHTML = `
                 <div class="message-content">${content}</div>
                 <div class="message-time">${new Date().toLocaleTimeString()}</div>
             `;
+            // Si es un mensaje de tipo "notice", agregar temporizador individual
             if (messageType === 'notice') {
                 messageEl.timeoutId = setTimeout(() => {
                     if (messageEl && messageEl.parentNode) {
                         messageEl.parentNode.removeChild(messageEl);
                     }
-                }, CONFIG.NOTICE_TIMEOUT);
+                }, CONFIG.NOTICE_TIMEOUT); // 10 segundos
             }
         }
 
@@ -460,114 +460,6 @@ const uiController = {
 
 // Manejadores de eventos
 const handlers = {
-    init() {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            uiController.displayMessage('Este navegador no soporta acceso a la cámara.', true);
-            return;
-        }
-    },
-
-    startCamera: async () => {
-        try {
-            if (!domElements.cameraModal) {
-                throw new Error('Camera modal element not found in DOM');
-            }
-            domElements.cameraModal.classList.add('active');
-            cameraStream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: 'environment',
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
-                }
-            });
-
-            domElements.cameraPreview.srcObject = cameraStream;
-
-            await new Promise((resolve) => {
-                domElements.cameraPreview.onloadedmetadata = () => {
-                    domElements.cameraPreview.play().then(resolve).catch(err => {
-                        throw new Error('Error playing video stream: ' + err.message);
-                    });
-                };
-            });
-
-            domElements.cameraModal.classList.remove('hidden');
-            scanning = true;
-            handlers.scan();
-
-            setTimeout(() => {
-                if (scanning) {
-                    handlers.stopCamera();
-                    uiController.displayMessage('Tiempo de escaneo agotado.', false);
-                }
-            }, CONFIG.CAMERA_TIMEOUT);
-        } catch (err) {
-            console.error('Error al acceder a la cámara:', err);
-            domElements.cameraModal.classList.remove('active');
-            domElements.cameraModal.classList.add('hidden');
-            uiController.displayMessage(`No se pudo acceder a la cámara: ${err.message}`, true);
-        }
-    },
-
-    stopCamera: () => {
-        if (cameraStream) {
-            cameraStream.getTracks().forEach(track => track.stop());
-            cameraStream = null;
-        }
-        scanning = false;
-        domElements.cameraPreview.srcObject = null;
-        domElements.cameraModal.classList.remove('active');
-        domElements.cameraModal.classList.add('hidden');
-    },
-
-    scan: () => {
-        if (!scanning) return;
-
-        if (domElements.cameraPreview.videoWidth === 0 || domElements.cameraPreview.videoHeight === 0) {
-            requestAnimationFrame(() => handlers.scan());
-            return;
-        }
-
-        scanCanvas.width = domElements.cameraPreview.videoWidth;
-        scanCanvas.height = domElements.cameraPreview.videoHeight;
-        scanContext.drawImage(domElements.cameraPreview, 0, 0, scanCanvas.width, scanCanvas.height);
-        const imageData = scanContext.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
-        const qrCode = jsQR(imageData.data, imageData.width, imageData.height, {
-            inversionAttempts: 'dontInvert'
-        });
-
-        if (qrCode) {
-            handlers.handleQRCode(qrCode.data);
-        }
-
-        setTimeout(() => handlers.scan(), 100); // 10 FPS para reducir carga
-    },
-
-    handleQRCode: (data) => {
-        try {
-            domElements.messageInput.value = data;
-            uiController.displayMessage('Código QR escaneado exitosamente!', false);
-            handlers.stopCamera();
-        } catch (error) {
-            console.error('Error al procesar QR:', error);
-            uiController.displayMessage('Error al procesar el código QR.', true);
-        }
-    },
-
-    handleCapture: () => {
-        if (!scanning) return;
-        scanCanvas.width = domElements.cameraPreview.videoWidth;
-        scanCanvas.height = domElements.cameraPreview.videoHeight;
-        scanContext.drawImage(domElements.cameraPreview, 0, 0);
-        const imageData = scanContext.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
-        const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
-        if (qrCode) {
-            handlers.handleQRCode(qrCode.data);
-        } else {
-            uiController.displayMessage('No se detectó un código QR en la captura.', true);
-        }
-    },
-
     handleEncrypt: async () => {
         const message = domElements.messageInput.value.trim();
         const passphrase = domElements.passphraseInput.value.trim();
@@ -672,19 +564,39 @@ const handlers = {
 
             const qrDataUrl = domElements.qrCanvas.toDataURL('image/png', 0.9);
             const qrBlob = await (await fetch(qrDataUrl)).blob();
-
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             const fileName = `hushbox-qr-${timestamp}.png`;
 
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(qrBlob);
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
-
-            uiController.displayMessage('QR downloaded successfully!', false);
+            // Check if running in Telegram WebView
+            if (window.Telegram && window.Telegram.WebApp) {
+                // Telegram WebView environment
+                const qrFile = new File([qrBlob], fileName, { type: 'image/png' });
+                
+                // Telegram doesn't support direct downloads in WebView; use clipboard
+                try {
+                    await navigator.clipboard.writeText(qrDataUrl);
+                    uiController.displayMessage(
+                        'QR code copied to clipboard. Paste it in Telegram to save or share.',
+                        false
+                    );
+                } catch (clipError) {
+                    console.error('Clipboard error in Telegram:', clipError);
+                    uiController.displayMessage(
+                        'Clipboard not available in Telegram. Use a browser for full functionality.',
+                        false
+                    );
+                }
+            } else {
+                // Standard browser environment
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(qrBlob);
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+                uiController.displayMessage('QR downloaded successfully!', false);
+            }
         } catch (error) {
             console.error('Download error:', error);
             uiController.displayMessage('Failed to download QR: ' + error.message, false);
@@ -702,27 +614,51 @@ const handlers = {
             const qrBlob = await (await fetch(qrDataUrl)).blob();
             const qrFile = new File([qrBlob], 'hushbox-qr.png', { type: 'image/png' });
 
-            if (navigator.share && navigator.canShare({ files: [qrFile] })) {
-                await navigator.share({
-                    title: 'HushBox Secure QR',
-                    text: 'Check out this encrypted QR code from HushBox!',
-                    files: [qrFile]
-                });
-                uiController.displayMessage('QR shared successfully!', false);
-            } else {
+            // Check if running in Telegram WebView
+            if (window.Telegram && window.Telegram.WebApp) {
+                // Initialize Telegram WebApp
+                const webApp = window.Telegram.WebApp;
+                webApp.ready();
+
+                // Telegram doesn't support direct file sharing via WebView; use clipboard
                 try {
                     await navigator.clipboard.writeText(qrDataUrl);
                     uiController.displayMessage(
-                        'Sharing and downloading are not supported on Telegram yet. Use HUSHBOX from a modern browser.',
+                        'QR code copied to clipboard. Paste it in Telegram to share.',
                         false
                     );
+                    webApp.expand(); // Expand the Mini App view
                 } catch (clipError) {
-                    console.error('Clipboard error:', clipError);
+                    console.error('Clipboard error in Telegram:', clipError);
                     uiController.displayMessage(
-                        'Sharing and clipboard not supported. Please download the QR and share it manually (e.g., in Telegram).',
+                        'Sharing not fully supported in Telegram. Copy failed.',
                         false
                     );
-                    handlers.handleDownload();
+                }
+            } else {
+                // Standard browser environment
+                if (navigator.share && navigator.canShare({ files: [qrFile] })) {
+                    await navigator.share({
+                        title: 'HushBox Secure QR',
+                        text: 'Check out this encrypted QR code from HushBox!',
+                        files: [qrFile]
+                    });
+                    uiController.displayMessage('QR shared successfully!', false);
+                } else {
+                    try {
+                        await navigator.clipboard.writeText(qrDataUrl);
+                        uiController.displayMessage(
+                            'Share API not supported. QR copied to clipboard instead.',
+                            false
+                        );
+                    } catch (clipError) {
+                        console.error('Clipboard error:', clipError);
+                        uiController.displayMessage(
+                            'Sharing and clipboard not supported. Please download manually.',
+                            false
+                        );
+                        handlers.handleDownload();
+                    }
                 }
             }
         } catch (error) {
@@ -731,19 +667,27 @@ const handlers = {
         }
     },
 
-    handleUploadArrow: () => {
-        fileInput.click();
+    stopCamera: () => {
+        const stream = domElements.cameraPreview.srcObject;
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            domElements.cameraPreview.srcObject = null;
+            domElements.cameraContainer.classList.add('hidden');
+            if (cameraTimeoutId) {
+                clearTimeout(cameraTimeoutId);
+                cameraTimeoutId = null;
+            }
+        }
     },
 
-    cleanup: () => {
-        handlers.stopCamera();
+    handleUploadArrow: () => {
+        fileInput.click();
     }
 };
 
 // Event listeners cargados después del DOM
 document.addEventListener('DOMContentLoaded', () => {
-    handlers.init();
-
+    // Generar contraseña al hacer clic en el ícono
     const generateButton = document.querySelector('.generate-password');
     if (generateButton) {
         generateButton.addEventListener('click', () => {
@@ -757,6 +701,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Element with class "generate-password" not found');
     }
 
+    // charCounter
     const charCounter = document.getElementById('char-counter');
     domElements.messageInput.addEventListener('input', () => {
         const currentLength = domElements.messageInput.value.length;
@@ -769,6 +714,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Otros eventos
     domElements.uploadArrowButton.addEventListener('click', handlers.handleUploadArrow);
     domElements.sendButton.addEventListener('click', handlers.handleEncrypt);
     domElements.decodeButton.addEventListener('click', handlers.handleDecrypt);
@@ -776,18 +722,7 @@ document.addEventListener('DOMContentLoaded', () => {
     domElements.shareButton.addEventListener('click', handlers.handleShare);
     fileInput.addEventListener('change', handlers.handleDecrypt);
 
-    domElements.scanButton.addEventListener('click', handlers.startCamera);
-    if (domElements.captureBtn) {
-        domElements.captureBtn.addEventListener('click', handlers.handleCapture);
-    } else {
-        console.warn('Capture button not found in DOM');
-    }
-    if (domElements.closeCamera) {
-        domElements.closeCamera.addEventListener('click', handlers.stopCamera);
-    } else {
-        console.warn('Close camera button not found in DOM');
-    }
-
+    // Validación visual de la passphrase
     domElements.passphraseInput.addEventListener('input', (e) => {
         const passphrase = e.target.value;
         const keyIcon = domElements.passphraseInput.parentElement.querySelector('.fa-key');
@@ -805,31 +740,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Modal de tutorial
+    // Eventos del tutorial y "Coming Soon"
     showTutorialModal();
-    if (domElements.closeTutorialBtn) {
-        domElements.closeTutorialBtn.addEventListener('click', closeTutorialModal);
-    } else {
-        console.warn('Close tutorial button not found in DOM');
-    }
-    if (domElements.closeModalButton) {
-        domElements.closeModalButton.addEventListener('click', closeTutorialModal);
-    } else {
-        console.warn('Close modal button not found in DOM');
-    }
-    if (domElements.dontShowAgain) {
-        domElements.dontShowAgain.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                setDontShowAgain();
-            }
-        });
-    } else {
-        console.warn('Dont show again checkbox not found in DOM');
-    }
+    domElements.closeTutorial.addEventListener('click', closeTutorialModal);
+    domElements.closeModalButton.addEventListener('click', closeTutorialModal);
+    domElements.dontShowAgain.addEventListener('click', setDontShowAgain);
+    domElements.scanButton.addEventListener('click', showComingSoonMessage);
     domElements.imageButton.addEventListener('click', showComingSoonMessage);
     domElements.pdfButton.addEventListener('click', showComingSoonMessage);
 
+    // Habilitar solo el botón de escaneo para "Coming Soon", dejar image y pdf desactivados
+    domElements.scanButton.disabled = false;
+
+    // Deshabilitar decodeButton inicialmente
     domElements.decodeButton.disabled = true;
+
+    // Habilitar decodeButton cuando se cargue un archivo
     fileInput.addEventListener('change', () => {
         if (fileInput.files.length > 0) {
             domElements.decodeButton.disabled = false;
@@ -837,16 +763,24 @@ document.addEventListener('DOMContentLoaded', () => {
             domElements.decodeButton.disabled = true;
         }
     });
+
+    // Telegram WebApp initialization (if in Telegram)
+    if (window.Telegram && window.Telegram.WebApp) {
+        const webApp = window.Telegram.WebApp;
+        webApp.ready();
+        webApp.expand(); // Ensure the Mini App is fully expanded
+    }
 });
 
+// Detener la cámara al salir de la página si está activa
 window.addEventListener('beforeunload', (e) => {
-    if (cameraStream) {
+    if (domElements.cameraPreview.srcObject) {
         e.preventDefault();
         e.returnValue = 'Camera is active. Are you sure you want to leave?';
-        handlers.cleanup();
+        handlers.stopCamera();
     }
 });
 
 // Inicialización
 domElements.qrContainer.classList.add('hidden');
-domElements.cameraModal.classList.add('hidden');
+domElements.cameraContainer.classList.add('hidden');
