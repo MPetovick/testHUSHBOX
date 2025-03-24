@@ -138,6 +138,7 @@ body {
     transition: color 0.3s ease;
 }
 
+/* Estilos específicos para el campo passphrase */
 .input-group #passphrase ~ .fa-key {
     right: 3rem;
 }
@@ -151,6 +152,7 @@ body {
     color: var(--primary-color);
 }
 
+/* Estilos específicos para el campo message-input */
 .input-group #message-input ~ .fa-comment-dots {
     right: 1rem;
     top: calc(1rem + 0.5rem);
@@ -180,36 +182,24 @@ body {
     box-shadow: 0 0 12px var(--glow-color);
 }
 
-/* Botones Principales Mejorados */
-.action-buttons {
-    display: flex;
-    gap: clamp(0.5rem, 2vw, 1.5rem);
-    margin: clamp(1rem, 2vw, 1.5rem) 0;
-    width: 100%;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
 .btn-primary {
-    flex: 1 1 auto;
-    padding: clamp(0.8rem, 2.5vw, 1rem) clamp(1.2rem, 3.5vw, 2rem);
-    font-size: clamp(0.9rem, 2.2vw, 1.1rem);
-    border-radius: 10px;
-    transition: all 0.3s ease;
-    min-width: 120px;
-    max-width: 280px;
-    white-space: nowrap;
-    letter-spacing: 0.5px;
+    width: auto;
+    min-width: 200px;
+    padding: clamp(0.8rem, 2vw, 1rem) clamp(1.5rem, 3vw, 2rem);
     background: var(--primary-color);
     border: none;
+    border-radius: 12px;
     color: #1a1a1a;
     font-weight: 600;
     cursor: pointer;
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: clamp(0.5rem, 1vw, 0.8rem);
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
     text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -221,9 +211,9 @@ body {
 .btn-primary:disabled {
     background: #666;
     cursor: default;
-    opacity: 0.7;
     transform: none;
     box-shadow: none;
+    opacity: 0.7;
 }
 
 .btn-secondary {
@@ -379,20 +369,20 @@ body {
 }
 
 .btn-icon:disabled {
-    background: rgba(102, 102, 102, 0.3);
-    border: 1px solid rgba(160, 160, 160, 0.3);
-    color: rgba(160, 160, 160, 0.5);
-    cursor: default;
-    box-shadow: none;
-    opacity: 0.6;
-    pointer-events: auto;
+    background: rgba(102, 102, 102, 0.3); /* Gris apagado */
+    border: 1px solid rgba(160, 160, 160, 0.3); /* Borde menos prominente */
+    color: rgba(160, 160, 160, 0.5); /* Color desvaído */
+    cursor: default; /* Cursor normal, no pointer */
+    box-shadow: none; /* Sin sombra */
+    opacity: 0.6; /* Ligeramente transparente */
+    pointer-events: auto; /* Permitir clics para "Coming Soon" */
 }
 
 .btn-icon:disabled:hover {
-    background: rgba(102, 102, 102, 0.3);
+    background: rgba(102, 102, 102, 0.3); /* Sin cambio al hover */
     color: rgba(160, 160, 160, 0.5);
     box-shadow: none;
-    transform: none;
+    transform: none; /* Sin animación */
 }
 
 .btn-icon i {
@@ -424,122 +414,35 @@ body {
     box-shadow: 0 4px 8px var(--glow-color);
 }
 
-/* Modal de Cámara */
-.camera-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.85); /* Fondo más claro para mejor contraste */
-    z-index: 1000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: opacity 0.3s ease; /* Transición solo en opacidad */
-    padding: 1rem;
-    opacity: 0; /* Inicialmente invisible */
+#camera-container {
+    display: none;
+    margin-bottom: 1rem;
+    text-align: center;
 }
 
-.camera-modal.hidden {
-    display: none; /* Oculta completamente cuando tiene clase hidden */
-}
-
-.camera-modal:not(.hidden) {
-    opacity: 1; /* Visible cuando no tiene hidden */
-    animation: fadeIn 0.3s ease; /* Animación más simple */
-}
-
-.camera-modal.active {
-    background: rgba(0, 0, 0, 0.95); /* Fondo más oscuro cuando está activa */
-}
-
-.camera-modal-content {
-    background: var(--section-bg);
-    border-radius: 15px;
-    padding: 1.5rem;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); /* Sombra más pronunciada */
-    backdrop-filter: blur(10px);
-    width: 100%;
-    max-width: 500px;
-    height: auto;
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    transition: transform 0.3s ease; /* Transición para efecto activo */
-}
-
-.camera-modal.active .camera-modal-content {
-    transform: scale(1.02); /* Ligero aumento cuando está activo */
-}
-
-.camera-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-}
-
-.camera-header h3 {
-    font-size: 1.2rem;
-    margin: 0;
-    color: var(--text-color);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.camera-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+#camera-container.hidden {
+    display: none;
 }
 
 #camera-preview {
     width: 100%;
-    max-height: 60vh;
-    background: var(--secondary-color);
+    max-width: 300px;
     border-radius: 12px;
     border: 2px solid var(--primary-color);
-    margin-bottom: 1rem;
-    object-fit: contain; /* Asegura que el video se ajuste bien */
+    background: var(--secondary-color);
 }
 
-.camera-actions {
+.action-buttons {
     display: flex;
-    gap: 1rem;
     justify-content: center;
-    flex-wrap: wrap;
+    gap: clamp(0.5rem, 1vw, 1rem);
+    margin-top: clamp(1rem, 2vw, 1.5rem);
 }
 
-.upload-label {
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.8rem 1.2rem;
-    background: var(--primary-color);
-    color: #1a1a1a;
-    border-radius: 10px;
-    transition: all 0.3s ease;
-    font-weight: 600;
-}
-
-.upload-label:hover {
-    background: #00b386;
-    box-shadow: 0 4px 16px var(--glow-color);
-}
-
-.upload-label input {
-    position: absolute;
-    opacity: 0;
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
+.action-buttons .btn-primary {
+    width: auto;
+    min-width: 150px;
+    max-width: none;
 }
 
 /* Modal Enhancements */
@@ -674,7 +577,6 @@ body {
     cursor: pointer;
     color: var(--primary-color);
     z-index: 1001;
-    transition: color 0.3s ease; /* Añadida transición */
 }
 
 .close-modal:hover {
@@ -692,8 +594,6 @@ body {
     from { opacity: 0; }
     to { opacity: 1; }
 }
-
-/* Eliminado modalSlideIn para simplificar y usar fadeIn */
 
 /* Estilos para el mensaje "Coming Soon" */
 #coming-soon-message {
@@ -722,7 +622,7 @@ body {
     margin: 0;
 }
 
-/* Media Queries */
+/* Media Queries para móviles */
 @media (max-width: 768px) {
     .main-grid {
         flex-direction: column;
@@ -750,6 +650,7 @@ body {
         padding: 8px 16px;
     }
 
+    /* Optimización específica para el modal en móviles */
     .modal-content {
         max-width: 95%;
         padding: 1rem;
@@ -811,34 +712,22 @@ body {
         font-size: 1.5rem;
     }
 
+    /* Ajustes específicos para los botones de QR */
     .qr-header {
         gap: 0.75rem;
     }
-
+    
     .qr-header h3 {
         font-size: 1.1rem;
     }
-
+    
     .btn-secondary {
         width: 28px;
         height: 28px;
     }
-
+    
     .btn-secondary i {
         font-size: 0.9rem;
-    }
-
-    .camera-modal-content {
-        max-width: 90%;
-        padding: 1rem;
-    }
-
-    #camera-preview {
-        max-height: 50vh;
-    }
-
-    .camera-header h3 {
-        font-size: 1.1rem;
     }
 }
 
@@ -847,39 +736,9 @@ body {
         width: 26px;
         height: 26px;
     }
-
+    
     .btn-secondary i {
         font-size: 0.85rem;
-    }
-
-    .action-buttons {
-        flex-direction: column;
-        gap: 0.8rem;
-    }
-    
-    .btn-primary {
-        width: 100%;
-        max-width: none;
-        padding: 0.8rem;
-        font-size: 0.9rem;
-    }
-
-    .camera-modal-content {
-        max-width: 95%;
-        padding: 0.8rem;
-    }
-
-    #camera-preview {
-        max-height: 40vh;
-    }
-
-    .camera-header h3 {
-        font-size: 1rem;
-    }
-
-    .upload-label {
-        padding: 0.6rem 1rem;
-        font-size: 0.9rem;
     }
 }
 
@@ -953,6 +812,7 @@ body {
     display: none;
 }
 
+/* Estilo para el ícono de copiar en el mensaje */
 .copy-icon {
     font-size: 0.9rem;
     color: var(--primary-color);
@@ -962,9 +822,21 @@ body {
 }
 
 .copy-icon:hover {
-    color: #00b386;
+    color: #00b386; /* Un tono más oscuro al pasar el ratón */
 }
 
+/* Ajuste para el contenedor del mensaje con ícono */
+.message-content {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 204, 153, 0.1);
+    border-radius: 8px;
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    word-break: break-all;
+}
+
+/* Asegurar que el texto de la contraseña no se desborde */
 .passphrase-text {
     flex-grow: 1;
     word-break: break-all;
