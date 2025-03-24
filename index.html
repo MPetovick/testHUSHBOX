@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="HUSHBOX is a privacy-focused tool for secure messaging using advanced encryption and QR codes. Simple and functional, it requires both users to share a password externally for secure transmission. Built upon SHUMZU.">
-  
+
     <!-- Title and Icons -->
     <title>HushBox - Secure Messaging with QR</title>
     <link rel="icon" href="/HUSHBOX/favicon.ico" type="image/x-icon">
@@ -24,9 +24,9 @@
     <!-- Header -->
     <header class="header">
         <h1 class="logo">
-            <a href="https://github.com/MPetovick/HUSHBOX/blob/main/README.md" target="_blank" class="lock-icon" title="Learn more about HushBox">
+            <a href="https://github.com/MPetovick/HUSHBOX/blob/main/README.md" target="_blank" class="lock-icon" title="Learn more about HushBox" aria-label="Learn more about HushBox">
                 <i class="fas fa-lock"></i>
-            </a> 
+            </a>
             HUSH<span class="white-text">B</span><i class="fas fa-qrcode qr-icon"></i><span class="white-text">X</span>
         </h1>
         <a href="#" id="login-icon" class="login-icon" title="Login" aria-label="Login">
@@ -34,48 +34,47 @@
         </a>
     </header>
 
-    <!-- Contenido Principal -->
-    <div class="container">
+    <!-- Main Content -->
+    <main class="container">
         <div class="main-grid">
-            <!-- Sección de Cifrado -->
-            <div class="section encrypt-section">
+            <!-- Encryption Section -->
+            <section class="section encrypt-section">
                 <div class="input-group">
-                    <input type="password" id="passphrase" placeholder="Enter your secret passphrase" required>
+                    <input type="password" id="passphrase" placeholder="Enter your secret passphrase" required aria-label="Secret passphrase">
                     <i class="fas fa-key icon"></i>
-                    <i class="fas fa-dice icon generate-password" title="Generate secure passphrase"></i>
+                    <i class="fas fa-dice icon generate-password" title="Generate secure passphrase" aria-label="Generate secure passphrase"></i>
                 </div>
                 <div class="input-group">
-                    <textarea id="message-input" placeholder="Write your secure message..." rows="4" maxlength="4000"></textarea>
+                    <textarea id="message-input" placeholder="Write your secure message..." maxlength="4000" aria-label="Secure message input"></textarea>
                     <i class="fas fa-comment-dots icon"></i>
                     <div id="char-counter" class="char-counter">0/4000</div>
                 </div>
 
-                <!-- Botones de acción con íconos -->
+                <!-- Action Buttons -->
                 <div class="button-group">
-                    <button id="upload-arrow-button" class="btn-icon" title="Upload Image">
+                    <button id="upload-arrow-button" class="btn-icon" title="Upload QR Image" aria-label="Upload QR Image">
                         <i class="fas fa-arrow-up"></i>
                     </button>
-                    <button id="scan-button" class="btn-icon" title="Scan QR">
+                    <button id="scan-button" class="btn-icon" title="Scan QR" aria-label="Scan QR">
                         <i class="fas fa-camera"></i>
                     </button>
-                    <button id="image-button" class="btn-icon" title="Upload QR Image" disabled>
+                    <button id="image-button" class="btn-icon" title="Upload Image (Coming Soon)" aria-label="Upload Image (Coming Soon)" disabled>
                         <i class="fas fa-image"></i>
                     </button>
-                    <button id="pdf-button" class="btn-icon" title="Upload PDF" disabled>
+                    <button id="pdf-button" class="btn-icon" title="Upload PDF (Coming Soon)" aria-label="Upload PDF (Coming Soon)" disabled>
                         <i class="fas fa-file-pdf"></i>
                     </button>
-                    <!-- Mensaje "Coming Soon" -->
                     <div id="coming-soon-message" class="hidden">
                         <p>Coming Soon!</p>
                     </div>
                 </div>
 
-                <!-- Área de la cámara -->
+                <!-- Camera Preview -->
                 <div id="camera-container" class="hidden">
-                    <video id="camera-preview" autoplay></video>
+                    <video id="camera-preview" autoplay playsinline aria-label="Camera preview for QR scanning"></video>
                 </div>
 
-                <!-- Botones Encrypt y Decrypt en la misma fila -->
+                <!-- Encrypt/Decrypt Buttons -->
                 <div class="action-buttons">
                     <button id="send-button" class="btn-primary" aria-label="Encrypt message">
                         <i class="fas fa-lock"></i> Encrypt
@@ -85,55 +84,55 @@
                     </button>
                 </div>
 
-                <!-- Contenedor del QR -->
+                <!-- QR Container -->
                 <div id="qr-container" class="hidden">
                     <div class="qr-header">
                         <h3><i class="fas fa-qrcode"></i> Secure QR</h3>
                         <div class="qr-actions">
-                            <button id="download-button" class="btn-secondary" aria-label="Download QR code">
+                            <button id="download-button" class="btn-secondary" title="Download QR code" aria-label="Download QR code">
                                 <i class="fas fa-arrow-down"></i>
                             </button>
-                            <button id="share-button" class="btn-secondary" aria-label="Share QR code">
+                            <button id="share-button" class="btn-secondary" title="Share QR code" aria-label="Share QR code">
                                 <i class="fas fa-share-alt"></i>
                             </button>
                         </div>
                     </div>
                     <canvas id="qr-canvas" aria-label="Generated QR code with encrypted message"></canvas>
                 </div>
-            </div>
+            </section>
 
-            <!-- Sección de Descifrado -->
-            <div class="section decrypt-section">
+            <!-- Decryption Section -->
+            <section class="section decrypt-section">
                 <div id="messages" class="message-container">
                     <div class="message-placeholder">
                         <i class="fas fa-comments"></i>
                         <p>Encrypted & Decrypted messages appear here</p>
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
-    </div>
+    </main>
 
     <!-- Footer -->
     <footer class="footer">
         <div class="social-icons">
-            <a href="https://t.me/HUSHBOX_QR" target="_blank" class="btn-icon social-icon telegram" title="Telegram">
+            <a href="https://t.me/HUSHBOX_QR" target="_blank" class="social-icon" title="Telegram" aria-label="Telegram">
                 <i class="fab fa-telegram-plane"></i>
             </a>
-            <a href="https://twitter.com/HUSHBOXonline" target="_blank" class="btn-icon social-icon twitter" title="Twitter">
+            <a href="https://twitter.com/HUSHBOXonline" target="_blank" class="social-icon" title="Twitter" aria-label="Twitter">
                 <i class="fab fa-twitter"></i>
             </a>
         </div>
         <p>© 2025 HushBox. All rights reserved.</p>
-        <a href="#" target="_blank">Privacy Policy</a>
+        <a href="#" target="_blank" aria-label="Privacy Policy">Privacy Policy</a>
     </footer>
 
-    <!-- Modal de tutorial -->
+    <!-- Tutorial Modal -->
     <div id="tutorial-modal" class="modal">
         <div class="modal-content">
-            <span class="close-modal">×</span>
+            <span class="close-modal" id="close-modal" title="Close" aria-label="Close modal">×</span>
             <div class="modal-header">
-                <h2><i class="fas fa-lock"></i>HUSHBOX</h2>
+                <h2><i class="fas fa-lock"></i> HUSHBOX</h2>
                 <p class="modal-subtitle">Your Digital Privacy Vault</p>
             </div>
             <div class="modal-body">
@@ -165,12 +164,11 @@
                 </div>
             </div>
             <div class="modal-actions">
-                <button id="close-tutorial" class="btn-primary">Start Securing Now</button>
+                <button id="close-tutorial" class="btn-primary" aria-label="Close tutorial">Start Securing Now</button>
                 <label class="disable-toggle">
-                    <input type="checkbox" id="dont-show-again-checkbox">
+                    <input type="checkbox" id="dont-show-again" aria-label="Don’t show this again">
                     Don’t show this again
                 </label>
-                <button id="dont-show-again" class="btn-secondary hidden">Save Preference</button>
             </div>
         </div>
     </div>
