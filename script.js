@@ -253,15 +253,23 @@ const cryptoUtils = {
         
         let encryptedData, salt, iv, ciphertext, hmac, decrypted;
         try {
+            // Validate base64 input before decoding
+            if (!encryptedBase64 || typeof encryptedBase64 !== 'string' || !/^[A-Za-z0-9+/=]+$/.test(encryptedBase64)) {
+                throw new Error('Invalid QR data: Not a valid base64 string.');
+            }
             encryptedData = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
             salt = encryptedData.slice(0, CONFIG.SALT_LENGTH);
             iv = encryptedData.slice(CONFIG.SALT_LENGTH, CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH);
             ciphertext = encryptedData.slice(CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH, -32);
             hmac = encryptedData.slice(-32);
             
+            if (salt.length !== CONFIG.SALT_LENGTH || iv.length !== CONFIG.IV_LENGTH || hmac.length !== 32) {
+                throw new Error('Invalid QR data: Incorrect format or length.');
+            }
+
             const { aesKey, hmacKey } = await cryptoUtils.deriveKeyPair(passphrase, salt);
             const isValid = await crypto.subtle.verify('HMAC', hmacKey, hmac, ciphertext);
-            if (!isValid) throw new Error('Integrity check failed: Data has been tampered with');
+            if (!isValid) throw new Error('Integrity check failed: Data has been tampered with or wrong passphrase.');
             
             decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, aesKey, ciphertext);
             let decompressed;
@@ -581,12 +589,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 try {
+                    console.log('Scanned QR Data:', qrData); // Debug QR data
                     const decrypted = await cryptoUtils.decryptMessage(qrData, passphrase);
                     uiController.displayMessage(`Decrypted: ${decrypted}`, false);
                     domElements.passphraseInput.value = '';
                     Telegram.WebApp.closeScanQrPopup();
                 } catch (error) {
-                    uiController.displayMessage(error.message || 'Decryption failed. Wrong passphrase?', false);
+                    console.error('Decryption Error:', error.message, 'QR Data:', qrData);
+                    uiController.displayMessage(error.message || 'Decryption failed. Wrong passphrase or invalid QR?', false);
                     Telegram.WebApp.closeScanQrPopup();
                 }
             });
