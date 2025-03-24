@@ -143,13 +143,53 @@ const cryptoUtils = {
     stringToArrayBuffer: str => new TextEncoder().encode(str),
     arrayBufferToString: buffer => new TextDecoder().decode(buffer),
 
+    // Codificación/Decodificación Base64 URL-safe
+    base64Encode: (buffer) => {
+        const binary = String.fromCharCode(...new Uint8Array(buffer));
+        return btoa(binary)
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, '');
+    },
+
+    base64Decode: (str) => {
+        // Validación de formato básico
+        if (!/^[A-Za-z0-9\-_]*$/.test(str)) {
+            throw new Error('Formato Base64 inválido: Caracteres no permitidos');
+        }
+
+        let decoded = str
+            .replace(/-/g, '+')
+            .replace(/_/g, '/');
+
+        // Añadir padding necesario
+        const padLength = (4 - (decoded.length % 4)) % 4;
+        decoded += '='.repeat(padLength);
+
+        try {
+            return atob(decoded);
+        } catch (error) {
+            throw new Error('Falló la decodificación Base64: Cadena mal formada');
+        }
+    },
+
     validatePassphrase: (passphrase) => {
-        if (!passphrase || passphrase.length < CONFIG.MIN_PASSPHRASE_LENGTH) throw new Error(`Passphrase must be at least ${CONFIG.MIN_PASSPHRASE_LENGTH} characters long`);
-        if (/^(.)\1+$/.test(passphrase)) throw new Error('Passphrase cannot consist of repeated characters');
-        if (new Set(passphrase).size < 5) throw new Error('Passphrase must have at least 5 unique characters');
+        if (!passphrase || passphrase.length < CONFIG.MIN_PASSPHRASE_LENGTH) {
+            throw new Error(`La frase clave debe tener al menos ${CONFIG.MIN_PASSPHRASE_LENGTH} caracteres`);
+        }
+        if (/^(.)\1+$/.test(passphrase)) {
+            throw new Error('La frase clave no puede contener caracteres repetidos consecutivos');
+        }
+        if (new Set(passphrase).size < 5) {
+            throw new Error('La frase clave debe contener al menos 5 caracteres únicos');
+        }
         const commonPasswords = ['password', '123456', 'qwerty', 'admin'];
-        if (commonPasswords.includes(passphrase.toLowerCase())) throw new Error('Passphrase is too common');
-        if (/[<>'"&\\/]/.test(passphrase)) throw new Error('Passphrase contains invalid characters');
+        if (commonPasswords.includes(passphrase.toLowerCase())) {
+            throw new Error('Frase clave demasiado común');
+        }
+        if (/[<>'"&\\/]/.test(passphrase)) {
+            throw new Error('La frase clave contiene caracteres inválidos');
+        }
         return true;
     },
 
@@ -163,20 +203,41 @@ const cryptoUtils = {
 
     deriveKeyPair: async (passphrase, salt) => {
         const baseKeyMaterial = await crypto.subtle.importKey(
-            'raw', cryptoUtils.stringToArrayBuffer(passphrase), { name: 'PBKDF2' }, false, ['deriveBits']
+            'raw', 
+            cryptoUtils.stringToArrayBuffer(passphrase), 
+            { name: 'PBKDF2' }, 
+            false, 
+            ['deriveBits']
         );
+
         const derivedBits = await crypto.subtle.deriveBits(
-            { name: 'PBKDF2', salt, iterations: CONFIG.PBKDF2_ITERATIONS, hash: 'SHA-256' },
+            {
+                name: 'PBKDF2',
+                salt,
+                iterations: CONFIG.PBKDF2_ITERATIONS,
+                hash: 'SHA-256'
+            },
             baseKeyMaterial,
             CONFIG.AES_KEY_LENGTH + CONFIG.HMAC_LENGTH
         );
+
         const derivedBitsArray = new Uint8Array(derivedBits);
         const aesKey = await crypto.subtle.importKey(
-            'raw', derivedBitsArray.slice(0, CONFIG.AES_KEY_LENGTH / 8), { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']
+            'raw',
+            derivedBitsArray.slice(0, CONFIG.AES_KEY_LENGTH / 8),
+            { name: 'AES-GCM' },
+            false,
+            ['encrypt', 'decrypt']
         );
+
         const hmacKey = await crypto.subtle.importKey(
-            'raw', derivedBitsArray.slice(CONFIG.AES_KEY_LENGTH / 8), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']
+            'raw',
+            derivedBitsArray.slice(CONFIG.AES_KEY_LENGTH / 8),
+            { name: 'HMAC', hash: 'SHA-256' },
+            false,
+            ['sign', 'verify']
         );
+
         clearBuffer(derivedBitsArray);
         return { aesKey, hmacKey };
     },
@@ -185,16 +246,34 @@ const cryptoUtils = {
         let dataToEncrypt = cryptoUtils.stringToArrayBuffer(message);
         let salt = crypto.getRandomValues(new Uint8Array(CONFIG.SALT_LENGTH));
         let iv = cryptoUtils.generateIV();
+
         try {
             cryptoUtils.validatePassphrase(passphrase);
+
+            // Compresión si es necesario
             if (message.length > CONFIG.COMPRESSION_THRESHOLD) {
                 dataToEncrypt = pako.deflate(dataToEncrypt, { level: 6 });
             }
+
             const { aesKey, hmacKey } = await cryptoUtils.deriveKeyPair(passphrase, salt);
-            const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aesKey, dataToEncrypt);
+            const encrypted = await crypto.subtle.encrypt(
+                { name: 'AES-GCM', iv },
+                aesKey,
+                dataToEncrypt
+            );
+
+            // Generar HMAC
             const hmac = await crypto.subtle.sign('HMAC', hmacKey, encrypted);
-            const combined = new Uint8Array([...salt, ...iv, ...new Uint8Array(encrypted), ...new Uint8Array(hmac)]);
-            return btoa(String.fromCharCode(...combined));
+
+            // Combinar todos los componentes
+            const combined = new Uint8Array([
+                ...salt,
+                ...iv,
+                ...new Uint8Array(encrypted),
+                ...new Uint8Array(hmac)
+            ]);
+
+            return cryptoUtils.base64Encode(combined);
         } finally {
             clearBuffer(dataToEncrypt);
             clearBuffer(salt);
@@ -204,43 +283,71 @@ const cryptoUtils = {
 
     decryptMessage: async (encryptedBase64, passphrase) => {
         const now = Date.now();
-        if (decryptAttempts >= CONFIG.MAX_DECRYPT_ATTEMPTS && (now - lastDecryptAttemptTime) < CONFIG.DECRYPT_COOLDOWN) {
-            throw new Error('Too many failed attempts. Please wait before trying again.');
+        if (decryptAttempts >= CONFIG.MAX_DECRYPT_ATTEMPTS && 
+            (now - lastDecryptAttemptTime) < CONFIG.DECRYPT_COOLDOWN) {
+            throw new Error('Demasiados intentos fallidos. Espere antes de intentar nuevamente.');
         }
-        
-        if (!passphrase) throw new Error('Please enter a passphrase to decrypt the message.');
-        
+
+        if (!passphrase) {
+            throw new Error('Por favor ingrese una frase clave para descifrar');
+        }
+
         let encryptedData, salt, iv, ciphertext, hmac, decrypted;
         try {
-            // Old code approach: No strict validation, direct atob
-            encryptedData = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
+            // Decodificación Base64 segura
+            const decodedString = cryptoUtils.base64Decode(encryptedBase64);
+            encryptedData = new Uint8Array([...decodedString].map(c => c.charCodeAt(0)));
+
+            // Extraer componentes
             salt = encryptedData.slice(0, CONFIG.SALT_LENGTH);
             iv = encryptedData.slice(CONFIG.SALT_LENGTH, CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH);
             ciphertext = encryptedData.slice(CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH, -32);
             hmac = encryptedData.slice(-32);
-            
+
+            // Derivar claves
             const { aesKey, hmacKey } = await cryptoUtils.deriveKeyPair(passphrase, salt);
-            const isValid = await crypto.subtle.verify('HMAC', hmacKey, hmac, ciphertext);
-            if (!isValid) throw new Error('Integrity check failed: Data has been tampered with or wrong passphrase.');
-            
-            decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, aesKey, ciphertext);
+
+            // Verificar integridad
+            const isValid = await crypto.subtle.verify(
+                'HMAC',
+                hmacKey,
+                hmac,
+                ciphertext
+            );
+
+            if (!isValid) {
+                throw new Error('Fallo de integridad: Los datos pueden estar alterados');
+            }
+
+            // Descifrar
+            decrypted = await crypto.subtle.decrypt(
+                { name: 'AES-GCM', iv },
+                aesKey,
+                ciphertext
+            );
+
+            // Descomprimir si es necesario
             let decompressed;
             try {
                 decompressed = pako.inflate(new Uint8Array(decrypted));
             } catch (e) {
                 decompressed = new Uint8Array(decrypted);
             }
+
             decryptAttempts = 0;
             return cryptoUtils.arrayBufferToString(decompressed);
+
         } catch (error) {
             decryptAttempts++;
             lastDecryptAttemptTime = now;
-            await new Promise(resolve => setTimeout(resolve, decryptAttempts * CONFIG.DECRYPT_DELAY_INCREMENT));
+            await new Promise(resolve => 
+                setTimeout(resolve, decryptAttempts * CONFIG.DECRYPT_DELAY_INCREMENT)
+            );
             throw error;
         } finally {
-            clearBuffer(salt);
-            clearBuffer(iv);
-            clearBuffer(decrypted);
+            if (salt) clearBuffer(salt);
+            if (iv) clearBuffer(iv);
+            if (decrypted) clearBuffer(decrypted);
         }
     }
 };
