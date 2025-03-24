@@ -12,8 +12,8 @@ const CONFIG = {
     CAMERA_TIMEOUT: 30000,
     DECRYPT_DELAY_INCREMENT: 100,
     MAX_DECRYPT_ATTEMPTS: 5,
-    DECRYPT_COOLDOWN: 5 * 60 * 1000, // 5 minutes
-    NOTICE_TIMEOUT: 10000 // 10 seconds for notice messages
+    DECRYPT_COOLDOWN: 5 * 60 * 1000,
+    NOTICE_TIMEOUT: 10000
 };
 
 // DOM Elements
@@ -41,20 +41,22 @@ const domElements = {
     loginIcon: document.getElementById('login-icon')
 };
 
-// Hide specific elements in Telegram
+// Telegram Detection
 function isTelegram() {
     return typeof Telegram !== 'undefined' && Telegram.WebApp && Telegram.WebApp.initData;
 }
 
 if (isTelegram()) {
     domElements.loginIcon.style.display = 'none';
+    Telegram.WebApp.ready();
+    Telegram.WebApp.expand();
 }
 
 // Telegram-specific utilities
 const telegramUtils = {
     downloadFile: async (blob, fileName) => {
         if (!isTelegram()) return false;
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => {
                 const base64Data = reader.result.split(',')[1];
@@ -66,13 +68,14 @@ const telegramUtils = {
                 }));
                 resolve(true);
             };
+            reader.onerror = () => reject(new Error('Failed to read file for download'));
             reader.readAsDataURL(blob);
         });
     },
 
     shareFile: async (blob, fileName) => {
         if (!isTelegram()) return false;
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => {
                 const base64Data = reader.result.split(',')[1];
@@ -84,12 +87,13 @@ const telegramUtils = {
                 }));
                 resolve(true);
             };
+            reader.onerror = () => reject(new Error('Failed to read file for sharing'));
             reader.readAsDataURL(blob);
         });
     }
 };
 
-// Enhanced secure passphrase generation
+// Secure passphrase generation
 function generateSecurePassphrase(length = 16) {
     length = Math.max(length, CONFIG.MIN_PASSPHRASE_LENGTH);
     const charSets = {
@@ -127,7 +131,7 @@ function generateSecurePassphrase(length = 16) {
     }
 }
 
-// Hidden file input for image upload
+// Hidden file input
 const fileInput = document.createElement('input');
 fileInput.type = 'file';
 fileInput.accept = 'image/*';
@@ -140,12 +144,12 @@ const scanContext = scanCanvas.getContext('2d');
 scanCanvas.style.display = 'none';
 document.body.appendChild(scanCanvas);
 
-// Brute force protection variables
+// Brute force protection
 let decryptAttempts = 0;
 let lastDecryptAttemptTime = 0;
 let cameraTimeoutId = null;
 
-// Clear ArrayBuffer or TypedArray
+// Buffer clearing
 const clearBuffer = (buffer) => {
     if (buffer instanceof ArrayBuffer) {
         new Uint8Array(buffer).fill(0);
@@ -163,11 +167,13 @@ const showTutorialModal = () => {
 };
 const closeTutorialModal = () => domElements.tutorialModal.style.display = 'none';
 const setDontShowAgain = () => {
-    localStorage.setItem('dontShowAgain', 'true');
+    if (domElements.dontShowAgain.checked) {
+        localStorage.setItem('dontShowAgain', 'true');
+    }
     closeTutorialModal();
 };
 
-// "Coming Soon" message
+// Coming Soon message
 const showComingSoonMessage = () => {
     domElements.comingSoonMessage.classList.add('visible');
     setTimeout(() => domElements.comingSoonMessage.classList.remove('visible'), 2000);
@@ -243,13 +249,15 @@ const cryptoUtils = {
             throw new Error('Too many failed attempts. Please wait before trying again.');
         }
         
+        if (!passphrase) throw new Error('Please enter a passphrase to decrypt the message.');
+        
         let encryptedData, salt, iv, ciphertext, hmac, decrypted;
         try {
             encryptedData = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
             salt = encryptedData.slice(0, CONFIG.SALT_LENGTH);
             iv = encryptedData.slice(CONFIG.SALT_LENGTH, CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH);
             ciphertext = encryptedData.slice(CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH, -32);
-            hmac = encryptedData.slice(-32);
+            CryptoJS = encryptedData.slice(-32);
             
             const { aesKey, hmacKey } = await cryptoUtils.deriveKeyPair(passphrase, salt);
             const isValid = await crypto.subtle.verify('HMAC', hmacKey, hmac, ciphertext);
@@ -262,7 +270,7 @@ const cryptoUtils = {
             } catch (e) {
                 decompressed = new Uint8Array(decrypted);
             }
-            decryptAttempts = 0; // Reset on success
+            decryptAttempts = 0;
             return cryptoUtils.arrayBufferToString(decompressed);
         } catch (error) {
             decryptAttempts++;
@@ -388,8 +396,8 @@ const handlers = {
     handleDecrypt: async () => {
         const file = fileInput.files[0];
         const passphrase = domElements.passphraseInput.value.trim();
-        if (!file || !passphrase) {
-            uiController.displayMessage('Please select a QR file and enter a passphrase', false);
+        if (!file) {
+            uiController.displayMessage('Please select a QR file to decrypt', false);
             return;
         }
 
@@ -426,7 +434,7 @@ const handlers = {
 
             const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
             if (!qrCode) throw new Error('No QR code detected');
-            
+
             const decrypted = await cryptoUtils.decryptMessage(qrCode.data, passphrase);
             uiController.displayMessage(`Decrypted: ${decrypted}`, false);
             domElements.passphraseInput.value = '';
@@ -446,11 +454,13 @@ const handlers = {
 
         try {
             const qrDataUrl = domElements.qrCanvas.toDataURL('image/png', 0.9);
+            const qrBlob = await (await fetch(qrDataUrl)).blob();
             const fileName = `hushbox-qr-${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
             
             if (isTelegram()) {
-                await telegramUtils.downloadFile(await (await fetch(qrDataUrl)).blob(), fileName);
-                uiController.displayMessage('Download started in Telegram', false);
+                await telegramUtils.downloadFile(qrBlob, fileName);
+                uiController.displayMessage('Download initiated in Telegram', false);
+                Telegram.WebApp.close(); // Optional: Close WebView after download
             } else {
                 const link = document.createElement('a');
                 link.href = qrDataUrl;
@@ -473,14 +483,16 @@ const handlers = {
         try {
             const qrDataUrl = domElements.qrCanvas.toDataURL('image/png');
             const qrBlob = await (await fetch(qrDataUrl)).blob();
+            const fileName = `hushbox-qr-${Date.now()}.png`;
             
             if (isTelegram()) {
-                await telegramUtils.shareFile(qrBlob, `hushbox-qr-${Date.now()}.png`);
+                await telegramUtils.shareFile(qrBlob, fileName);
                 uiController.displayMessage('Sharing via Telegram...', false);
+                Telegram.WebApp.close(); // Optional: Close WebView after share
             } else if (navigator.share) {
                 await navigator.share({
                     title: 'HushBox Secure QR',
-                    files: [new File([qrBlob], 'hushbox-qr.png', { type: 'image/png' })]
+                    files: [new File([qrBlob], fileName, { type: 'image/png' })]
                 });
             } else {
                 await navigator.clipboard.writeText(qrDataUrl);
@@ -523,7 +535,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (charCounter) {
         domElements.messageInput.addEventListener('input', () => {
             const currentLength = domElements.messageInput.value.length;
-            const maxLength = domElements.messageInput.getAttribute('maxlength') || 500;
+            const maxLength = domElements.messageInput.getAttribute('maxlength') || 4000;
             charCounter.textContent = `${currentLength}/${maxLength}`;
             charCounter.style.color = currentLength >= maxLength * 0.9 ? 'var(--error-color)' : 'rgba(160, 160, 160, 0.8)';
         });
@@ -558,25 +570,37 @@ document.addEventListener('DOMContentLoaded', () => {
     showTutorialModal();
     domElements.closeTutorial.addEventListener('click', closeTutorialModal);
     domElements.closeModalButton.addEventListener('click', closeTutorialModal);
-    domElements.dontShowAgain.addEventListener('click', setDontShowAgain);
+    domElements.dontShowAgain.addEventListener('change', setDontShowAgain);
+
     domElements.scanButton.addEventListener('click', () => {
         if (isTelegram()) {
             Telegram.WebApp.showScanQrPopup({ text: 'Scan HUSHBOX QR' });
             Telegram.WebApp.onEvent('qrTextReceived', async (qrData) => {
                 try {
-                    const blob = new Blob([qrData], { type: 'text/plain' });
-                    const fakeFile = new File([blob], 'telegram-qr.txt', { type: 'text/plain' });
-                    fileInput.files = new DataTransfer().items.add(fakeFile).files;
-                    fileInput.dispatchEvent(new Event('change'));
+                    const passphrase = domElements.passphraseInput.value.trim();
+                    if (!passphrase) {
+                        uiController.displayMessage('Please enter a passphrase to decrypt the QR code', false);
+                        Telegram.WebApp.closeScanQrPopup();
+                        return;
+                    }
+                    const decrypted = await cryptoUtils.decryptMessage(qrData, passphrase);
+                    uiController.displayMessage(`Decrypted: ${decrypted}`, false);
+                    domElements.passphraseInput.value = '';
                     Telegram.WebApp.closeScanQrPopup();
                 } catch (error) {
-                    uiController.displayMessage('Error processing QR: ' + error.message, false);
+                    uiController.displayMessage(error.message || 'Decryption failed. Wrong passphrase?', false);
+                    Telegram.WebApp.closeScanQrPopup();
                 }
+            });
+            Telegram.WebApp.onEvent('qrPopupClosed', () => {
+                Telegram.WebApp.offEvent('qrTextReceived');
+                Telegram.WebApp.offEvent('qrPopupClosed');
             });
         } else {
             showComingSoonMessage();
         }
     });
+
     domElements.imageButton.addEventListener('click', showComingSoonMessage);
     domElements.pdfButton.addEventListener('click', showComingSoonMessage);
 
