@@ -41,7 +41,7 @@ const domElements = {
     loginIcon: document.getElementById('login-icon')
 };
 
-// Telegram Detection
+// Telegram Detection and Initialization
 function isTelegram() {
     return typeof Telegram !== 'undefined' && Telegram.WebApp && Telegram.WebApp.initData;
 }
@@ -257,7 +257,7 @@ const cryptoUtils = {
             salt = encryptedData.slice(0, CONFIG.SALT_LENGTH);
             iv = encryptedData.slice(CONFIG.SALT_LENGTH, CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH);
             ciphertext = encryptedData.slice(CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH, -32);
-            CryptoJS = encryptedData.slice(-32);
+            hmac = encryptedData.slice(-32);
             
             const { aesKey, hmacKey } = await cryptoUtils.deriveKeyPair(passphrase, salt);
             const isValid = await crypto.subtle.verify('HMAC', hmacKey, hmac, ciphertext);
@@ -460,7 +460,6 @@ const handlers = {
             if (isTelegram()) {
                 await telegramUtils.downloadFile(qrBlob, fileName);
                 uiController.displayMessage('Download initiated in Telegram', false);
-                Telegram.WebApp.close(); // Optional: Close WebView after download
             } else {
                 const link = document.createElement('a');
                 link.href = qrDataUrl;
@@ -488,7 +487,6 @@ const handlers = {
             if (isTelegram()) {
                 await telegramUtils.shareFile(qrBlob, fileName);
                 uiController.displayMessage('Sharing via Telegram...', false);
-                Telegram.WebApp.close(); // Optional: Close WebView after share
             } else if (navigator.share) {
                 await navigator.share({
                     title: 'HushBox Secure QR',
@@ -576,13 +574,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isTelegram()) {
             Telegram.WebApp.showScanQrPopup({ text: 'Scan HUSHBOX QR' });
             Telegram.WebApp.onEvent('qrTextReceived', async (qrData) => {
+                const passphrase = domElements.passphraseInput.value.trim();
+                if (!passphrase) {
+                    uiController.displayMessage('Please enter a passphrase to decrypt the QR code', false);
+                    Telegram.WebApp.closeScanQrPopup();
+                    return;
+                }
                 try {
-                    const passphrase = domElements.passphraseInput.value.trim();
-                    if (!passphrase) {
-                        uiController.displayMessage('Please enter a passphrase to decrypt the QR code', false);
-                        Telegram.WebApp.closeScanQrPopup();
-                        return;
-                    }
                     const decrypted = await cryptoUtils.decryptMessage(qrData, passphrase);
                     uiController.displayMessage(`Decrypted: ${decrypted}`, false);
                     domElements.passphraseInput.value = '';
