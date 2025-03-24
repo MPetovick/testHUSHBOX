@@ -52,47 +52,6 @@ if (isTelegram()) {
     Telegram.WebApp.expand();
 }
 
-// Telegram-specific utilities
-const telegramUtils = {
-    downloadFile: async (blob, fileName) => {
-        if (!isTelegram()) return false;
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-                const base64Data = reader.result.split(',')[1];
-                Telegram.WebApp.sendData(JSON.stringify({
-                    action: 'download',
-                    file: base64Data,
-                    filename: fileName,
-                    mimeType: blob.type
-                }));
-                resolve(true);
-            };
-            reader.onerror = () => reject(new Error('Failed to read file for download'));
-            reader.readAsDataURL(blob);
-        });
-    },
-
-    shareFile: async (blob, fileName) => {
-        if (!isTelegram()) return false;
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-                const base64Data = reader.result.split(',')[1];
-                Telegram.WebApp.sendData(JSON.stringify({
-                    action: 'share',
-                    file: base64Data,
-                    filename: fileName,
-                    mimeType: blob.type
-                }));
-                resolve(true);
-            };
-            reader.onerror = () => reject(new Error('Failed to read file for sharing'));
-            reader.readAsDataURL(blob);
-        });
-    }
-};
-
 // Secure passphrase generation
 function generateSecurePassphrase(length = 16) {
     length = Math.max(length, CONFIG.MIN_PASSPHRASE_LENGTH);
@@ -253,21 +212,13 @@ const cryptoUtils = {
         
         let encryptedData, salt, iv, ciphertext, hmac, decrypted;
         try {
-            // Clean the input to remove any non-base64 characters
-            const cleanedBase64 = encryptedBase64.trim().replace(/[^A-Za-z0-9+/=]/g, '');
-            if (!cleanedBase64 || !/^[A-Za-z0-9+/=]+$/.test(cleanedBase64)) {
-                throw new Error('Invalid QR data: Not a valid base64 string after cleaning.');
-            }
-            encryptedData = Uint8Array.from(atob(cleanedBase64), c => c.charCodeAt(0));
+            // Old code approach: No strict validation, direct atob
+            encryptedData = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
             salt = encryptedData.slice(0, CONFIG.SALT_LENGTH);
             iv = encryptedData.slice(CONFIG.SALT_LENGTH, CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH);
             ciphertext = encryptedData.slice(CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH, -32);
             hmac = encryptedData.slice(-32);
             
-            if (salt.length !== CONFIG.SALT_LENGTH || iv.length !== CONFIG.IV_LENGTH || hmac.length !== 32) {
-                throw new Error('Invalid QR data: Incorrect format or length.');
-            }
-
             const { aesKey, hmacKey } = await cryptoUtils.deriveKeyPair(passphrase, salt);
             const isValid = await crypto.subtle.verify('HMAC', hmacKey, hmac, ciphertext);
             if (!isValid) throw new Error('Integrity check failed: Data has been tampered with or wrong passphrase.');
@@ -466,17 +417,12 @@ const handlers = {
             const qrBlob = await (await fetch(qrDataUrl)).blob();
             const fileName = `hushbox-qr-${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
             
-            if (isTelegram()) {
-                await telegramUtils.downloadFile(qrBlob, fileName);
-                uiController.displayMessage('Download initiated in Telegram', false);
-            } else {
-                const link = document.createElement('a');
-                link.href = qrDataUrl;
-                link.download = fileName;
-                link.click();
-                link.remove();
-                uiController.displayMessage('QR downloaded successfully!', false);
-            }
+            const link = document.createElement('a');
+            link.href = qrDataUrl;
+            link.download = fileName;
+            link.click();
+            link.remove();
+            uiController.displayMessage('QR downloaded successfully!', false);
         } catch (error) {
             uiController.displayMessage('Download failed: ' + error.message, false);
         }
@@ -493,10 +439,7 @@ const handlers = {
             const qrBlob = await (await fetch(qrDataUrl)).blob();
             const fileName = `hushbox-qr-${Date.now()}.png`;
             
-            if (isTelegram()) {
-                await telegramUtils.shareFile(qrBlob, fileName);
-                uiController.displayMessage('Sharing via Telegram...', false);
-            } else if (navigator.share) {
+            if (navigator.share) {
                 await navigator.share({
                     title: 'HushBox Secure QR',
                     files: [new File([qrBlob], fileName, { type: 'image/png' })]
@@ -590,16 +533,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 try {
-                    console.log('Raw QR Data:', qrData); // Log raw data
-                    const cleanedQRData = qrData.trim().replace(/[^A-Za-z0-9+/=]/g, '');
-                    console.log('Cleaned QR Data:', cleanedQRData); // Log cleaned data
-                    const decrypted = await cryptoUtils.decryptMessage(cleanedQRData, passphrase);
+                    console.log('Raw QR Data:', qrData); // Debug raw data
+                    const decrypted = await cryptoUtils.decryptMessage(qrData, passphrase);
                     uiController.displayMessage(`Decrypted: ${decrypted}`, false);
                     domElements.passphraseInput.value = '';
                     Telegram.WebApp.closeScanQrPopup();
                 } catch (error) {
                     console.error('Decryption Error:', error.message, 'Raw QR Data:', qrData);
-                    uiController.displayMessage(error.message || 'Decryption failed. Wrong passphrase or invalid QR?', false);
+                    uiController.displayMessage(error.message || 'Decryption failed. Wrong passphrase?', false);
                     Telegram.WebApp.closeScanQrPopup();
                 }
             });
