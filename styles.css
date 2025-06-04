@@ -43,6 +43,7 @@ body {
     letter-spacing: clamp(2px, 0.5vw, 4px);
     text-shadow: 0 0 10px var(--glow-color);
     animation: pulseGlow 4s infinite;
+    position: relative;
     display: flex;
     align-items: center;
 }
@@ -84,11 +85,12 @@ body {
     transform: translateY(-2px);
 }
 
-/* Main Container */
+/* Contenedor Principal */
 .container {
     width: 100%;
     max-width: 1200px;
     padding: clamp(1rem, 3vw, 2rem);
+    position: relative;
     margin: 0 auto;
 }
 
@@ -122,7 +124,6 @@ body {
     flex-direction: column;
 }
 
-/* Input Groups */
 .input-group {
     position: relative;
     margin-bottom: clamp(1rem, 2vw, 1.5rem);
@@ -137,6 +138,7 @@ body {
     transition: color 0.3s ease;
 }
 
+/* Estilos específicos para el campo passphrase */
 .input-group #passphrase ~ .fa-key {
     right: 3rem;
 }
@@ -150,6 +152,7 @@ body {
     color: var(--primary-color);
 }
 
+/* Estilos específicos para el campo message-input */
 .input-group #message-input ~ .fa-comment-dots {
     right: 1rem;
     top: calc(1rem + 0.5rem);
@@ -179,7 +182,6 @@ body {
     box-shadow: 0 0 12px var(--glow-color);
 }
 
-/* Buttons */
 .btn-primary {
     width: auto;
     min-width: 200px;
@@ -208,7 +210,9 @@ body {
 
 .btn-primary:disabled {
     background: #666;
-    cursor: not-allowed;
+    cursor: default;
+    transform: none;
+    box-shadow: none;
     opacity: 0.7;
 }
 
@@ -240,10 +244,10 @@ body {
     color: #1a1a1a;
 }
 
-/* QR Container */
 #qr-container {
     margin-top: clamp(1rem, 3vw, 2rem);
     text-align: center;
+    will-change: opacity;
     opacity: 0;
     transition: opacity 0.3s ease;
 }
@@ -288,7 +292,6 @@ body {
     margin: 0 auto;
 }
 
-/* Message Container */
 .message-container {
     background: rgba(30, 30, 30, 0.6);
     border-radius: 10px;
@@ -297,26 +300,21 @@ body {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
     overflow-x: hidden;
     overflow-y: auto;
     min-height: 20vh;
     max-height: calc(100% - 2rem);
 }
 
-#messages {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
 .message {
     max-width: 100%;
     word-break: break-all;
+    margin-bottom: 0.5rem;
 }
 
 .message.sent {
-    align-self: flex-end;
+    text-align: right;
 }
 
 .message-content {
@@ -341,7 +339,6 @@ body {
     color: rgba(255, 255, 255, 0.6);
 }
 
-/* Button Groups */
 .button-group {
     display: flex;
     gap: 1rem;
@@ -372,20 +369,20 @@ body {
 }
 
 .btn-icon:disabled {
-    background: rgba(102, 102, 102, 0.3);
-    border: 1px solid rgba(160, 160, 160, 0.3);
-    color: rgba(160, 160, 160, 0.5);
-    cursor: default;
-    box-shadow: none;
-    opacity: 0.6;
-    pointer-events: auto;
+    background: rgba(102, 102, 102, 0.3); /* Gris apagado */
+    border: 1px solid rgba(160, 160, 160, 0.3); /* Borde menos prominente */
+    color: rgba(160, 160, 160, 0.5); /* Color desvaído */
+    cursor: default; /* Cursor normal, no pointer */
+    box-shadow: none; /* Sin sombra */
+    opacity: 0.6; /* Ligeramente transparente */
+    pointer-events: auto; /* Permitir clics para "Coming Soon" */
 }
 
 .btn-icon:disabled:hover {
-    background: rgba(102, 102, 102, 0.3);
+    background: rgba(102, 102, 102, 0.3); /* Sin cambio al hover */
     color: rgba(160, 160, 160, 0.5);
     box-shadow: none;
-    transform: none;
+    transform: none; /* Sin animación */
 }
 
 .btn-icon i {
@@ -396,8 +393,29 @@ body {
     color: rgba(160, 160, 160, 0.5);
 }
 
-/* Camera Container */
+.social-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--secondary-color);
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.social-icon:hover {
+    background: var(--primary-color);
+    color: #1a1a1a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px var(--glow-color);
+}
+
 #camera-container {
+    display: none;
     margin-bottom: 1rem;
     text-align: center;
 }
@@ -414,7 +432,6 @@ body {
     background: var(--secondary-color);
 }
 
-/* Action Buttons */
 .action-buttons {
     display: flex;
     justify-content: center;
@@ -425,9 +442,10 @@ body {
 .action-buttons .btn-primary {
     width: auto;
     min-width: 150px;
+    max-width: none;
 }
 
-/* Modal */
+/* Modal Enhancements */
 .modal {
     display: none;
     position: fixed;
@@ -443,10 +461,6 @@ body {
     overflow-y: auto;
 }
 
-#tutorial-modal[style*="display: flex"] {
-    display: flex;
-}
-
 .modal-content {
     background: var(--section-bg);
     padding: clamp(1.5rem, 3vw, 2rem);
@@ -454,6 +468,7 @@ body {
     max-width: 600px;
     width: 90%;
     text-align: center;
+    position: relative;
     box-shadow: 0 10px 40px rgba(0, 204, 153, 0.2);
     border: 1px solid var(--primary-color);
     overflow-y: auto;
@@ -550,7 +565,7 @@ body {
     cursor: pointer;
 }
 
-#dont-show-again {
+.disable-toggle input {
     accent-color: var(--primary-color);
 }
 
@@ -568,10 +583,22 @@ body {
     color: #00b386;
 }
 
-/* Coming Soon Message */
+/* Animations */
+@keyframes pulseGlow {
+    0% { text-shadow: 0 0 10px var(--glow-color); }
+    50% { text-shadow: 0 0 20px var(--glow-color), 0 0 30px var(--glow-color); }
+    100% { text-shadow: 0 0 10px var(--glow-color); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Estilos para el mensaje "Coming Soon" */
 #coming-soon-message {
-    position: fixed;
-    bottom: 20px;
+    position: absolute;
+    bottom: -40px;
     left: 50%;
     transform: translateX(-50%);
     background: var(--section-bg);
@@ -595,116 +622,7 @@ body {
     margin: 0;
 }
 
-/* Animations */
-@keyframes pulseGlow {
-    0% { text-shadow: 0 0 10px var(--glow-color); }
-    50% { text-shadow: 0 0 20px var(--glow-color), 0 0 30px var(--glow-color); }
-    100% { text-shadow: 0 0 10px var(--glow-color); }
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-/* Footer */
-.footer {
-    text-align: center;
-    padding: 0.5rem;
-    background: var(--secondary-color);
-    margin-top: 1rem;
-}
-
-.footer p {
-    margin: 0;
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.footer a {
-    color: var(--primary-color);
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-.footer a:hover {
-    color: #00b386;
-}
-
-.social-icons {
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.social-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--secondary-color);
-    color: var(--primary-color);
-    border: 1px solid var(--primary-color);
-    transition: all 0.3s ease;
-    text-decoration: none;
-}
-
-.social-icon:hover {
-    background: var(--primary-color);
-    color: #1a1a1a;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px var(--glow-color);
-}
-
-/* Character Counter */
-.char-counter {
-    position: absolute;
-    right: 1rem;
-    bottom: 0.5rem;
-    font-size: 0.8rem;
-    color: rgba(160, 160, 160, 0.8);
-    pointer-events: none;
-}
-
-/* Copy Icon */
-.copy-icon {
-    font-size: 0.9rem;
-    color: var(--primary-color);
-    cursor: pointer;
-    margin-left: 0.5rem;
-    transition: color 0.3s ease;
-}
-
-.copy-icon:hover {
-    color: #00b386;
-}
-
-.passphrase-text {
-    flex-grow: 1;
-    word-break: break-all;
-}
-
-/* Telegram-Specific Styles */
-.telegram-webview .header {
-    padding-top: 50px;
-}
-
-.telegram-webview .login-icon {
-    display: none !important;
-}
-
-.telegram-webview .btn-secondary {
-    background: rgba(0, 204, 153, 0.2);
-}
-
-.telegram-webview .social-icons {
-    display: none;
-}
-
-/* Media Queries */
+/* Media Queries para móviles */
 @media (max-width: 768px) {
     .main-grid {
         flex-direction: column;
@@ -732,6 +650,7 @@ body {
         padding: 8px 16px;
     }
 
+    /* Optimización específica para el modal en móviles */
     .modal-content {
         max-width: 95%;
         padding: 1rem;
@@ -790,21 +709,23 @@ body {
     .close-modal {
         top: 0.5rem;
         right: 0.5rem;
+        font-size: 1.5rem;
     }
 
+    /* Ajustes específicos para los botones de QR */
     .qr-header {
         gap: 0.75rem;
     }
-
+    
     .qr-header h3 {
         font-size: 1.1rem;
     }
-
+    
     .btn-secondary {
         width: 28px;
         height: 28px;
     }
-
+    
     .btn-secondary i {
         font-size: 0.9rem;
     }
@@ -815,7 +736,7 @@ body {
         width: 26px;
         height: 26px;
     }
-
+    
     .btn-secondary i {
         font-size: 0.85rem;
     }
@@ -825,4 +746,108 @@ body {
     .feature-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 0.5rem;
+    background: var(--secondary-color);
+    margin-top: 1rem;
+}
+
+.footer p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer a:hover {
+    color: #00b386;
+}
+
+.social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.social-icons .btn-icon {
+    width: auto;
+    height: auto;
+    border-radius: 0;
+    background: transparent;
+    color: var(--primary-color);
+    border: none;
+    transition: color 0.3s ease;
+    padding: 0.3rem;
+    font-size: 1rem;
+}
+
+.social-icons .btn-icon:hover {
+    background: transparent;
+    color: #00b386;
+    transform: translateY(-2px);
+    box-shadow: none;
+}
+
+.char-counter {
+    position: absolute;
+    right: 1rem;
+    bottom: 0.5rem;
+    font-size: 0.8rem;
+    color: rgba(160, 160, 160, 0.8);
+    padding: 0;
+    pointer-events: none;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Estilo para el ícono de copiar en el mensaje */
+.copy-icon {
+    font-size: 0.9rem;
+    color: var(--primary-color);
+    cursor: pointer;
+    margin-left: 0.5rem;
+    transition: color 0.3s ease;
+}
+
+.copy-icon:hover {
+    color: #00b386; /* Un tono más oscuro al pasar el ratón */
+}
+
+/* Ajuste para el contenedor del mensaje con ícono */
+.message-content {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 204, 153, 0.1);
+    border-radius: 8px;
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    word-break: break-all;
+}
+
+/* Asegurar que el texto de la contraseña no se desborde */
+.passphrase-text {
+    flex-grow: 1;
+    word-break: break-all;
+}
+
+/* Add to your CSS */
+#camera-preview {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    border-radius: 12px;
+    border: 2px solid var(--primary-color);
+    background: var(--secondary-color);
 }
