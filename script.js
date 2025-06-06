@@ -1,7 +1,7 @@
-// Configuración global para parámetros criptográficos
+// Configuración global para parámetros criptográficos y de la aplicación
 const CONFIG = {
     PBKDF2_ITERATIONS_DESKTOP: 250000,
-    PBKDF2_ITERATIONS_MOBILE: 100000, // Reducido para móviles
+    PBKDF2_ITERATIONS_MOBILE: 100000,
     SALT_LENGTH: 32,
     IV_LENGTH: 12,
     AES_KEY_LENGTH: 256,
@@ -13,8 +13,8 @@ const CONFIG = {
     CAMERA_TIMEOUT: 30000,
     DECRYPT_DELAY_INCREMENT: 100,
     MAX_DECRYPT_ATTEMPTS: 5,
-    DECRYPT_COOLDOWN: 5 * 60 * 1000, // 5 minutos
-    NOTICE_TIMEOUT: 10000 // 10 segundos para mensajes de tipo "notice"
+    DECRYPT_COOLDOWN: 5 * 60 * 1000,
+    NOTICE_TIMEOUT: 10000
 };
 
 // Detectar si es un dispositivo móvil
@@ -27,8 +27,8 @@ const domElements = {
     scanButton: document.getElementById('scan-button'),
     imageButton: document.getElementById('image-button'),
     pdfButton: document.getElementById('pdf-button'),
-    cameraContainer: document.getElementById('camera-container'),
-    cameraPreview: document.getElementById('camera-preview'),
+    cameraModal: document.getElementById('camera-modal'),
+    cameraCanvas: document.getElementById('camera-canvas'),
     messagesDiv: document.getElementById('messages'),
     passphraseInput: document.getElementById('passphrase'),
     passphraseError: document.getElementById('passphrase-error'),
@@ -42,57 +42,45 @@ const domElements = {
     tutorialModal: document.getElementById('tutorial-modal'),
     closeTutorial: document.getElementById('close-tutorial'),
     dontShowAgain: document.getElementById('dont-show-again'),
-    closeModalButton: document.querySelector('.close-modal')
+    closeModalButton: document.querySelector('.close-modal'),
+    closeCameraModal: document.querySelector('.close-camera-modal'),
+    toggleCameraButton: document.getElementById('toggle-camera-button')
 };
 
-// Input oculto para la carga de imágenes y PDFs
+// Input oculto para la carga de archivos
 const fileInput = document.createElement('input');
 fileInput.type = 'file';
 fileInput.accept = 'image/*,application/pdf';
 fileInput.style.display = 'none';
 document.body.appendChild(fileInput);
 
-// Canvas oculto para procesar el video
-const scanCanvas = document.createElement('canvas');
-const scanContext = scanCanvas.getContext('2d');
-scanCanvas.style.display = 'none';
-document.body.appendChild(scanCanvas);
-
-// Variables para protección contra fuerza bruta y cámara
+// Variables de estado
 let decryptAttempts = 0;
-let cameraTimeoutId = null;
 let cameraStream = null;
-let qrScanInterval = null;
+let qrScanAnimation = null;
+let currentFacingMode = 'environment';
+let qrData = null;
 
 // Función para limpiar buffers sensibles
 const clearBuffer = (buffer) => {
-    if (buffer instanceof ArrayBuffer) {
-        const zeros = new Uint8Array(buffer.byteLength);
-        new Uint8Array(buffer).set(zeros);
-    } else if (buffer instanceof Uint8Array || buffer instanceof Int32Array || buffer instanceof Float32Array) {
+    if (buffer instanceof ArrayBuffer || buffer instanceof Uint8Array || buffer instanceof Int32Array || buffer instanceof Float32Array) {
         buffer.fill(0);
     } else {
-        console.warn("clearBuffer: El objeto no es un ArrayBuffer ni un TypedArray.");
+        console.warn('clearBuffer: Tipo de buffer no soportado.');
     }
 };
 
-// Verificar si el usuario ha elegido no mostrar el modal
+// Modal de tutorial
 const shouldShowModal = () => localStorage.getItem('dontShowAgain') !== 'true';
-
-// Mostrar el modal de tutorial
 const showTutorialModal = () => {
     if (shouldShowModal()) {
         domElements.tutorialModal.style.display = 'flex';
         domElements.tutorialModal.focus();
     }
 };
-
-// Cerrar el modal
 const closeTutorialModal = () => {
     domElements.tutorialModal.style.display = 'none';
 };
-
-// Guardar preferencia de no mostrar el modal
 const setDontShowAgain = () => {
     localStorage.setItem('dontShowAgain', 'true');
     closeTutorialModal();
@@ -107,62 +95,55 @@ const generateSecurePassphrase = (length = 16) => {
         digits: '0123456789',
         symbols: '!@#$%^&*()_+-=[]{}|;:,.?'
     };
-    const allChars = charSets.uppercase + charSets.lowercase + charSets.digits + charSets.symbols;
+    const allChars = Object.values(charSets).join('');
     const getRandomChar = (str) => str[crypto.getRandomValues(new Uint32Array(1))[0] % str.length];
-    let passphraseArray = [
+    
+    let passphrase = [
         getRandomChar(charSets.uppercase),
         getRandomChar(charSets.lowercase),
         getRandomChar(charSets.digits),
-        getRandomChar(charSets.symbols)
+        getRandomChar(charSets.symbols),
+        getRandomChar(allChars)
     ];
-    let fifthChar;
-    do {
-        fifthChar = getRandomChar(allChars);
-    } while (passphraseArray.includes(fifthChar));
-    passphraseArray.push(fifthChar);
-    const remainingLength = length - passphraseArray.length;
-    const randomValues = new Uint8Array(remainingLength);
-    crypto.getRandomValues(randomValues);
-    for (let i = 0; i < remainingLength; i++) {
-        passphraseArray.push(allChars[randomValues[i] % allChars.length]);
+    
+    for (let i = passphrase.length; i < length; i++) {
+        passphrase.push(getRandomChar(allChars));
     }
-    for (let i = passphraseArray.length - 1; i > 0; i--) {
+    
+    for (let i = passphrase.length - 1; i > 0; i--) {
         const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1);
-        [passphraseArray[i], passphraseArray[j]] = [passphraseArray[j], passphraseArray[i]];
+        [passphrase[i], passphrase[j]] = [passphrase[j], passphrase[i]];
     }
-    const passphrase = passphraseArray.join('');
+    
+    const result = passphrase.join('');
     try {
-        cryptoUtils.validatePassphrase(passphrase);
-        return passphrase;
-    } catch (error) {
-        console.warn('Generated passphrase failed validation, regenerating:', error.message);
+        cryptoUtils.validatePassphrase(result);
+        return result;
+    } catch {
         return generateSecurePassphrase(length);
     }
 };
 
 // Utilidades criptográficas
 const cryptoUtils = {
-    stringToArrayBuffer: str => new TextEncoder().encode(str),
-    arrayBufferToString: buffer => new TextDecoder().decode(buffer),
+    stringToArrayBuffer: (str) => new TextEncoder().encode(str),
+    arrayBufferToString: (buffer) => new TextDecoder().decode(buffer),
 
     validatePassphrase: (passphrase) => {
-        if (passphrase.length < CONFIG.MIN_PASSPHRASE_LENGTH) {
+        if (!passphrase || passphrase.length < CONFIG.MIN_PASSPHRASE_LENGTH) {
             throw new Error(`Passphrase must be at least ${CONFIG.MIN_PASSPHRASE_LENGTH} characters long`);
         }
         if (/^(.)\1+$/.test(passphrase)) {
             throw new Error('Passphrase cannot consist of repeated characters');
         }
-        const uniqueChars = new Set(passphrase).size;
-        if (uniqueChars < 5) {
-            throw new Error('Passphrase should have at least 5 unique characters');
+        if (new Set(passphrase).size < 5) {
+            throw new Error('Passphrase must have at least 5 unique characters');
         }
-        const commonPasswords = ['password', '123456', 'qwerty', 'admin'];
-        if (commonPasswords.includes(passphrase.toLowerCase())) {
-            throw new Error('Passphrase is too common. Please choose a stronger one.');
+        if (['password', '123456', 'qwerty', 'admin'].includes(passphrase.toLowerCase())) {
+            throw new Error('Passphrase is too common');
         }
-        const dangerousChars = /[<>'"&\\/]/;
-        if (dangerousChars.test(passphrase)) {
-            throw new Error('Passphrase contains invalid characters.');
+        if (/[<>'"&\\/]/.test(passphrase)) {
+            throw new Error('Passphrase contains invalid characters');
         }
         return true;
     },
@@ -176,44 +157,48 @@ const cryptoUtils = {
     },
 
     deriveKeyPair: async (passphrase, salt) => {
-        const baseKeyMaterial = await crypto.subtle.importKey(
-            'raw',
-            cryptoUtils.stringToArrayBuffer(passphrase),
-            { name: 'PBKDF2' },
-            false,
-            ['deriveBits']
-        );
+        try {
+            const baseKeyMaterial = await crypto.subtle.importKey(
+                'raw',
+                cryptoUtils.stringToArrayBuffer(passphrase),
+                'PBKDF2',
+                false,
+                ['deriveBits']
+            );
 
-        const derivedBits = await crypto.subtle.deriveBits(
-            {
-                name: 'PBKDF2',
-                salt,
-                iterations: PBKDF2_ITERATIONS,
-                hash: 'SHA-256'
-            },
-            baseKeyMaterial,
-            CONFIG.AES_KEY_LENGTH + CONFIG.HMAC_LENGTH
-        );
+            const derivedBits = await crypto.subtle.deriveBits(
+                {
+                    name: 'PBKDF2',
+                    salt,
+                    iterations: PBKDF2_ITERATIONS,
+                    hash: 'SHA-256'
+                },
+                baseKeyMaterial,
+                CONFIG.AES_KEY_LENGTH + CONFIG.HMAC_LENGTH
+            );
 
-        const derivedBitsArray = new Uint8Array(derivedBits);
-        const aesKey = await crypto.subtle.importKey(
-            'raw',
-            derivedBitsArray.slice(0, CONFIG.AES_KEY_LENGTH / 8),
-            { name: 'AES-GCM' },
-            false,
-            ['encrypt', 'decrypt']
-        );
+            const derivedBitsArray = new Uint8Array(derivedBits);
+            const aesKey = await crypto.subtle.importKey(
+                'raw',
+                derivedBitsArray.slice(0, CONFIG.AES_KEY_LENGTH / 8),
+                'AES-GCM',
+                false,
+                ['encrypt', 'decrypt']
+            );
 
-        const hmacKey = await crypto.subtle.importKey(
-            'raw',
-            derivedBitsArray.slice(CONFIG.AES_KEY_LENGTH / 8),
-            { name: 'HMAC', hash: 'SHA-256' },
-            false,
-            ['sign', 'verify']
-        );
+            const hmacKey = await crypto.subtle.importKey(
+                'raw',
+                derivedBitsArray.slice(CONFIG.AES_KEY_LENGTH / 8),
+                { name: 'HMAC', hash: 'SHA-256' },
+                false,
+                ['sign', 'verify']
+            );
 
-        clearBuffer(derivedBitsArray);
-        return { aesKey, hmacKey };
+            clearBuffer(derivedBitsArray);
+            return { aesKey, hmacKey };
+        } catch (error) {
+            throw new Error(`Key derivation failed: ${error.message}`);
+        }
     },
 
     encryptMessage: async (message, passphrase) => {
@@ -252,7 +237,7 @@ const cryptoUtils = {
             ]);
             return btoa(String.fromCharCode(...combined));
         } catch (error) {
-            throw new Error('Encryption failed: ' + error.message);
+            throw new Error(`Encryption failed: ${error.message}`);
         } finally {
             if (dataToEncrypt) clearBuffer(dataToEncrypt);
             if (salt) clearBuffer(salt);
@@ -296,14 +281,14 @@ const cryptoUtils = {
             let decompressed;
             try {
                 decompressed = pako.inflate(new Uint8Array(decrypted));
-            } catch (e) {
+            } catch {
                 decompressed = new Uint8Array(decrypted);
             }
             return cryptoUtils.arrayBufferToString(decompressed);
         } catch (error) {
             decryptAttempts++;
             await new Promise(resolve => setTimeout(resolve, decryptAttempts * CONFIG.DECRYPT_DELAY_INCREMENT));
-            throw new Error('Decryption failed: ' + error.message);
+            throw new Error(`Decryption failed: ${error.message}`);
         } finally {
             if (salt) clearBuffer(salt);
             if (iv) clearBuffer(iv);
@@ -315,13 +300,9 @@ const cryptoUtils = {
 // Controlador de la interfaz de usuario
 const uiController = {
     displayMessage: (content, isSent = false, isPassphrase = false) => {
-        const messagesDiv = domElements.messagesDiv;
         const messageEl = document.createElement('div');
         messageEl.className = `message ${isSent ? 'sent' : ''}`;
-        
-        const isEncrypted = content.startsWith('Encrypted:');
-        const isDecrypted = content.startsWith('Decrypted:');
-        const messageType = isEncrypted ? 'encrypted' : isDecrypted ? 'decrypted' : 'notice';
+        const messageType = content.startsWith('Encrypted:') ? 'encrypted' : content.startsWith('Decrypted:') ? 'decrypted' : 'notice';
         messageEl.dataset.messageType = messageType;
 
         if (isPassphrase) {
@@ -332,84 +313,56 @@ const uiController = {
                 </div>
                 <div class="message-time">${new Date().toLocaleTimeString()}</div>
             `;
-            const copyIcon = messageEl.querySelector('.copy-icon');
-            copyIcon.addEventListener('click', async () => {
+            messageEl.querySelector('.copy-icon').addEventListener('click', async () => {
                 try {
                     await navigator.clipboard.writeText(content);
                     uiController.displayMessage('Passphrase copied to clipboard!', false);
                     clearTimeout(messageEl.timeoutId);
-                } catch (error) {
-                    console.error('Failed to copy passphrase:', error);
+                } catch {
                     uiController.displayMessage('Failed to copy passphrase.', false);
                 }
             });
-            if (messageType === 'notice') {
-                messageEl.timeoutId = setTimeout(() => {
-                    if (messageEl && messageEl.parentNode) {
-                        messageEl.parentNode.removeChild(messageEl);
-                    }
-                }, CONFIG.NOTICE_TIMEOUT);
-                messageEl.addEventListener('mouseenter', () => clearTimeout(messageEl.timeoutId));
-                messageEl.addEventListener('mouseleave', () => {
-                    messageEl.timeoutId = setTimeout(() => {
-                        if (messageEl && messageEl.parentNode) {
-                            messageEl.parentNode.removeChild(messageEl);
-                        }
-                    }, CONFIG.NOTICE_TIMEOUT);
-                });
-            }
         } else {
             messageEl.innerHTML = `
                 <div class="message-content">${content}</div>
                 <div class="message-time">${new Date().toLocaleTimeString()}</div>
             `;
-            if (messageType === 'notice') {
-                messageEl.timeoutId = setTimeout(() => {
-                    if (messageEl && messageEl.parentNode) {
-                        messageEl.parentNode.removeChild(messageEl);
-                    }
-                }, CONFIG.NOTICE_TIMEOUT);
-                messageEl.addEventListener('mouseenter', () => clearTimeout(messageEl.timeoutId));
-                messageEl.addEventListener('mouseleave', () => {
-                    messageEl.timeoutId = setTimeout(() => {
-                        if (messageEl && messageEl.parentNode) {
-                            messageEl.parentNode.removeChild(messageEl);
-                        }
-                    }, CONFIG.NOTICE_TIMEOUT);
-                });
-            }
         }
 
-        if (!isSent && messagesDiv.children.length === 0) {
-            messagesDiv.querySelector('.message-placeholder')?.remove();
+        if (messageType === 'notice') {
+            messageEl.timeoutId = setTimeout(() => messageEl.remove(), CONFIG.NOTICE_TIMEOUT);
+            messageEl.addEventListener('mouseenter', () => clearTimeout(messageEl.timeoutId));
+            messageEl.addEventListener('mouseleave', () => {
+                messageEl.timeoutId = setTimeout(() => messageEl.remove(), CONFIG.NOTICE_TIMEOUT);
+            });
         }
 
-        const maxMessages = 7;
-        if (messagesDiv.children.length >= maxMessages) {
-            messagesDiv.removeChild(messagesDiv.firstChild);
+        if (!isSent && domElements.messagesDiv.children.length === 0) {
+            domElements.messagesDiv.querySelector('.message-placeholder')?.remove();
         }
 
-        messagesDiv.appendChild(messageEl);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        while (domElements.messagesDiv.children.length >= 7) {
+            domElements.messagesDiv.firstChild.remove();
+        }
+
+        domElements.messagesDiv.appendChild(messageEl);
+        domElements.messagesDiv.scrollTop = domElements.messagesDiv.scrollHeight;
         return messageEl;
     },
 
     showPassphraseError: (message) => {
         domElements.passphraseError.textContent = message;
         domElements.passphraseError.classList.add('visible');
-        setTimeout(() => {
-            domElements.passphraseError.classList.remove('visible');
-        }, 3000);
+        setTimeout(() => domElements.passphraseError.classList.remove('visible'), 3000);
     },
 
     generateQR: (data) => {
         return new Promise((resolve, reject) => {
-            const dataLength = data.length;
-            const qrSize = Math.min(CONFIG.MAX_QR_SIZE, Math.max(CONFIG.QR_SIZE, Math.ceil(dataLength / 20) * 10 + 150));
+            const qrSize = Math.min(CONFIG.MAX_QR_SIZE, Math.max(CONFIG.QR_SIZE, Math.ceil(data.length / 20) * 10 + 150));
             domElements.qrCanvas.width = qrSize;
             domElements.qrCanvas.height = qrSize;
 
-            const drawQR = () => {
+            requestAnimationFrame(() => {
                 const tempCanvas = document.createElement('canvas');
                 tempCanvas.width = qrSize;
                 tempCanvas.height = qrSize;
@@ -420,10 +373,7 @@ const uiController = {
                     color: { dark: '#000000', light: '#ffffff' },
                     errorCorrectionLevel: 'H'
                 }, (error) => {
-                    if (error) {
-                        reject(error);
-                        return;
-                    }
+                    if (error) return reject(error);
 
                     const ctx = tempCanvas.getContext('2d');
                     const circleRadius = qrSize * 0.15;
@@ -432,11 +382,11 @@ const uiController = {
 
                     ctx.beginPath();
                     ctx.arc(circleX, circleY, circleRadius, 0, Math.PI * 2);
-                    ctx.fillStyle = 'var(--primary-color)';
+                    ctx.fillStyle = '#00cc99';
                     ctx.fill();
 
-                    ctx.fillStyle = '#00cc99';
-                    ctx.font = `bold ${qrSize * 0.08}px "Segoe UI", system-ui, sans-serif`;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = `bold ${qrSize * 0.08}px 'Segoe UI', sans-serif`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText('HUSH', circleX, circleY - circleRadius * 0.2);
@@ -449,9 +399,7 @@ const uiController = {
                     domElements.qrContainer.classList.remove('hidden');
                     resolve();
                 });
-            };
-
-            requestAnimationFrame(drawQR);
+            });
         });
     },
 
@@ -494,32 +442,31 @@ const handlers = {
             domElements.messageInput.value = '';
             domElements.passphraseInput.value = '';
         } catch (error) {
-            console.error('Encryption error:', error);
-            uiController.displayMessage(error.message || 'Encryption failed. Please try again.', false);
+            uiController.displayMessage(error.message || 'Encryption failed.', false);
         } finally {
             uiController.resetButton(domElements.sendButton, originalHTML);
         }
     },
 
-    handleDecrypt: async (qrData) => {
+    handleDecrypt: async (data) => {
         const passphrase = domElements.passphraseInput.value.trim();
 
-        if (!qrData || !passphrase) {
-            uiController.displayMessage('Please provide a QR code and enter a passphrase', false);
+        if (!data || !passphrase) {
+            uiController.displayMessage('Please provide a QR code and a passphrase', false);
             return;
         }
 
-        const originalButtonHTML = domElements.decodeButton.innerHTML;
+        const originalHTML = domElements.decodeButton.innerHTML;
         uiController.showLoader(domElements.decodeButton, 'Decrypting...');
 
         try {
-            const decrypted = await cryptoUtils.decryptMessage(qrData, passphrase);
+            const decrypted = await cryptoUtils.decryptMessage(data, passphrase);
             uiController.displayMessage(`Decrypted: ${decrypted}`, false);
             domElements.passphraseInput.value = '';
             fileInput.value = '';
+            qrData = null;
             decryptAttempts = 0;
         } catch (error) {
-            console.error('Decryption error:', error);
             uiController.displayMessage(
                 error.message.includes('decrypt') || error.message.includes('Integrity')
                     ? 'Decryption failed. Wrong passphrase or tampered data?'
@@ -527,62 +474,56 @@ const handlers = {
                 false
             );
         } finally {
-            uiController.resetButton(domElements.decodeButton, originalButtonHTML);
+            uiController.resetButton(domElements.decodeButton, originalHTML);
         }
     },
 
     handleDownload: async () => {
         try {
-            if (!domElements.qrCanvas.toDataURL) {
+            const dataUrl = domElements.qrCanvas.toDataURL('image/png', 0.9);
+            if (!dataUrl) {
                 uiController.displayMessage('No QR code available to download.', false);
                 return;
             }
 
-            const qrDataUrl = domElements.qrCanvas.toDataURL('image/png', 0.9);
-            const qrBlob = await (await fetch(qrDataUrl)).blob();
+            const blob = await fetch(dataUrl).then(res => res.blob());
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const fileName = `hushbox-qr-${timestamp}.png`;
-
             const link = document.createElement('a');
-            link.href = URL.createObjectURL(qrBlob);
-            link.download = fileName;
-            document.body.appendChild(link);
+            link.href = URL.createObjectURL(blob);
+            link.download = `hushbox-qr-${timestamp}.png`;
             link.click();
-            document.body.removeChild(link);
             URL.revokeObjectURL(link.href);
 
             uiController.displayMessage('QR downloaded successfully!', false);
         } catch (error) {
-            console.error('Download error:', error);
-            uiController.displayMessage('Failed to download QR: ' + error.message, false);
+            uiController.displayMessage('Failed to download QR.', false);
         }
     },
 
     handleShare: async () => {
         try {
-            if (!domElements.qrCanvas.toDataURL) {
+            const dataUrl = domElements.qrCanvas.toDataURL('image/png', 0.9);
+            if (!dataUrl) {
                 uiController.displayMessage('No QR code available to share.', false);
                 return;
             }
 
-            const qrDataUrl = domElements.qrCanvas.toDataURL('image/png', 0.9);
-            const qrBlob = await (await fetch(qrDataUrl)).blob();
-            const qrFile = new File([qrBlob], 'hushbox-qr.png', { type: 'image/png' });
+            const blob = await fetch(dataUrl).then(res => res.blob());
+            const file = new File([blob], 'hushbox-qr.png', { type: 'image/png' });
 
-            if (navigator.share && navigator.canShare({ files: [qrFile] })) {
+            if (navigator.share && navigator.canShare({ files: [file] })) {
                 await navigator.share({
                     title: 'HushBox Secure QR',
                     text: 'Check out this encrypted QR code from HushBox!',
-                    files: [qrFile]
+                    files: [file]
                 });
                 uiController.displayMessage('QR shared successfully!', false);
             } else {
-                await navigator.clipboard.writeText(qrDataUrl);
+                await navigator.clipboard.writeText(dataUrl);
                 uiController.displayMessage('QR code copied to clipboard!', false);
             }
         } catch (error) {
-            console.error('Share error:', error);
-            uiController.displayMessage('Failed to share QR. Copied to clipboard instead.', false);
+            uiController.displayMessage('Failed to share QR. Copied to clipboard.', false);
             await navigator.clipboard.writeText(domElements.qrCanvas.toDataURL('image/png', 0.9));
         }
     },
@@ -590,67 +531,103 @@ const handlers = {
     stopCamera: () => {
         if (cameraStream) {
             cameraStream.getTracks().forEach(track => track.stop());
-            domElements.cameraPreview.srcObject = null;
             cameraStream = null;
         }
-        if (qrScanInterval) {
-            clearInterval(qrScanInterval);
-            qrScanInterval = null;
+        if (qrScanAnimation) {
+            cancelAnimationFrame(qrScanAnimation);
+            qrScanAnimation = null;
         }
-        if (cameraTimeoutId) {
-            clearTimeout(cameraTimeoutId);
-            cameraTimeoutId = null;
+        domElements.cameraModal.classList.add('hidden');
+        window.removeEventListener('resize', handlers.updateCanvasSize);
+    },
+
+    updateCanvasSize: () => {
+        const container = domElements.cameraCanvas.parentElement;
+        const aspectRatio = cameraStream?.getVideoTracks()[0]?.getSettings()?.aspectRatio || 16 / 9;
+        let width = container.clientWidth;
+        let height = width / aspectRatio;
+        if (height > container.clientHeight) {
+            height = container.clientHeight;
+            width = height * aspectRatio;
         }
-        domElements.cameraContainer.classList.add('hidden');
+        domElements.cameraCanvas.width = width;
+        domElements.cameraCanvas.height = height;
     },
 
     startCamera: async () => {
         try {
-            handlers.stopCamera(); // Detener cualquier cámara activa
+            handlers.stopCamera();
             cameraStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment' }
+                video: { facingMode: currentFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } }
             });
-            domElements.cameraPreview.srcObject = cameraStream;
-            domElements.cameraContainer.classList.remove('hidden');
+
+            const video = document.createElement('video');
+            video.srcObject = cameraStream;
+            video.play();
+
+            const ctx = domElements.cameraCanvas.getContext('2d');
 
             const scanQR = () => {
-                if (!domElements.cameraPreview.videoWidth) return;
-                scanCanvas.width = domElements.cameraPreview.videoWidth;
-                scanCanvas.height = domElements.cameraPreview.videoHeight;
-                scanContext.drawImage(domElements.cameraPreview, 0, 0, scanCanvas.width, scanCanvas.height);
-                const imageData = scanContext.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+                if (!cameraStream) return;
+
+                ctx.drawImage(video, 0, 0, domElements.cameraCanvas.width, domElements.cameraCanvas.height);
+                const imageData = ctx.getImageData(0, 0, domElements.cameraCanvas.width, domElements.cameraCanvas.height);
                 const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
+
                 if (qrCode) {
-                    handlers.stopCamera();
-                    handlers.handleDecrypt(qrCode.data);
+                    const { topLeftCorner, topRightCorner, bottomRightCorner, bottomLeftCorner } = qrCode.location;
+                    ctx.strokeStyle = qrData === qrCode.data ? '#00ff00' : '#ffffff';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.moveTo(topLeftCorner.x, topLeftCorner.y);
+                    ctx.lineTo(topRightCorner.x, topRightCorner.y);
+                    ctx.lineTo(bottomRightCorner.x, bottomRightCorner.y);
+                    ctx.lineTo(bottomLeftCorner.x, bottomLeftCorner.y);
+                    ctx.closePath();
+                    ctx.stroke();
+
+                    if (qrCode.data && qrData !== qrCode.data) {
+                        qrData = qrCode.data;
+                        handlers.stopCamera();
+                        handlers.handleDecrypt(qrCode.data);
+                        return;
+                    }
                 }
+
+                qrScanAnimation = requestAnimationFrame(scanQR);
             };
 
-            qrScanInterval = setInterval(() => {
-                requestAnimationFrame(scanQR);
-            }, 500);
+            video.addEventListener('loadedmetadata', () => {
+                handlers.updateCanvasSize();
+                window.addEventListener('resize', handlers.updateCanvasSize);
+                qrScanAnimation = requestAnimationFrame(scanQR);
+            });
 
-            cameraTimeoutId = setTimeout(() => {
-                handlers.stopCamera();
-                uiController.displayMessage('Camera scan timed out.', false);
+            domElements.cameraModal.classList.remove('hidden');
+            domElements.cameraModal.focus();
+
+            setTimeout(() => {
+                if (cameraStream) {
+                    handlers.stopCamera();
+                    uiController.displayMessage('Camera scan timed out.', false);
+                }
             }, CONFIG.CAMERA_TIMEOUT);
         } catch (error) {
-            console.error('Camera error:', error);
             uiController.displayMessage('Failed to access camera. Please check permissions.', false);
             handlers.stopCamera();
         }
     },
 
-    handleUploadArrow: () => {
-        fileInput.accept = 'image/*,application/pdf';
-        fileInput.click();
+    toggleCamera: async () => {
+        currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+        await handlers.startCamera();
     },
 
+    handleUploadArrow: () => fileInput.click(),
     handleImageUpload: () => {
         fileInput.accept = 'image/*';
         fileInput.click();
     },
-
     handlePDFUpload: () => {
         fileInput.accept = 'application/pdf';
         fileInput.click();
@@ -669,23 +646,19 @@ const handlers = {
         try {
             const imageData = await new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.onload = e => {
+                reader.onload = () => {
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         const MAX_SIZE = 800;
                         let width = img.width;
                         let height = img.height;
-                        if (width > height) {
-                            if (width > MAX_SIZE) {
-                                height *= MAX_SIZE / width;
-                                width = MAX_SIZE;
-                            }
-                        } else {
-                            if (height > MAX_SIZE) {
-                                width *= MAX_SIZE / height;
-                                height = MAX_SIZE;
-                            }
+                        if (width > height && width > MAX_SIZE) {
+                            height *= MAX_SIZE / width;
+                            width = MAX_SIZE;
+                        } else if (height > MAX_SIZE) {
+                            width *= MAX_SIZE / height;
+                            height = MAX_SIZE;
                         }
                         canvas.width = width;
                         canvas.height = height;
@@ -694,20 +667,18 @@ const handlers = {
                         resolve(ctx.getImageData(0, 0, width, height));
                     };
                     img.onerror = reject;
-                    img.src = e.target.result;
+                    img.src = reader.result;
                 };
                 reader.onerror = reject;
                 reader.readAsDataURL(file);
             });
 
             const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
-            if (!qrCode) {
-                throw new Error('No QR code detected in the image');
-            }
+            if (!qrCode) throw new Error('No QR code detected in the image');
 
+            qrData = qrCode.data;
             await handlers.handleDecrypt(qrCode.data);
         } catch (error) {
-            console.error('File upload error:', error);
             uiController.displayMessage(error.message || 'Failed to process file.', false);
         } finally {
             fileInput.value = '';
@@ -715,44 +686,42 @@ const handlers = {
     }
 };
 
-// Event listeners
+// Inicialización y eventos
 document.addEventListener('DOMContentLoaded', () => {
     // Generar contraseña
     document.querySelector('.generate-password').addEventListener('click', () => {
-        const securePassphrase = generateSecurePassphrase(16);
-        domElements.passphraseInput.value = securePassphrase;
+        const passphrase = generateSecurePassphrase(16);
+        domElements.passphraseInput.value = passphrase;
         domElements.passphraseInput.dispatchEvent(new Event('input'));
-        uiController.displayMessage(securePassphrase, true, true);
+        uiController.displayMessage(passphrase, true, true);
     });
 
     // Contador de caracteres
     const charCounter = document.getElementById('char-counter');
     domElements.messageInput.addEventListener('input', () => {
-        const currentLength = domElements.messageInput.value.length;
-        const maxLength = domElements.messageInput.getAttribute('maxlength');
-        charCounter.textContent = `${currentLength}/${maxLength}`;
-        charCounter.style.color = currentLength >= maxLength * 0.9 ? 'var(--error-color)' : 'rgba(160, 160, 160, 0.8)';
+        const length = domElements.messageInput.value.length;
+        const maxLength = parseInt(domElements.messageInput.getAttribute('maxlength'));
+        charCounter.textContent = `${length}/${maxLength}`;
+        charCounter.style.color = length >= maxLength * 0.9 ? 'var(--error-color)' : 'rgba(160, 160, 160, 0.8)';
     });
 
-    // Validación visual de la passphrase
+    // Validación de passphrase
     domElements.passphraseInput.addEventListener('input', (e) => {
         const passphrase = e.target.value;
-        const keyIcon = domElements.passphraseInput.parentElement.querySelector('.fa-key');
-        if (passphrase.length === 0) {
+        const keyIcon = e.target.parentElement.querySelector('.fa-key');
+        if (!passphrase) {
             keyIcon.style.color = 'rgba(160, 160, 160, 0.6)';
             domElements.passphraseError.classList.remove('visible');
-        } else if (passphrase.length < CONFIG.MIN_PASSPHRASE_LENGTH) {
+            return;
+        }
+
+        try {
+            cryptoUtils.validatePassphrase(passphrase);
+            keyIcon.style.color = 'var(--success-color)';
+            domElements.passphraseError.classList.remove('visible');
+        } catch (error) {
             keyIcon.style.color = 'var(--error-color)';
-            uiController.showPassphraseError(`Passphrase must be at least ${CONFIG.MIN_PASSPHRASE_LENGTH} characters long`);
-        } else {
-            try {
-                cryptoUtils.validatePassphrase(passphrase);
-                keyIcon.style.color = 'var(--success-color)';
-                domElements.passphraseError.classList.remove('visible');
-            } catch (error) {
-                keyIcon.style.color = 'var(--error-color)';
-                uiController.showPassphraseError(error.message);
-            }
+            uiController.showPassphraseError(error.message);
         }
     });
 
@@ -762,32 +731,33 @@ document.addEventListener('DOMContentLoaded', () => {
     domElements.imageButton.addEventListener('click', handlers.handleImageUpload);
     domElements.pdfButton.addEventListener('click', handlers.handlePDFUpload);
     domElements.sendButton.addEventListener('click', handlers.handleEncrypt);
-    domElements.decodeButton.addEventListener('click', () => handlers.handleDecrypt(fileInput.qrData));
+    domElements.decodeButton.addEventListener('click', () => handlers.handleDecrypt(qrData));
     domElements.downloadButton.addEventListener('click', handlers.handleDownload);
     domElements.shareButton.addEventListener('click', handlers.handleShare);
+    domElements.closeCameraModal.addEventListener('click', handlers.stopCamera);
+    domElements.toggleCameraButton.addEventListener('click', handlers.toggleCamera);
     fileInput.addEventListener('change', handlers.handleFileUpload);
 
-    // Habilitar decodeButton cuando se carga un archivo o se escanea un QR
+    // Habilitar/deshabilitar botón de descifrado
     fileInput.addEventListener('change', () => {
-        domElements.decodeButton.disabled = fileInput.files.length === 0;
+        domElements.decodeButton.disabled = !fileInput.files.length && !qrData;
+    });
+    domElements.passphraseInput.addEventListener('input', () => {
+        domElements.decodeButton.disabled = !qrData;
     });
 
-    // Eventos del modal
+    // Modal de tutorial
     showTutorialModal();
     domElements.closeTutorial.addEventListener('click', closeTutorialModal);
     domElements.closeModalButton.addEventListener('click', closeTutorialModal);
     domElements.dontShowAgain.addEventListener('click', setDontShowAgain);
+
+    // Inicialización
+    domElements.qrContainer.classList.add('hidden');
+    domElements.cameraModal.classList.add('hidden');
 });
 
-// Detener la cámara al salir de la página
-window.addEventListener('beforeunload', (e) => {
-    if (cameraStream) {
-        e.preventDefault();
-        e.returnValue = 'Camera is active. Are you sure you want to leave?';
-        handlers.stopCamera();
-    }
+// Limpieza al salir
+window.addEventListener('beforeunload', () => {
+    handlers.stopCamera();
 });
-
-// Inicialización
-domElements.qrContainer.classList.add('hidden');
-domElements.cameraContainer.classList.add('hidden');
