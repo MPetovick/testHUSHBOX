@@ -42,10 +42,15 @@ body {
     font-size: clamp(2rem, 6vw, 2.8rem);
     letter-spacing: clamp(2px, 0.5vw, 4px);
     text-shadow: 0 0 10px var(--glow-color);
-    animation: pulseGlow 4s infinite;
     position: relative;
     display: flex;
     align-items: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .logo {
+        animation: pulseGlow 4s infinite;
+    }
 }
 
 .white-text {
@@ -105,20 +110,23 @@ body {
     border-radius: 15px;
     padding: clamp(1rem, 2.5vw, 2rem);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(10px);
+    /* Fallback para navegadores sin soporte de backdrop-filter */
+    background: rgba(42, 42, 42, 0.95);
     transition: transform 0.3s ease;
     flex: 1;
+}
+
+@supports (backdrop-filter: blur(10px)) {
+    .section {
+        backdrop-filter: blur(10px);
+    }
 }
 
 .section:hover {
     transform: translateY(-5px);
 }
 
-.encrypt-section {
-    flex: 1;
-}
-
-.decrypt-section {
+.encrypt-section, .decrypt-section {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -138,22 +146,22 @@ body {
     transition: color 0.3s ease;
 }
 
-/* Estilos específicos para el campo passphrase */
-.input-group #passphrase ~ .fa-key {
+/* Estilos para el campo passphrase */
+.input-group .fa-key {
     right: 3rem;
 }
 
-.input-group #passphrase ~ .fa-dice {
+.input-group .fa-dice {
     right: 1rem;
     cursor: pointer;
 }
 
-.input-group #passphrase ~ .fa-dice:hover {
+.input-group .fa-dice:hover {
     color: var(--primary-color);
 }
 
-/* Estilos específicos para el campo message-input */
-.input-group #message-input ~ .fa-comment-dots {
+/* Estilos para el campo message-input */
+.input-group .fa-comment-dots {
     right: 1rem;
     top: calc(1rem + 0.5rem);
     transform: none;
@@ -369,20 +377,12 @@ body {
 }
 
 .btn-icon:disabled {
-    background: rgba(102, 102, 102, 0.3); /* Gris apagado */
-    border: 1px solid rgba(160, 160, 160, 0.3); /* Borde menos prominente */
-    color: rgba(160, 160, 160, 0.5); /* Color desvaído */
-    cursor: default; /* Cursor normal, no pointer */
-    box-shadow: none; /* Sin sombra */
-    opacity: 0.6; /* Ligeramente transparente */
-    pointer-events: auto; /* Permitir clics para "Coming Soon" */
-}
-
-.btn-icon:disabled:hover {
-    background: rgba(102, 102, 102, 0.3); /* Sin cambio al hover */
+    background: rgba(102, 102, 102, 0.3);
+    border: 1px solid rgba(160, 160, 160, 0.3);
     color: rgba(160, 160, 160, 0.5);
+    cursor: default;
     box-shadow: none;
-    transform: none; /* Sin animación */
+    opacity: 0.6;
 }
 
 .btn-icon i {
@@ -457,8 +457,13 @@ body {
     background-color: rgba(0, 0, 0, 0.85);
     justify-content: center;
     align-items: center;
-    animation: fadeIn 0.3s ease;
     overflow-y: auto;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .modal {
+        animation: fadeIn 0.3s ease;
+    }
 }
 
 .modal-content {
@@ -472,6 +477,12 @@ body {
     box-shadow: 0 10px 40px rgba(0, 204, 153, 0.2);
     border: 1px solid var(--primary-color);
     overflow-y: auto;
+}
+
+@supports (backdrop-filter: blur(10px)) {
+    .modal-content {
+        backdrop-filter: blur(10px);
+    }
 }
 
 .modal-header {
@@ -583,6 +594,29 @@ body {
     color: #00b386;
 }
 
+/* Tooltip de error para validación */
+.error-tooltip {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--error-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 1000;
+    max-width: 90%;
+    text-align: center;
+}
+
+.error-tooltip.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(5px);
+}
+
 /* Animations */
 @keyframes pulseGlow {
     0% { text-shadow: 0 0 10px var(--glow-color); }
@@ -595,41 +629,10 @@ body {
     to { opacity: 1; }
 }
 
-/* Estilos para el mensaje "Coming Soon" */
-#coming-soon-message {
-    position: absolute;
-    bottom: -40px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--section-bg);
-    color: var(--primary-color);
-    padding: 10px 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    font-size: 1rem;
-    font-weight: 500;
-    opacity: 0;
-    transition: opacity 0.5s ease, transform 0.5s ease;
-    z-index: 1000;
-}
-
-#coming-soon-message.visible {
-    opacity: 1;
-    transform: translateX(-50%) translateY(-10px);
-}
-
-#coming-soon-message p {
-    margin: 0;
-}
-
 /* Media Queries para móviles */
 @media (max-width: 768px) {
     .main-grid {
         flex-direction: column;
-    }
-
-    .logo {
-        animation: none;
     }
 
     .container {
@@ -645,12 +648,6 @@ body {
         max-height: 250px;
     }
 
-    #coming-soon-message {
-        font-size: 0.9rem;
-        padding: 8px 16px;
-    }
-
-    /* Optimización específica para el modal en móviles */
     .modal-content {
         max-width: 95%;
         padding: 1rem;
@@ -712,7 +709,6 @@ body {
         font-size: 1.5rem;
     }
 
-    /* Ajustes específicos para los botones de QR */
     .qr-header {
         gap: 0.75rem;
     }
@@ -729,6 +725,11 @@ body {
     .btn-secondary i {
         font-size: 0.9rem;
     }
+
+    .error-tooltip {
+        font-size: 0.8rem;
+        max-width: 95%;
+    }
 }
 
 @media (max-width: 480px) {
@@ -739,6 +740,11 @@ body {
     
     .btn-secondary i {
         font-size: 0.85rem;
+    }
+
+    .error-tooltip {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
     }
 }
 
@@ -822,32 +828,5 @@ body {
 }
 
 .copy-icon:hover {
-    color: #00b386; /* Un tono más oscuro al pasar el ratón */
-}
-
-/* Ajuste para el contenedor del mensaje con ícono */
-.message-content {
-    display: flex;
-    align-items: center;
-    padding: 0.5rem 1rem;
-    background: rgba(0, 204, 153, 0.1);
-    border-radius: 8px;
-    font-size: clamp(0.9rem, 2vw, 1rem);
-    word-break: break-all;
-}
-
-/* Asegurar que el texto de la contraseña no se desborde */
-.passphrase-text {
-    flex-grow: 1;
-    word-break: break-all;
-}
-
-/* Add to your CSS */
-#camera-preview {
-    width: 100%;
-    max-width: 300px;
-    height: auto;
-    border-radius: 12px;
-    border: 2px solid var(--primary-color);
-    background: var(--secondary-color);
+    color: #00b386;
 }
