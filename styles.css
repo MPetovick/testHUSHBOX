@@ -110,7 +110,6 @@ body {
     border-radius: 15px;
     padding: clamp(1rem, 2.5vw, 2rem);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    background: rgba(42, 42, 42, 0.95);
     transition: transform 0.3s ease;
     flex: 1;
 }
@@ -215,21 +214,21 @@ body {
 
 .btn-primary:disabled {
     background: #666;
-    cursor: default;
+    cursor: not-allowed;
     transform: none;
     box-shadow: none;
     opacity: 0.7;
 }
 
 .btn-secondary {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     padding: 0;
     border-radius: 8px;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: rgba(0, 204, 153, 0.1);
+    background: rgba(0, 204, 153, 0.2);
     border: 1px solid var(--primary-color);
     transition: all 0.3s ease;
 }
@@ -239,20 +238,19 @@ body {
     transform: translateY(-1px);
 }
 
-.btn-secondary i {
+.btn-secondary .icon {
     font-size: 1rem;
     color: var(--primary-color);
     transition: color 0.3s ease;
 }
 
-.btn-secondary:hover i {
+.btn-secondary:hover .icon {
     color: #1a1a1a;
 }
 
 #qr-container {
-    margin-top: clamp(1rem, 3vw, 2rem);
+    margin-top: clamp(10px, 3vw, 20px);
     text-align: center;
-    will-change: opacity;
     opacity: 0;
     transition: opacity 0.3s ease;
 }
@@ -286,7 +284,7 @@ body {
     gap: 0.5rem;
 }
 
-#qr-canvas {
+#qr-code {
     max-width: 100%;
     max-height: 350px;
     background: white;
@@ -377,16 +375,16 @@ body {
     background: rgba(102, 102, 102, 0.3);
     border: 1px solid rgba(160, 160, 160, 0.3);
     color: rgba(160, 160, 160, 0.5);
-    cursor: default;
+    cursor: not-allowed;
     box-shadow: none;
     opacity: 0.6;
 }
 
-.btn-icon i {
+.btn-icon .icon {
     font-size: 1.2rem;
 }
 
-.btn-icon:disabled i {
+.btn-icon:disabled .icon {
     color: rgba(160, 160, 160, 0.5);
 }
 
@@ -421,10 +419,9 @@ body {
 .action-buttons .btn-primary {
     width: auto;
     min-width: 150px;
-    max-width: none;
 }
 
-/* Modal Enhancements */
+/* Modal */
 .modal {
     display: none;
     position: fixed;
@@ -534,7 +531,7 @@ body {
     color: var(--text-color);
 }
 
-.security-tip i {
+.security-tip .icon {
     margin-right: 0.5rem;
     color: var(--primary-color);
 }
@@ -567,6 +564,7 @@ body {
     cursor: pointer;
     color: var(--primary-color);
     z-index: 1001;
+    transition: color 0.3s ease;
 }
 
 .close-modal:hover, .close-camera-modal:hover {
@@ -576,18 +574,33 @@ body {
 /* Camera Modal */
 .camera-modal {
     display: none;
-    align-items: center;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
     justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.camera-modal:not(.hidden) {
+    display: flex;
 }
 
 .camera-modal-content {
+    width: 90vw;
     max-width: 700px;
-    width: 90%;
     padding: 1.5rem;
     border-radius: 20px;
     background: var(--section-bg);
     box-shadow: 0 10px 40px rgba(0, 204, 153, 0.2);
-    border: 1px solid var(--primary-color);
+    border: 2px solid var(--primary-color);
+    position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 @supports (backdrop-filter: blur(10px)) {
@@ -605,10 +618,12 @@ body {
     border-radius: 12px;
     border: 2px solid var(--primary-color);
     background: var(--secondary-color);
+    flex-grow: 1;
 }
 
 #camera-canvas {
     width: 100%;
+    height: auto;
     display: block;
 }
 
@@ -627,59 +642,81 @@ body {
 /* Estilos para móviles (pantalla completa) */
 @media (max-width: 768px) {
     .camera-modal {
+        display: none;
         background: black;
         padding: 0;
         align-items: stretch;
     }
 
+    .camera-modal:not(.hidden) {
+        display: flex;
+    }
+
     .camera-modal-content {
-        width: 100%;
-        height: 100%;
+        width: 100vw;
+        height: 100vh;
         max-width: none;
+        max-height: none;
         border-radius: 0;
-        padding: 1rem;
+        padding: 0;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         border: none;
+        background: black;
     }
 
     .camera-container {
         flex-grow: 1;
+        width: 100%;
+        height: 100%;
         margin: 0;
         border: none;
         border-radius: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
     #camera-canvas {
-        width: 100%;
+        width: 100vw;
         height: 100%;
         object-fit: contain;
+        display: block;
     }
 
     .camera-controls {
-        margin-bottom: 1rem;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.5);
     }
 
     .close-camera-modal {
         top: 0.5rem;
         right: 0.5rem;
         font-size: 2rem;
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.7);
         border-radius: 50%;
         padding: 0.5rem;
+        color: var(--primary-color);
+        z-index: 2100;
+    }
+
+    .close-camera-modal:hover {
+        background: var(--primary-color);
+        color: #ffffff;
     }
 }
 
-/* Tooltip de error para validación */
-.error-tooltip {
+/* Tooltip de error para validación de passphrase */
+#passphrase-error {
     position: absolute;
     top: 100%;
     left: 50%;
     transform: translateX(-50%);
     background: var(--error-color);
-    color: white;
     padding: 0.5rem 1rem;
+    color: white;
     border-radius: 8px;
     font-size: 0.9rem;
     opacity: 0;
@@ -689,15 +726,40 @@ body {
     text-align: center;
 }
 
-.error-tooltip.visible {
+#passphrase-error.visible {
     opacity: 1;
     transform: translateX(-50%) translateY(5px);
 }
 
-/* Animations */
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 1rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: clamp(0.8rem, 2vw, 0.9rem);
+}
+
+.footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer a:hover {
+    color: #00b386;
+}
+
+.social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Animaciones */
 @keyframes pulseGlow {
     0% { text-shadow: 0 0 10px var(--glow-color); }
-    50% { text-shadow: 0 0 20px var(--glow-color), 0 0 30px var(--glow-color); }
+    50% { text-shadow: 0 0 20px var(--glow-color), 0 0 30px rgba(0, 204, 153, 0.5); }
     100% { text-shadow: 0 0 10px var(--glow-color); }
 }
 
@@ -717,192 +779,28 @@ body {
     }
 
     .btn-primary {
-        padding: 1rem;
-        font-size: 1rem;
+        padding: 0.8rem;
+        width: 100%;
     }
 
-    #qr-canvas {
-        max-height: 250px;
+    #qr-code {
+        max-width: 100%;
+        background: white;
+        padding: clamp(0.5rem, 1vw, 0.8rem);
     }
 
     .modal-content {
-        max-width: 95%;
+        max-width: 95vw;
         padding: 1rem;
         margin: 0.5rem;
     }
 
     .feature-grid {
-        grid-template-columns: repeat(2, minmax(120px, 1fr));
-        gap: 0.5rem;
-    }
-
-    .feature-item {
-        padding: 0.8rem;
-        min-height: 140px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        text-align: center;
-    }
-
-    .feature-icon {
-        font-size: 1.3rem;
-        margin-bottom: 0.3rem;
-    }
-
-    .feature-item h3 {
-        font-size: 0.9rem;
-        margin-bottom: 0.3rem;
-    }
-
-    .feature-item p {
-        font-size: 0.75rem;
-        line-height: 1.3;
-    }
-
-    .security-tip {
-        grid-column: span 2;
-        font-size: 0.75rem;
-        padding: 0.6rem;
-        margin-top: 0.5rem;
-    }
-
-    .modal-header h2 {
-        font-size: 1.4rem;
-        line-height: 1.3;
-    }
-
-    .modal-subtitle {
-        font-size: 0.9rem;
-    }
-
-    .modal-actions .btn-primary {
-        width: 100%;
-    }
-
-    .close-modal {
-        top: 0.5rem;
-        right: 0.5rem;
-        font-size: 1.5rem;
-    }
-
-    .qr-header {
-        gap: 0.75rem;
-    }
-    
-    .qr-header h3 {
-        font-size: 1.1rem;
-    }
-    
-    .btn-secondary {
-        width: 28px;
-        height: 28px;
-    }
-    
-    .btn-secondary i {
-        font-size: 0.9rem;
-    }
-
-    .error-tooltip {
-        font-size: 0.8rem;
-        max-width: 95%;
+        grid-template-columns: 1fr;
     }
 }
 
-@media (max-width: 480px) {
-    .btn-secondary {
-        width: 26px;
-        height: 26px;
-    }
-    
-    .btn-secondary i {
-        font-size: 0.85rem;
-    }
-
-    .error-tooltip {
-        font-size: 0.75rem;
-        padding: 0.4rem 0.8rem;
-    }
-}
-
-@media (min-width: 769px) and (max-width: 1024px) {
-    .feature-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-/* Footer */
-.footer {
-    text-align: center;
-    padding: 0.5rem;
-    background: var(--secondary-color);
-    margin-top: 1rem;
-}
-
-.footer p {
-    margin: 0;
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.footer a {
-    color: var(--primary-color);
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-.footer a:hover {
-    color: #00b386;
-}
-
-.social-icons {
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.social-icons .btn-icon {
-    width: auto;
-    height: auto;
-    border-radius: 0;
-    background: transparent;
-    color: var(--primary-color);
-    border: none;
-    transition: color 0.3s ease;
-    padding: 0.3rem;
-    font-size: 1rem;
-}
-
-.social-icons .btn-icon:hover {
-    background: transparent;
-    color: #00b386;
-    transform: translateY(-2px);
-    box-shadow: none;
-}
-
-.char-counter {
-    position: absolute;
-    right: 1rem;
-    bottom: 0.5rem;
-    font-size: 0.8rem;
-    color: rgba(160, 160, 160, 0.8);
-    padding: 0;
-    pointer-events: none;
-}
-
+/* Asegurar que .hidden oculte correctamente */
 .hidden {
-    display: none;
-}
-
-.copy-icon {
-    font-size: 0.9rem;
-    color: var(--primary-color);
-    cursor: pointer;
-    margin-left: 0.5rem;
-    transition: color 0.3s ease;
-}
-
-.copy-icon:hover {
-    color: #00b386;
+    display: none !important;
 }
