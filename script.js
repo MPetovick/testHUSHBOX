@@ -41,10 +41,6 @@ const domElements = {
     loginIcon: document.getElementById('login-icon')
 };
 
-// Variables globales para el escaneo de cámara
-let isCameraActive = false;
-let scanInterval = null;
-
 // Función mejorada para generar contraseñas seguras que cumplan con las reglas de validación
 function generateSecurePassphrase(length = 16) {
     length = Math.max(length, CONFIG.MIN_PASSPHRASE_LENGTH);
@@ -340,7 +336,7 @@ const uiController = {
         const messagesDiv = domElements.messagesDiv;
         const messageEl = document.createElement('div');
         messageEl.className = `message ${isSent ? 'sent' : ''}`;
-
+        
         // Determinar el tipo de mensaje
         const isEncrypted = content.startsWith('Encrypted:');
         const isDecrypted = content.startsWith('Decrypted:');
@@ -627,91 +623,17 @@ const handlers = {
         }
     },
 
-    // ===== FUNCIONES DE CÁMARA NUEVAS =====
-    startCameraScan: async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "environment" } 
-            });
-            domElements.cameraPreview.srcObject = stream;
-            domElements.cameraContainer.classList.remove('hidden');
-            isCameraActive = true;
-
-            // Iniciar escaneo de códigos QR
-            scanInterval = setInterval(() => {
-                handlers.scanQRFromCamera();
-            }, 500);
-        } catch (error) {
-            console.error('Camera error:', error);
-            uiController.displayMessage('Failed to access camera: ' + error.message, false);
-        }
-    },
-
-    scanQRFromCamera: () => {
-        if (!isCameraActive) return;
-
-        const video = domElements.cameraPreview;
-        if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
-
-        scanCanvas.width = video.videoWidth;
-        scanCanvas.height = video.videoHeight;
-        scanContext.drawImage(video, 0, 0, scanCanvas.width, scanCanvas.height);
-
-        const imageData = scanContext.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
-        const qrCode = jsQR(imageData.data, imageData.width, imageData.height, {
-            inversionAttempts: "dontInvert"
-        });
-
-        if (qrCode) {
-            handlers.stopCamera();
-            handlers.handleScannedQRData(qrCode.data);
-        }
-    },
-
-    handleScannedQRData: (encryptedData) => {
-        const passphrase = domElements.passphraseInput.value.trim();
-        if (!passphrase) {
-            uiController.displayMessage('Please enter the passphrase', false);
-            return;
-        }
-
-        const originalButtonHTML = domElements.decodeButton.innerHTML;
-        uiController.showLoader(domElements.decodeButton, 'Decrypting...');
-
-        cryptoUtils.decryptMessage(encryptedData, passphrase)
-            .then(decrypted => {
-                uiController.displayMessage(`Decrypted: ${decrypted}`, false);
-                domElements.passphraseInput.value = '';
-                decryptAttempts = 0;
-            })
-            .catch(error => {
-                console.error('Decryption error:', error);
-                uiController.displayMessage(
-                    error.message.includes('decrypt') || error.message.includes('Integrity') 
-                        ? 'Decryption failed. Wrong passphrase or tampered data?' 
-                        : error.message,
-                    false
-                );
-            })
-            .finally(() => {
-                uiController.resetButton(domElements.decodeButton, originalButtonHTML);
-            });
-    },
-
     stopCamera: () => {
-        if (scanInterval) {
-            clearInterval(scanInterval);
-            scanInterval = null;
-        }
-
         const stream = domElements.cameraPreview.srcObject;
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
             domElements.cameraPreview.srcObject = null;
+            domElements.cameraContainer.classList.add('hidden');
+            if (cameraTimeoutId) {
+                clearTimeout(cameraTimeoutId);
+                cameraTimeoutId = null;
+            }
         }
-
-        domElements.cameraContainer.classList.add('hidden');
-        isCameraActive = false;
     },
 
     handleUploadArrow: () => {
@@ -779,17 +701,12 @@ document.addEventListener('DOMContentLoaded', () => {
     domElements.closeTutorial.addEventListener('click', closeTutorialModal);
     domElements.closeModalButton.addEventListener('click', closeTutorialModal);
     domElements.dontShowAgain.addEventListener('click', setDontShowAgain);
+    domElements.scanButton.addEventListener('click', showComingSoonMessage);
     domElements.imageButton.addEventListener('click', showComingSoonMessage);
     domElements.pdfButton.addEventListener('click', showComingSoonMessage);
 
-    // Habilitar solo el botón de escaneo para cámara, otros para "Coming Soon"
-    domElements.scanButton.addEventListener('click', () => {
-        if (isCameraActive) {
-            handlers.stopCamera();
-        } else {
-            handlers.startCameraScan();
-        }
-    });
+    // Habilitar solo el botón de escaneo para "Coming Soon", dejar image y pdf desactivados
+    domElements.scanButton.disabled = false;
 
     // Deshabilitar decodeButton inicialmente
     domElements.decodeButton.disabled = true;
@@ -806,7 +723,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Detener la cámara al salir de la página si está activa
 window.addEventListener('beforeunload', (e) => {
-    if (isCameraActive) {
+    if (domElements.cameraPreview.srcObject) {
         e.preventDefault();
         e.returnValue = 'Camera is active. Are you sure you want to leave?';
         handlers.stopCamera();
