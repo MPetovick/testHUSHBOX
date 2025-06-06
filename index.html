@@ -67,11 +67,6 @@
                     </button>
                 </div>
 
-                <!-- Área de la cámara -->
-                <div id="camera-container" class="hidden">
-                    <video id="camera-preview" autoplay playsinline></video>
-                </div>
-
                 <!-- Botones Encrypt y Decrypt en la misma fila -->
                 <div class="action-buttons">
                     <button id="send-button" class="btn-primary" aria-label="Encrypt message">
@@ -168,6 +163,24 @@
                     Don’t show this again
                 </label>
                 <button id="dont-show-again" class="btn-secondary hidden">Save Preference</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de cámara (para web) -->
+    <div id="camera-modal" class="modal camera-modal hidden" role="dialog" aria-labelledby="camera-modal-title">
+        <div class="modal-content camera-modal-content">
+            <span class="close-camera-modal" aria-label="Close camera modal">×</span>
+            <div class="modal-header">
+                <h2 id="camera-modal-title"><i class="fas fa-camera"></i> Scan QR Code</h2>
+            </div>
+            <div class="camera-container">
+                <canvas id="camera-canvas" aria-label="Camera feed for QR code scanning"></canvas>
+            </div>
+            <div class="camera-controls">
+                <button id="toggle-camera-button" class="btn-secondary" title="Toggle Camera" aria-label="Toggle between front and back camera">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
             </div>
         </div>
     </div>
