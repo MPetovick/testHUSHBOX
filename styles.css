@@ -1,366 +1,452 @@
-// Configuración global
-const CONFIG = {
-    PBKDF2_ITERATIONS: 250000,
-    SALT_LENGTH: 32,
-    IV_LENGTH: 12,
-    AES_KEY_LENGTH: 256,
-    QR_SIZE: 200,
-    MIN_PASSPHRASE_LENGTH: 12,
-    CAMERA_TIMEOUT: 30000,
-    DECRYPT_DELAY_INCREMENT: 100,
-    MAX_DECRYPT_ATTEMPTS: 5,
-    NOTICE_TIMEOUT: 10000
-};
+:root {
+    --primary-color: #00cc99;
+    --secondary-color: #2a2a2a;
+    --background-gradient: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    --text-color: #f0f0f0;
+    --success-color: #00cc99;
+    --error-color: #ff4d4d;
+    --section-bg: rgba(42, 42, 42, 0.95);
+    --glow-color: rgba(0, 204, 153, 0.4);
+}
 
-// Elementos del DOM
-const dom = {
-    uploadArrow: document.getElementById('upload-arrow-button'),
-    scanButton: document.getElementById('scan-button'),
-    imageButton: document.getElementById('image-button'),
-    pdfButton: document.getElementById('pdf-button'),
-    messages: document.getElementById('messages'),
-    passphrase: document.getElementById('passphrase'),
-    messageInput: document.getElementById('message-input'),
-    sendButton: document.getElementById('send-button'),
-    qrCanvas: document.getElementById('qr-canvas'),
-    decodeButton: document.getElementById('decode-button'),
-    downloadButton: document.getElementById('download-button'),
-    shareButton: document.getElementById('share-button'),
-    qrContainer: document.getElementById('qr-container'),
-    comingSoon: document.getElementById('coming-soon-message'),
-    cameraModal: document.getElementById('camera-modal'),
-    cameraPreview: document.getElementById('camera-preview'),
-    closeCamera: document.getElementById('close-camera'),
-    fileInput: document.createElement('input'),
-    charCounter: document.getElementById('char-counter'),
-    generatePass: document.querySelector('.generate-password')
-};
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}
 
-// Inicialización
-dom.fileInput.type = 'file';
-dom.fileInput.accept = 'image/*';
-dom.fileInput.style.display = 'none';
-document.body.appendChild(dom.fileInput);
+body {
+    background: var(--background-gradient);
+    color: var(--text-color);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.6;
+    overflow-x: hidden;
+    padding: 1rem;
+}
 
-// Utilidades criptográficas
-const cryptoUtils = {
-    validatePassphrase: (pass) => {
-        if (pass.length < CONFIG.MIN_PASSPHRASE_LENGTH) 
-            throw new Error(`Passphrase must be at least ${CONFIG.MIN_PASSPHRASE_LENGTH} characters`);
-        if (/(.)\1{3,}/.test(pass)) 
-            throw new Error('Passphrase has too many repeated characters');
-        return true;
-    },
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+}
 
-    generateSecurePass: (length = 16) => {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=';
-        const values = new Uint32Array(length);
-        crypto.getRandomValues(values);
-        return Array.from(values, v => chars[v % chars.length]).join('');
-    },
+.logo {
+    color: var(--primary-color);
+    font-size: clamp(2rem, 6vw, 2.8rem);
+    letter-spacing: clamp(2px, 0.5vw, 4px);
+    text-shadow: 0 0 10px var(--glow-color);
+    display: flex;
+    align-items: center;
+}
 
-    encryptMessage: async (message, passphrase) => {
-        try {
-            cryptoUtils.validatePassphrase(passphrase);
-            const data = new TextEncoder().encode(message);
-            const salt = crypto.getRandomValues(new Uint8Array(CONFIG.SALT_LENGTH));
-            const iv = crypto.getRandomValues(new Uint8Array(CONFIG.IV_LENGTH));
-            
-            const baseKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(passphrase), 
-                { name: 'PBKDF2' }, false, ['deriveBits']);
-                
-            const keyMaterial = await crypto.subtle.deriveBits({
-                name: 'PBKDF2',
-                salt,
-                iterations: CONFIG.PBKDF2_ITERATIONS,
-                hash: 'SHA-256'
-            }, baseKey, 256);
-            
-            const key = await crypto.subtle.importKey('raw', keyMaterial, 
-                { name: 'AES-GCM' }, false, ['encrypt']);
-            
-            const encrypted = await crypto.subtle.encrypt(
-                { name: 'AES-GCM', iv }, key, data
-            );
-            
-            const combined = new Uint8Array([...salt, ...iv, ...new Uint8Array(encrypted)]);
-            return btoa(String.fromCharCode(...combined));
-        } catch (error) {
-            throw new Error('Encryption failed: ' + error.message);
-        }
-    },
+.white-text {
+    color: white;
+}
 
-    decryptMessage: async (encryptedBase64, passphrase) => {
-        try {
-            const encryptedData = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
-            const salt = encryptedData.slice(0, CONFIG.SALT_LENGTH);
-            const iv = encryptedData.slice(CONFIG.SALT_LENGTH, CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH);
-            const ciphertext = encryptedData.slice(CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH);
-            
-            const baseKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(passphrase), 
-                { name: 'PBKDF2' }, false, ['deriveBits']);
-                
-            const keyMaterial = await crypto.subtle.deriveBits({
-                name: 'PBKDF2',
-                salt,
-                iterations: CONFIG.PBKDF2_ITERATIONS,
-                hash: 'SHA-256'
-            }, baseKey, 256);
-            
-            const key = await crypto.subtle.importKey('raw', keyMaterial, 
-                { name: 'AES-GCM' }, false, ['decrypt']);
-            
-            const decrypted = await crypto.subtle.decrypt(
-                { name: 'AES-GCM', iv }, key, ciphertext
-            );
-            
-            return new TextDecoder().decode(decrypted);
-        } catch (error) {
-            throw new Error('Decryption failed: ' + error.message);
-        }
+.qr-icon {
+    color: white;
+    font-size: 0.85em;
+    vertical-align: -0.15em;
+    margin: 0 2px;
+}
+
+.lock-icon {
+    font-size: 0.8em;
+    color: var(--primary-color);
+    cursor: pointer;
+    margin-right: 10px;
+    transition: color 0.3s ease;
+    text-decoration: none;
+}
+
+.login-icon {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+/* Contenedor Principal */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    padding: clamp(1rem, 3vw, 2rem);
+    margin: 0 auto;
+    flex: 1;
+}
+
+.main-grid {
+    display: flex;
+    gap: clamp(1rem, 3vw, 2rem);
+    margin-top: clamp(1rem, 3vw, 2rem);
+}
+
+@media (max-width: 768px) {
+    .main-grid {
+        flex-direction: column;
     }
-};
+}
 
-// Controlador de UI
-const ui = {
-    displayMessage: (content, isSent = false) => {
-        const messageEl = document.createElement('div');
-        messageEl.className = `message ${isSent ? 'sent' : ''}`;
-        messageEl.innerHTML = `
-            <div class="message-content">${content}</div>
-            <div class="message-time">${new Date().toLocaleTimeString()}</div>
-        `;
-        
-        if (dom.messages.children.length === 0) {
-            dom.messages.querySelector('.message-placeholder')?.remove();
-        }
-        
-        if (dom.messages.children.length >= 7) {
-            dom.messages.removeChild(dom.messages.firstChild);
-        }
-        
-        dom.messages.appendChild(messageEl);
-        dom.messages.scrollTop = dom.messages.scrollHeight;
-    },
+.section {
+    background: var(--section-bg);
+    border-radius: 15px;
+    padding: clamp(1rem, 2.5vw, 2rem);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    flex: 1;
+}
 
-    generateQR: async (data) => {
-        return new Promise((resolve) => {
-            QRCode.toCanvas(dom.qrCanvas, data, {
-                width: 200,
-                margin: 1,
-                color: { dark: '#000', light: '#fff' },
-                errorCorrectionLevel: 'H'
-            }, () => {
-                dom.qrContainer.classList.remove('hidden');
-                resolve();
-            });
-        });
-    },
+.input-group {
+    position: relative;
+    margin-bottom: clamp(1rem, 2vw, 1.5rem);
+}
 
-    toggleButton: (btn, state, text = '') => {
-        btn.disabled = state;
-        if (text) btn.innerHTML = text;
-    },
+.input-group .icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(160, 160, 160, 0.6);
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    transition: color 0.3s ease;
+}
 
-    showCameraModal: () => {
-        dom.cameraModal.style.display = 'flex';
-        handlers.startCamera();
-    },
+.input-group #passphrase ~ .fa-key {
+    right: 3rem;
+}
 
-    hideCameraModal: () => {
-        dom.cameraModal.style.display = 'none';
-        handlers.stopCamera();
-    },
+.input-group #passphrase ~ .fa-dice {
+    right: 1rem;
+    cursor: pointer;
+}
 
-    showScanEffect: () => {
-        const overlay = document.querySelector('.scanner-overlay');
-        overlay.classList.add('scan-success');
-        setTimeout(() => overlay.classList.remove('scan-success'), 1000);
-    }
-};
+.input-group #passphrase ~ .fa-dice:hover {
+    color: var(--primary-color);
+}
 
-// Manejadores de eventos
-const handlers = {
-    handleEncrypt: async () => {
-        const message = dom.messageInput.value.trim();
-        const passphrase = dom.passphrase.value.trim();
-        
-        if (!message || !passphrase) {
-            ui.displayMessage('Please enter both message and passphrase');
-            return;
-        }
-        
-        ui.toggleButton(dom.sendButton, true, '<i class="fas fa-spinner fa-spin"></i> Encrypting');
-        
-        try {
-            const encrypted = await cryptoUtils.encryptMessage(message, passphrase);
-            await ui.generateQR(encrypted);
-            ui.displayMessage(`Encrypted: ${encrypted.slice(0, 40)}...`, true);
-            dom.messageInput.value = '';
-            dom.passphrase.value = '';
-        } catch (error) {
-            ui.displayMessage(error.message);
-        } finally {
-            ui.toggleButton(dom.sendButton, false, '<i class="fas fa-lock"></i> Encrypt');
-        }
-    },
+#passphrase, #message-input {
+    width: 100%;
+    padding: clamp(0.8rem, 2vw, 1rem) clamp(2rem, 4vw, 2.5rem) clamp(0.8rem, 2vw, 1rem) clamp(0.8rem, 2vw, 1rem);
+    border: 2px solid transparent;
+    border-radius: 10px;
+    background: rgba(58, 58, 58, 0.8);
+    color: var(--text-color);
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    transition: all 0.3s ease;
+}
 
-    handleDecrypt: async (qrData) => {
-        const passphrase = dom.passphrase.value.trim();
-        if (!passphrase) {
-            ui.displayMessage('Please enter passphrase');
-            return;
-        }
-        
-        ui.toggleButton(dom.decodeButton, true, '<i class="fas fa-spinner fa-spin"></i> Decrypting');
-        
-        try {
-            const decrypted = await cryptoUtils.decryptMessage(qrData, passphrase);
-            ui.displayMessage(`Decrypted: ${decrypted}`);
-            dom.passphrase.value = '';
-        } catch (error) {
-            ui.displayMessage(error.message);
-        } finally {
-            ui.toggleButton(dom.decodeButton, false, '<i class="fas fa-unlock"></i> Decrypt');
-        }
-    },
+#message-input {
+    resize: vertical;
+    min-height: clamp(100px, 25vw, 150px);
+    max-height: 300px;
+}
 
-    startCamera: () => {
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-        .then(stream => {
-            dom.cameraPreview.srcObject = stream;
-            const scanLoop = () => {
-                if (!dom.cameraPreview.srcObject) return;
-                
-                const canvas = document.createElement('canvas');
-                canvas.width = dom.cameraPreview.videoWidth;
-                canvas.height = dom.cameraPreview.videoHeight;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(dom.cameraPreview, 0, 0, canvas.width, canvas.height);
-                
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
-                
-                if (qrCode) {
-                    ui.showScanEffect();
-                    handlers.handleDecrypt(qrCode.data);
-                    handlers.stopCamera();
-                    ui.hideCameraModal();
-                } else {
-                    requestAnimationFrame(scanLoop);
-                }
-            };
-            scanLoop();
-        })
-        .catch(error => {
-            console.error('Camera error:', error);
-            ui.displayMessage('Camera access denied. Please enable camera permissions.');
-        });
-    },
+#passphrase:focus, #message-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 12px var(--glow-color);
+}
 
-    stopCamera: () => {
-        if (dom.cameraPreview.srcObject) {
-            dom.cameraPreview.srcObject.getTracks().forEach(track => track.stop());
-            dom.cameraPreview.srcObject = null;
-        }
-    },
+.btn-primary {
+    padding: clamp(0.8rem, 2vw, 1rem) clamp(1.5rem, 3vw, 2rem);
+    background: var(--primary-color);
+    border: none;
+    border-radius: 12px;
+    color: #1a1a1a;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.5rem, 1vw, 0.8rem);
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+}
 
-    handleUpload: () => dom.fileInput.click(),
+.btn-primary:hover:not(:disabled) {
+    background: #00b386;
+    box-shadow: 0 4px 16px var(--glow-color);
+}
 
-    handleFileSelect: async () => {
-        const file = dom.fileInput.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0);
-                
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
-                
-                if (qrCode) {
-                    handlers.handleDecrypt(qrCode.data);
-                } else {
-                    ui.displayMessage('No QR code detected');
-                }
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    },
+.btn-primary:disabled {
+    background: #666;
+    cursor: default;
+    opacity: 0.7;
+}
 
-    handleDownload: () => {
-        const link = document.createElement('a');
-        link.href = dom.qrCanvas.toDataURL('image/png');
-        link.download = `hushbox-${Date.now()}.png`;
-        link.click();
-    },
+.btn-secondary {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 204, 153, 0.1);
+    border: 1px solid var(--primary-color);
+    transition: all 0.3s ease;
+}
 
-    handleShare: async () => {
-        try {
-            const blob = await new Promise(resolve => dom.qrCanvas.toBlob(resolve));
-            const file = new File([blob], 'hushbox-qr.png', { type: 'image/png' });
-            
-            if (navigator.share) {
-                await navigator.share({
-                    title: 'HushBox QR',
-                    files: [file]
-                });
-            } else {
-                throw new Error('Sharing not supported');
-            }
-        } catch (error) {
-            handlers.handleDownload();
-        }
-    },
+.btn-secondary:hover {
+    background: var(--primary-color);
+}
 
-    showComingSoon: () => {
-        dom.comingSoon.classList.add('visible');
-        setTimeout(() => dom.comingSoon.classList.remove('visible'), 2000);
-    },
+#qr-container {
+    margin-top: clamp(1rem, 3vw, 2rem);
+    text-align: center;
+    display: none;
+}
 
-    initEventListeners: () => {
-        // Botones principales
-        dom.sendButton.addEventListener('click', handlers.handleEncrypt);
-        dom.decodeButton.addEventListener('click', handlers.handleFileSelect);
-        dom.downloadButton.addEventListener('click', handlers.handleDownload);
-        dom.shareButton.addEventListener('click', handlers.handleShare);
-        
-        // Cámara y archivos
-        dom.scanButton.addEventListener('click', ui.showCameraModal);
-        dom.closeCamera.addEventListener('click', ui.hideCameraModal);
-        dom.uploadArrow.addEventListener('click', handlers.handleUpload);
-        dom.fileInput.addEventListener('change', handlers.handleFileSelect);
-        
-        // Generar contraseña
-        dom.generatePass.addEventListener('click', () => {
-            const pass = cryptoUtils.generateSecurePass();
-            dom.passphrase.value = pass;
-            ui.displayMessage(`Generated: ${pass}`, true);
-        });
-        
-        // Contador de caracteres
-        dom.messageInput.addEventListener('input', () => {
-            const len = dom.messageInput.value.length;
-            dom.charCounter.textContent = `${len}/4000`;
-            dom.charCounter.style.color = len > 3600 ? 'var(--error-color)' : 'rgba(160,160,160,0.8)';
-        });
-        
-        // Botones deshabilitados
-        dom.imageButton.addEventListener('click', handlers.showComingSoon);
-        dom.pdfButton.addEventListener('click', handlers.showComingSoon);
-    }
-};
+#qr-container:not(.hidden) {
+    display: block;
+}
 
-// Inicialización
-document.addEventListener('DOMContentLoaded', () => {
-    handlers.initEventListeners();
-    dom.qrContainer.classList.add('hidden');
-    dom.cameraModal.style.display = 'none';
-});
+.qr-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+.qr-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+#qr-canvas {
+    max-width: 100%;
+    max-height: 350px;
+    background: white;
+    padding: clamp(0.5rem, 1vw, 0.8rem);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border: 2px solid var(--primary-color);
+    margin: 0 auto;
+}
+
+.message-container {
+    background: rgba(30, 30, 30, 0.6);
+    border-radius: 10px;
+    padding: clamp(1rem, 2vw, 1.5rem);
+    border: 1px solid rgba(0, 204, 153, 0.1);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    min-height: 20vh;
+    max-height: 60vh;
+}
+
+.message {
+    max-width: 100%;
+    word-break: break-word;
+    margin-bottom: 0.5rem;
+}
+
+.message.sent {
+    text-align: right;
+}
+
+.message-content {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 204, 153, 0.1);
+    border-radius: 8px;
+    font-size: clamp(0.9rem, 2vw, 1rem);
+}
+
+.message-time {
+    font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 0.2rem;
+}
+
+.message-placeholder {
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+    margin: auto;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-icon {
+    padding: 0.8rem;
+    background: var(--secondary-color);
+    border: 1px solid var(--primary-color);
+    border-radius: 8px;
+    color: var(--primary-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+}
+
+.btn-icon:hover:not(:disabled) {
+    background: var(--primary-color);
+    color: #1a1a1a;
+    box-shadow: 0 2px 8px var(--glow-color);
+}
+
+.btn-icon:disabled {
+    background: rgba(102, 102, 102, 0.3);
+    border: 1px solid rgba(160, 160, 160, 0.3);
+    color: rgba(160, 160, 160, 0.5);
+    cursor: default;
+    opacity: 0.6;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: clamp(0.5rem, 1vw, 1rem);
+    margin-top: clamp(1rem, 2vw, 1.5rem);
+}
+
+/* Camera Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    background: #000;
+}
+
+.camera-header {
+    padding: 1rem;
+    text-align: center;
+    color: white;
+    z-index: 10;
+}
+
+.camera-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+#camera-preview {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.scanner-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 70%;
+    height: 70%;
+    max-width: 300px;
+    max-height: 300px;
+    transform: translate(-50%, -50%);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.scan-success {
+    border-color: var(--success-color);
+    box-shadow: 0 0 20px var(--success-color);
+}
+
+.camera-hint {
+    padding: 1rem;
+    text-align: center;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.close-modal {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 2rem;
+    cursor: pointer;
+    color: white;
+    z-index: 1001;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 0.5rem;
+    background: var(--secondary-color);
+    margin-top: 1rem;
+}
+
+.footer p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.char-counter {
+    position: absolute;
+    right: 1rem;
+    bottom: 0.5rem;
+    font-size: 0.8rem;
+    color: rgba(160, 160, 160, 0.8);
+    padding: 0;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Coming Soon Message */
+#coming-soon-message {
+    position: absolute;
+    bottom: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--section-bg);
+    color: var(--primary-color);
+    padding: 10px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+#coming-soon-message.visible {
+    opacity: 1;
+}
