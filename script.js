@@ -1,6 +1,7 @@
 // Configuración global para parámetros criptográficos
 const CONFIG = {
-    PBKDF2_ITERATIONS: 250000,
+    PBKDF2_ITERATIONS_DESKTOP: 250000,
+    PBKDF2_ITERATIONS_MOBILE: 100000, // Reducido para móviles
     SALT_LENGTH: 32,
     IV_LENGTH: 12,
     AES_KEY_LENGTH: 256,
@@ -16,6 +17,10 @@ const CONFIG = {
     NOTICE_TIMEOUT: 10000 // 10 segundos para mensajes de tipo "notice"
 };
 
+// Detectar si es un dispositivo móvil
+const isMobileDevice = () => /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+const PBKDF2_ITERATIONS = isMobileDevice() ? CONFIG.PBKDF2_ITERATIONS_MOBILE : CONFIG.PBKDF2_ITERATIONS_DESKTOP;
+
 // Elementos del DOM
 const domElements = {
     uploadArrowButton: document.getElementById('upload-arrow-button'),
@@ -26,6 +31,7 @@ const domElements = {
     cameraPreview: document.getElementById('camera-preview'),
     messagesDiv: document.getElementById('messages'),
     passphraseInput: document.getElementById('passphrase'),
+    passphraseError: document.getElementById('passphrase-error'),
     messageInput: document.getElementById('message-input'),
     sendButton: document.getElementById('send-button'),
     qrCanvas: document.getElementById('qr-canvas'),
@@ -36,13 +42,64 @@ const domElements = {
     tutorialModal: document.getElementById('tutorial-modal'),
     closeTutorial: document.getElementById('close-tutorial'),
     dontShowAgain: document.getElementById('dont-show-again'),
-    closeModalButton: document.querySelector('.close-modal'),
-    comingSoonMessage: document.getElementById('coming-soon-message'),
-    loginIcon: document.getElementById('login-icon')
+    closeModalButton: document.querySelector('.close-modal')
 };
 
-// Función mejorada para generar contraseñas seguras que cumplan con las reglas de validación
-function generateSecurePassphrase(length = 16) {
+// Input oculto para la carga de imágenes y PDFs
+const fileInput = document.createElement('input');
+fileInput.type = 'file';
+fileInput.accept = 'image/*,application/pdf';
+fileInput.style.display = 'none';
+document.body.appendChild(fileInput);
+
+// Canvas oculto para procesar el video
+const scanCanvas = document.createElement('canvas');
+const scanContext = scanCanvas.getContext('2d');
+scanCanvas.style.display = 'none';
+document.body.appendChild(scanCanvas);
+
+// Variables para protección contra fuerza bruta y cámara
+let decryptAttempts = 0;
+let cameraTimeoutId = null;
+let cameraStream = null;
+let qrScanInterval = null;
+
+// Función para limpiar buffers sensibles
+const clearBuffer = (buffer) => {
+    if (buffer instanceof ArrayBuffer) {
+        const zeros = new Uint8Array(buffer.byteLength);
+        new Uint8Array(buffer).set(zeros);
+    } else if (buffer instanceof Uint8Array || buffer instanceof Int32Array || buffer instanceof Float32Array) {
+        buffer.fill(0);
+    } else {
+        console.warn("clearBuffer: El objeto no es un ArrayBuffer ni un TypedArray.");
+    }
+};
+
+// Verificar si el usuario ha elegido no mostrar el modal
+const shouldShowModal = () => localStorage.getItem('dontShowAgain') !== 'true';
+
+// Mostrar el modal de tutorial
+const showTutorialModal = () => {
+    if (shouldShowModal()) {
+        domElements.tutorialModal.style.display = 'flex';
+        domElements.tutorialModal.focus();
+    }
+};
+
+// Cerrar el modal
+const closeTutorialModal = () => {
+    domElements.tutorialModal.style.display = 'none';
+};
+
+// Guardar preferencia de no mostrar el modal
+const setDontShowAgain = () => {
+    localStorage.setItem('dontShowAgain', 'true');
+    closeTutorialModal();
+};
+
+// Generar contraseña segura
+const generateSecurePassphrase = (length = 16) => {
     length = Math.max(length, CONFIG.MIN_PASSPHRASE_LENGTH);
     const charSets = {
         uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
@@ -81,67 +138,6 @@ function generateSecurePassphrase(length = 16) {
         console.warn('Generated passphrase failed validation, regenerating:', error.message);
         return generateSecurePassphrase(length);
     }
-}
-
-// Input oculto para la carga de imágenes
-const fileInput = document.createElement('input');
-fileInput.type = 'file';
-fileInput.accept = 'image/*';
-fileInput.style.display = 'none';
-document.body.appendChild(fileInput);
-
-// Canvas oculto para procesar el video
-const scanCanvas = document.createElement('canvas');
-const scanContext = scanCanvas.getContext('2d');
-scanCanvas.style.display = 'none';
-document.body.appendChild(scanCanvas);
-
-// Variables para protección contra fuerza bruta
-let decryptAttempts = 0;
-let cameraTimeoutId = null;
-
-// Función para limpiar un ArrayBuffer o Uint8Array
-const clearBuffer = (buffer) => {
-    if (buffer instanceof ArrayBuffer) {
-        const zeros = new Uint8Array(buffer.byteLength);
-        new Uint8Array(buffer).set(zeros);
-    } else if (buffer instanceof Uint8Array || buffer instanceof Int32Array || buffer instanceof Float32Array) {
-        buffer.fill(0);
-    } else {
-        console.warn("clearBuffer: El objeto no es un ArrayBuffer ni un TypedArray. No se puede limpiar.");
-    }
-};
-
-// Verificar si el usuario ha elegido no mostrar el modal nuevamente
-const shouldShowModal = () => {
-    const dontShowAgain = localStorage.getItem('dontShowAgain');
-    return dontShowAgain !== 'true';
-};
-
-// Mostrar el modal si es necesario
-const showTutorialModal = () => {
-    if (shouldShowModal()) {
-        domElements.tutorialModal.style.display = 'flex';
-    }
-};
-
-// Cerrar el modal
-const closeTutorialModal = () => {
-    domElements.tutorialModal.style.display = 'none';
-};
-
-// Guardar la preferencia del usuario en localStorage
-const setDontShowAgain = () => {
-    localStorage.setItem('dontShowAgain', 'true');
-    closeTutorialModal();
-};
-
-// Función para mostrar y ocultar el mensaje "Coming Soon"
-const showComingSoonMessage = () => {
-    domElements.comingSoonMessage.classList.add('visible');
-    setTimeout(() => {
-        domElements.comingSoonMessage.classList.remove('visible');
-    }, 2000);
 };
 
 // Utilidades criptográficas
@@ -192,7 +188,7 @@ const cryptoUtils = {
             {
                 name: 'PBKDF2',
                 salt,
-                iterations: CONFIG.PBKDF2_ITERATIONS,
+                iterations: PBKDF2_ITERATIONS,
                 hash: 'SHA-256'
             },
             baseKeyMaterial,
@@ -200,7 +196,6 @@ const cryptoUtils = {
         );
 
         const derivedBitsArray = new Uint8Array(derivedBits);
-
         const aesKey = await crypto.subtle.importKey(
             'raw',
             derivedBitsArray.slice(0, CONFIG.AES_KEY_LENGTH / 8),
@@ -225,9 +220,6 @@ const cryptoUtils = {
         let dataToEncrypt = null;
         let salt = null;
         let iv = null;
-        let aesKey = null;
-        let hmacKey = null;
-
         try {
             cryptoUtils.validatePassphrase(passphrase);
             dataToEncrypt = cryptoUtils.stringToArrayBuffer(message);
@@ -238,9 +230,7 @@ const cryptoUtils = {
 
             salt = crypto.getRandomValues(new Uint8Array(CONFIG.SALT_LENGTH));
             iv = cryptoUtils.generateIV();
-            const { aesKey: derivedAesKey, hmacKey: derivedHmacKey } = await cryptoUtils.deriveKeyPair(passphrase, salt);
-            aesKey = derivedAesKey;
-            hmacKey = derivedHmacKey;
+            const { aesKey, hmacKey } = await cryptoUtils.deriveKeyPair(passphrase, salt);
 
             const encrypted = await crypto.subtle.encrypt(
                 { name: 'AES-GCM', iv },
@@ -267,17 +257,13 @@ const cryptoUtils = {
             if (dataToEncrypt) clearBuffer(dataToEncrypt);
             if (salt) clearBuffer(salt);
             if (iv) clearBuffer(iv);
-            passphrase = null;
         }
     },
 
     decryptMessage: async (encryptedBase64, passphrase) => {
         let salt = null;
         let iv = null;
-        let aesKey = null;
-        let hmacKey = null;
         let decrypted = null;
-
         try {
             if (decryptAttempts >= CONFIG.MAX_DECRYPT_ATTEMPTS) {
                 throw new Error('Too many failed attempts. Please try again later.');
@@ -289,10 +275,7 @@ const cryptoUtils = {
             const ciphertext = encryptedData.slice(CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH, -32);
             const hmac = encryptedData.slice(-32);
 
-            const { aesKey: derivedAesKey, hmacKey: derivedHmacKey } = await cryptoUtils.deriveKeyPair(passphrase, salt);
-            aesKey = derivedAesKey;
-            hmacKey = derivedHmacKey;
-
+            const { aesKey, hmacKey } = await cryptoUtils.deriveKeyPair(passphrase, salt);
             const isValid = await crypto.subtle.verify(
                 'HMAC',
                 hmacKey,
@@ -325,7 +308,6 @@ const cryptoUtils = {
             if (salt) clearBuffer(salt);
             if (iv) clearBuffer(iv);
             if (decrypted) clearBuffer(decrypted);
-            passphrase = null;
         }
     }
 };
@@ -337,18 +319,16 @@ const uiController = {
         const messageEl = document.createElement('div');
         messageEl.className = `message ${isSent ? 'sent' : ''}`;
         
-        // Determinar el tipo de mensaje
         const isEncrypted = content.startsWith('Encrypted:');
         const isDecrypted = content.startsWith('Decrypted:');
         const messageType = isEncrypted ? 'encrypted' : isDecrypted ? 'decrypted' : 'notice';
         messageEl.dataset.messageType = messageType;
 
-        // Si es una contraseña, agregar el ícono de copiar
         if (isPassphrase) {
             messageEl.innerHTML = `
                 <div class="message-content">
                     <span class="passphrase-text">${content}</span>
-                    <i class="fas fa-copy copy-icon" title="Copy to clipboard"></i>
+                    <i class="fas fa-copy copy-icon" title="Copy to clipboard" aria-label="Copy passphrase"></i>
                 </div>
                 <div class="message-time">${new Date().toLocaleTimeString()}</div>
             `;
@@ -363,23 +343,40 @@ const uiController = {
                     uiController.displayMessage('Failed to copy passphrase.', false);
                 }
             });
-            messageEl.timeoutId = setTimeout(() => {
-                if (messageEl && messageEl.parentNode) {
-                    messageEl.parentNode.removeChild(messageEl);
-                }
-            }, CONFIG.NOTICE_TIMEOUT); // 10 segundos
-        } else {
-            messageEl.innerHTML = `
-                <div class="message-content">${content}</div>
-                <div class="message-time">${new Date().toLocaleTimeString()}</div>
-            `;
-            // Si es un mensaje de tipo "notice", agregar temporizador individual
             if (messageType === 'notice') {
                 messageEl.timeoutId = setTimeout(() => {
                     if (messageEl && messageEl.parentNode) {
                         messageEl.parentNode.removeChild(messageEl);
                     }
-                }, CONFIG.NOTICE_TIMEOUT); // 10 segundos
+                }, CONFIG.NOTICE_TIMEOUT);
+                messageEl.addEventListener('mouseenter', () => clearTimeout(messageEl.timeoutId));
+                messageEl.addEventListener('mouseleave', () => {
+                    messageEl.timeoutId = setTimeout(() => {
+                        if (messageEl && messageEl.parentNode) {
+                            messageEl.parentNode.removeChild(messageEl);
+                        }
+                    }, CONFIG.NOTICE_TIMEOUT);
+                });
+            }
+        } else {
+            messageEl.innerHTML = `
+                <div class="message-content">${content}</div>
+                <div class="message-time">${new Date().toLocaleTimeString()}</div>
+            `;
+            if (messageType === 'notice') {
+                messageEl.timeoutId = setTimeout(() => {
+                    if (messageEl && messageEl.parentNode) {
+                        messageEl.parentNode.removeChild(messageEl);
+                    }
+                }, CONFIG.NOTICE_TIMEOUT);
+                messageEl.addEventListener('mouseenter', () => clearTimeout(messageEl.timeoutId));
+                messageEl.addEventListener('mouseleave', () => {
+                    messageEl.timeoutId = setTimeout(() => {
+                        if (messageEl && messageEl.parentNode) {
+                            messageEl.parentNode.removeChild(messageEl);
+                        }
+                    }, CONFIG.NOTICE_TIMEOUT);
+                });
             }
         }
 
@@ -397,53 +394,64 @@ const uiController = {
         return messageEl;
     },
 
-    generateQR: async (data) => {
+    showPassphraseError: (message) => {
+        domElements.passphraseError.textContent = message;
+        domElements.passphraseError.classList.add('visible');
+        setTimeout(() => {
+            domElements.passphraseError.classList.remove('visible');
+        }, 3000);
+    },
+
+    generateQR: (data) => {
         return new Promise((resolve, reject) => {
             const dataLength = data.length;
             const qrSize = Math.min(CONFIG.MAX_QR_SIZE, Math.max(CONFIG.QR_SIZE, Math.ceil(dataLength / 20) * 10 + 150));
-
             domElements.qrCanvas.width = qrSize;
             domElements.qrCanvas.height = qrSize;
 
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = qrSize;
-            tempCanvas.height = qrSize;
+            const drawQR = () => {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = qrSize;
+                tempCanvas.height = qrSize;
 
-            QRCode.toCanvas(tempCanvas, data, {
-                width: qrSize,
-                margin: 1,
-                color: { dark: '#000000', light: '#ffffff' },
-                errorCorrectionLevel: 'H'
-            }, (error) => {
-                if (error) {
-                    reject(error);
-                    return;
-                }
+                QRCode.toCanvas(tempCanvas, data, {
+                    width: qrSize,
+                    margin: 1,
+                    color: { dark: '#000000', light: '#ffffff' },
+                    errorCorrectionLevel: 'H'
+                }, (error) => {
+                    if (error) {
+                        reject(error);
+                        return;
+                    }
 
-                const ctx = tempCanvas.getContext('2d');
-                const circleRadius = qrSize * 0.15;
-                const circleX = qrSize / 2;
-                const circleY = qrSize / 2;
+                    const ctx = tempCanvas.getContext('2d');
+                    const circleRadius = qrSize * 0.15;
+                    const circleX = qrSize / 2;
+                    const circleY = qrSize / 2;
 
-                ctx.beginPath();
-                ctx.arc(circleX, circleY, circleRadius, 0, Math.PI * 2);
-                ctx.fillStyle = 'var(--primary-color)';
-                ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(circleX, circleY, circleRadius, 0, Math.PI * 2);
+                    ctx.fillStyle = 'var(--primary-color)';
+                    ctx.fill();
 
-                ctx.fillStyle = '#00cc99';
-                ctx.font = `bold ${qrSize * 0.08}px "Segoe UI", system-ui, sans-serif`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('HUSH', circleX, circleY - circleRadius * 0.2);
-                ctx.fillText('BOX', circleX, circleY + circleRadius * 0.3);
+                    ctx.fillStyle = '#00cc99';
+                    ctx.font = `bold ${qrSize * 0.08}px "Segoe UI", system-ui, sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('HUSH', circleX, circleY - circleRadius * 0.2);
+                    ctx.fillText('BOX', circleX, circleY + circleRadius * 0.3);
 
-                const qrCtx = domElements.qrCanvas.getContext('2d');
-                qrCtx.clearRect(0, 0, qrSize, qrSize);
-                qrCtx.drawImage(tempCanvas, 0, 0, qrSize, qrSize);
+                    const qrCtx = domElements.qrCanvas.getContext('2d');
+                    qrCtx.clearRect(0, 0, qrSize, qrSize);
+                    qrCtx.drawImage(tempCanvas, 0, 0, qrSize, qrSize);
 
-                domElements.qrContainer.classList.remove('hidden');
-                resolve();
-            });
+                    domElements.qrContainer.classList.remove('hidden');
+                    resolve();
+                });
+            };
+
+            requestAnimationFrame(drawQR);
         });
     },
 
@@ -469,6 +477,13 @@ const handlers = {
             return;
         }
 
+        try {
+            cryptoUtils.validatePassphrase(passphrase);
+        } catch (error) {
+            uiController.showPassphraseError(error.message);
+            return;
+        }
+
         const originalHTML = domElements.sendButton.innerHTML;
         uiController.showLoader(domElements.sendButton, 'Encrypting...');
 
@@ -486,17 +501,170 @@ const handlers = {
         }
     },
 
-    handleDecrypt: async () => {
-        const file = fileInput.files[0];
+    handleDecrypt: async (qrData) => {
         const passphrase = domElements.passphraseInput.value.trim();
 
-        if (!file || !passphrase) {
-            uiController.displayMessage('Please select a QR file and enter a passphrase', false);
+        if (!qrData || !passphrase) {
+            uiController.displayMessage('Please provide a QR code and enter a passphrase', false);
             return;
         }
 
         const originalButtonHTML = domElements.decodeButton.innerHTML;
         uiController.showLoader(domElements.decodeButton, 'Decrypting...');
+
+        try {
+            const decrypted = await cryptoUtils.decryptMessage(qrData, passphrase);
+            uiController.displayMessage(`Decrypted: ${decrypted}`, false);
+            domElements.passphraseInput.value = '';
+            fileInput.value = '';
+            decryptAttempts = 0;
+        } catch (error) {
+            console.error('Decryption error:', error);
+            uiController.displayMessage(
+                error.message.includes('decrypt') || error.message.includes('Integrity')
+                    ? 'Decryption failed. Wrong passphrase or tampered data?'
+                    : error.message,
+                false
+            );
+        } finally {
+            uiController.resetButton(domElements.decodeButton, originalButtonHTML);
+        }
+    },
+
+    handleDownload: async () => {
+        try {
+            if (!domElements.qrCanvas.toDataURL) {
+                uiController.displayMessage('No QR code available to download.', false);
+                return;
+            }
+
+            const qrDataUrl = domElements.qrCanvas.toDataURL('image/png', 0.9);
+            const qrBlob = await (await fetch(qrDataUrl)).blob();
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const fileName = `hushbox-qr-${timestamp}.png`;
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(qrBlob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+
+            uiController.displayMessage('QR downloaded successfully!', false);
+        } catch (error) {
+            console.error('Download error:', error);
+            uiController.displayMessage('Failed to download QR: ' + error.message, false);
+        }
+    },
+
+    handleShare: async () => {
+        try {
+            if (!domElements.qrCanvas.toDataURL) {
+                uiController.displayMessage('No QR code available to share.', false);
+                return;
+            }
+
+            const qrDataUrl = domElements.qrCanvas.toDataURL('image/png', 0.9);
+            const qrBlob = await (await fetch(qrDataUrl)).blob();
+            const qrFile = new File([qrBlob], 'hushbox-qr.png', { type: 'image/png' });
+
+            if (navigator.share && navigator.canShare({ files: [qrFile] })) {
+                await navigator.share({
+                    title: 'HushBox Secure QR',
+                    text: 'Check out this encrypted QR code from HushBox!',
+                    files: [qrFile]
+                });
+                uiController.displayMessage('QR shared successfully!', false);
+            } else {
+                await navigator.clipboard.writeText(qrDataUrl);
+                uiController.displayMessage('QR code copied to clipboard!', false);
+            }
+        } catch (error) {
+            console.error('Share error:', error);
+            uiController.displayMessage('Failed to share QR. Copied to clipboard instead.', false);
+            await navigator.clipboard.writeText(domElements.qrCanvas.toDataURL('image/png', 0.9));
+        }
+    },
+
+    stopCamera: () => {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            domElements.cameraPreview.srcObject = null;
+            cameraStream = null;
+        }
+        if (qrScanInterval) {
+            clearInterval(qrScanInterval);
+            qrScanInterval = null;
+        }
+        if (cameraTimeoutId) {
+            clearTimeout(cameraTimeoutId);
+            cameraTimeoutId = null;
+        }
+        domElements.cameraContainer.classList.add('hidden');
+    },
+
+    startCamera: async () => {
+        try {
+            handlers.stopCamera(); // Detener cualquier cámara activa
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' }
+            });
+            domElements.cameraPreview.srcObject = cameraStream;
+            domElements.cameraContainer.classList.remove('hidden');
+
+            const scanQR = () => {
+                if (!domElements.cameraPreview.videoWidth) return;
+                scanCanvas.width = domElements.cameraPreview.videoWidth;
+                scanCanvas.height = domElements.cameraPreview.videoHeight;
+                scanContext.drawImage(domElements.cameraPreview, 0, 0, scanCanvas.width, scanCanvas.height);
+                const imageData = scanContext.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+                const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
+                if (qrCode) {
+                    handlers.stopCamera();
+                    handlers.handleDecrypt(qrCode.data);
+                }
+            };
+
+            qrScanInterval = setInterval(() => {
+                requestAnimationFrame(scanQR);
+            }, 500);
+
+            cameraTimeoutId = setTimeout(() => {
+                handlers.stopCamera();
+                uiController.displayMessage('Camera scan timed out.', false);
+            }, CONFIG.CAMERA_TIMEOUT);
+        } catch (error) {
+            console.error('Camera error:', error);
+            uiController.displayMessage('Failed to access camera. Please check permissions.', false);
+            handlers.stopCamera();
+        }
+    },
+
+    handleUploadArrow: () => {
+        fileInput.accept = 'image/*,application/pdf';
+        fileInput.click();
+    },
+
+    handleImageUpload: () => {
+        fileInput.accept = 'image/*';
+        fileInput.click();
+    },
+
+    handlePDFUpload: () => {
+        fileInput.accept = 'application/pdf';
+        fileInput.click();
+    },
+
+    handleFileUpload: async () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        if (file.type === 'application/pdf') {
+            uiController.displayMessage('PDF processing is not yet implemented.', false);
+            fileInput.value = '';
+            return;
+        }
 
         try {
             const imageData = await new Promise((resolve, reject) => {
@@ -537,146 +705,34 @@ const handlers = {
                 throw new Error('No QR code detected in the image');
             }
 
-            const decrypted = await cryptoUtils.decryptMessage(qrCode.data, passphrase);
-            uiController.displayMessage(`Decrypted: ${decrypted}`, false);
-            domElements.passphraseInput.value = '';
-            fileInput.value = '';
-            decryptAttempts = 0;
+            await handlers.handleDecrypt(qrCode.data);
         } catch (error) {
-            console.error('Decryption error:', error);
-            uiController.displayMessage(
-                error.message.includes('decrypt') || error.message.includes('Integrity')
-                    ? 'Decryption failed. Wrong passphrase or tampered data?'
-                    : error.message,
-                false
-            );
+            console.error('File upload error:', error);
+            uiController.displayMessage(error.message || 'Failed to process file.', false);
         } finally {
-            uiController.resetButton(domElements.decodeButton, originalButtonHTML);
+            fileInput.value = '';
         }
-    },
-
-    handleDownload: async () => {
-        try {
-            if (!domElements.qrCanvas.toDataURL) {
-                uiController.displayMessage('No QR code available to download.', false);
-                return;
-            }
-
-            const qrDataUrl = domElements.qrCanvas.toDataURL('image/png', 0.9);
-            const qrBlob = await (await fetch(qrDataUrl)).blob();
-
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const fileName = `hushbox-qr-${timestamp}.png`;
-
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(qrBlob);
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
-
-            uiController.displayMessage('QR downloaded successfully!', false);
-        } catch (error) {
-            console.error('Download error:', error);
-            uiController.displayMessage('Failed to download QR: ' + error.message, false);
-        }
-    },
-
-    handleShare: async () => {
-        try {
-            if (!domElements.qrCanvas.toDataURL) {
-                uiController.displayMessage('No QR code available to share.', false);
-                return;
-            }
-
-            const qrDataUrl = domElements.qrCanvas.toDataURL('image/png', 0.9);
-            const qrBlob = await (await fetch(qrDataUrl)).blob();
-            const qrFile = new File([qrBlob], 'hushbox-qr.png', { type: 'image/png' });
-
-            if (navigator.share && navigator.canShare({ files: [qrFile] })) {
-                await navigator.share({
-                    title: 'HushBox Secure QR',
-                    text: 'Check out this encrypted QR code from HushBox!',
-                    files: [qrFile]
-                });
-                uiController.displayMessage('QR shared successfully!', false);
-            } else {
-                try {
-                    await navigator.clipboard.writeText(qrDataUrl);
-                    uiController.displayMessage(
-                        'Sharing and downloading are not supported on Telegram yet. Use HUSHBOX from a modern browser.',
-                        false
-                    );
-                } catch (clipError) {
-                    console.error('Clipboard error:', clipError);
-                    uiController.displayMessage(
-                        'Sharing and clipboard not supported. Please download the QR and share it manually (e.g., in Telegram).',
-                        false
-                    );
-                    handlers.handleDownload();
-                }
-            }
-        } catch (error) {
-            console.error('Share error:', error);
-            uiController.displayMessage('Failed to share QR: ' + error.message, false);
-        }
-    },
-
-    stopCamera: () => {
-        const stream = domElements.cameraPreview.srcObject;
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-            domElements.cameraPreview.srcObject = null;
-            domElements.cameraContainer.classList.add('hidden');
-            if (cameraTimeoutId) {
-                clearTimeout(cameraTimeoutId);
-                cameraTimeoutId = null;
-            }
-        }
-    },
-
-    handleUploadArrow: () => {
-        fileInput.click();
     }
 };
 
-// Event listeners cargados después del DOM
+// Event listeners
 document.addEventListener('DOMContentLoaded', () => {
-    // Generar contraseña al hacer clic en el ícono
-    const generateButton = document.querySelector('.generate-password');
-    if (generateButton) {
-        generateButton.addEventListener('click', () => {
-            const passphraseField = domElements.passphraseInput;
-            const securePassphrase = generateSecurePassphrase(16);
-            passphraseField.value = securePassphrase;
-            passphraseField.dispatchEvent(new Event('input'));
-            uiController.displayMessage(securePassphrase, true, true);
-        });
-    } else {
-        console.error('Element with class "generate-password" not found');
-    }
+    // Generar contraseña
+    document.querySelector('.generate-password').addEventListener('click', () => {
+        const securePassphrase = generateSecurePassphrase(16);
+        domElements.passphraseInput.value = securePassphrase;
+        domElements.passphraseInput.dispatchEvent(new Event('input'));
+        uiController.displayMessage(securePassphrase, true, true);
+    });
 
-    // charCounter
+    // Contador de caracteres
     const charCounter = document.getElementById('char-counter');
     domElements.messageInput.addEventListener('input', () => {
         const currentLength = domElements.messageInput.value.length;
         const maxLength = domElements.messageInput.getAttribute('maxlength');
         charCounter.textContent = `${currentLength}/${maxLength}`;
-        if (currentLength >= maxLength * 0.9) {
-            charCounter.style.color = 'var(--error-color)';
-        } else {
-            charCounter.style.color = 'rgba(160, 160, 160, 0.8)';
-        }
+        charCounter.style.color = currentLength >= maxLength * 0.9 ? 'var(--error-color)' : 'rgba(160, 160, 160, 0.8)';
     });
-
-    // Otros eventos
-    domElements.uploadArrowButton.addEventListener('click', handlers.handleUploadArrow);
-    domElements.sendButton.addEventListener('click', handlers.handleEncrypt);
-    domElements.decodeButton.addEventListener('click', handlers.handleDecrypt);
-    domElements.downloadButton.addEventListener('click', handlers.handleDownload);
-    domElements.shareButton.addEventListener('click', handlers.handleShare);
-    fileInput.addEventListener('change', handlers.handleDecrypt);
 
     // Validación visual de la passphrase
     domElements.passphraseInput.addEventListener('input', (e) => {
@@ -684,46 +740,48 @@ document.addEventListener('DOMContentLoaded', () => {
         const keyIcon = domElements.passphraseInput.parentElement.querySelector('.fa-key');
         if (passphrase.length === 0) {
             keyIcon.style.color = 'rgba(160, 160, 160, 0.6)';
+            domElements.passphraseError.classList.remove('visible');
         } else if (passphrase.length < CONFIG.MIN_PASSPHRASE_LENGTH) {
             keyIcon.style.color = 'var(--error-color)';
+            uiController.showPassphraseError(`Passphrase must be at least ${CONFIG.MIN_PASSPHRASE_LENGTH} characters long`);
         } else {
             try {
                 cryptoUtils.validatePassphrase(passphrase);
                 keyIcon.style.color = 'var(--success-color)';
+                domElements.passphraseError.classList.remove('visible');
             } catch (error) {
                 keyIcon.style.color = 'var(--error-color)';
+                uiController.showPassphraseError(error.message);
             }
         }
     });
 
-    // Eventos del tutorial y "Coming Soon"
+    // Eventos de botones
+    domElements.uploadArrowButton.addEventListener('click', handlers.handleUploadArrow);
+    domElements.scanButton.addEventListener('click', handlers.startCamera);
+    domElements.imageButton.addEventListener('click', handlers.handleImageUpload);
+    domElements.pdfButton.addEventListener('click', handlers.handlePDFUpload);
+    domElements.sendButton.addEventListener('click', handlers.handleEncrypt);
+    domElements.decodeButton.addEventListener('click', () => handlers.handleDecrypt(fileInput.qrData));
+    domElements.downloadButton.addEventListener('click', handlers.handleDownload);
+    domElements.shareButton.addEventListener('click', handlers.handleShare);
+    fileInput.addEventListener('change', handlers.handleFileUpload);
+
+    // Habilitar decodeButton cuando se carga un archivo o se escanea un QR
+    fileInput.addEventListener('change', () => {
+        domElements.decodeButton.disabled = fileInput.files.length === 0;
+    });
+
+    // Eventos del modal
     showTutorialModal();
     domElements.closeTutorial.addEventListener('click', closeTutorialModal);
     domElements.closeModalButton.addEventListener('click', closeTutorialModal);
     domElements.dontShowAgain.addEventListener('click', setDontShowAgain);
-    domElements.scanButton.addEventListener('click', showComingSoonMessage);
-    domElements.imageButton.addEventListener('click', showComingSoonMessage);
-    domElements.pdfButton.addEventListener('click', showComingSoonMessage);
-
-    // Habilitar solo el botón de escaneo para "Coming Soon", dejar image y pdf desactivados
-    domElements.scanButton.disabled = false;
-
-    // Deshabilitar decodeButton inicialmente
-    domElements.decodeButton.disabled = true;
-
-    // Habilitar decodeButton cuando se cargue un archivo
-    fileInput.addEventListener('change', () => {
-        if (fileInput.files.length > 0) {
-            domElements.decodeButton.disabled = false;
-        } else {
-            domElements.decodeButton.disabled = true;
-        }
-    });
 });
 
-// Detener la cámara al salir de la página si está activa
+// Detener la cámara al salir de la página
 window.addEventListener('beforeunload', (e) => {
-    if (domElements.cameraPreview.srcObject) {
+    if (cameraStream) {
         e.preventDefault();
         e.returnValue = 'Camera is active. Are you sure you want to leave?';
         handlers.stopCamera();
