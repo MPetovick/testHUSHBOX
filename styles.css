@@ -1,4 +1,4 @@
-/* Variables globales */
+/* Global variables */
 :root {
     --primary-color: #00cc99;
     --secondary-color: #2a2a2a;
@@ -15,7 +15,7 @@
     --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-/* Estilos generales */
+/* General styles */
 * {
     margin: 0;
     padding: 0;
@@ -96,7 +96,7 @@ body::before {
     transition: var(--transition);
 }
 
-/* Contenedor Principal */
+/* Main Container */
 .container {
     width: 100%;
     max-width: 1400px;
@@ -131,7 +131,7 @@ body::before {
 }
 
 .encrypt-section {
-    /* La sección de encriptación determinará la altura */
+    /* The encryption section will determine the height */
 }
 
 .decrypt-section {
@@ -277,7 +277,7 @@ body::before {
 
 .action-buttons.compact {
     display: flex;
-    gap: clamp(0.6rem, 1.2vw, 0.8rem); /* Ajustado para pantallas pequeñas */
+    gap: clamp(0.6rem, 1.2vw, 0.8rem); /* Adjusted for small screens */
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
@@ -291,7 +291,7 @@ body::before {
 }
 
 .btn-secondary {
-    width: 42px; /* Estandarizado */
+    width: 42px; /* Standardized */
     height: 42px;
     padding: 0;
     border-radius: 10px;
@@ -302,7 +302,7 @@ body::before {
     border: 1px solid var(--primary-color);
     transition: var(--transition);
     color: var(--primary-color);
-    font-size: 1rem; /* Estandarizado */
+    font-size: 1rem; /* Standardized */
 }
 
 .btn-secondary:hover {
@@ -342,7 +342,7 @@ body::before {
 
 .qr-actions {
     display: flex;
-    gap: clamp(0.5rem, 1vw, 0.7rem); /* Ajustado para pantallas pequeñas */
+    gap: clamp(0.5rem, 1vw, 0.7rem); /* Adjusted for small screens */
 }
 
 #qr-canvas {
@@ -354,7 +354,7 @@ body::before {
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
     border: 3px solid var(--primary-color);
     margin: 0 auto;
-    user-select: none; /* Prevenir selección */
+    user-select: none; /* Prevent selection */
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -369,7 +369,7 @@ body::before {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    box-shadow: none; /* Optimizado para rendimiento */
+    box-shadow: none; /* Optimized for performance */
 }
 
 .message {
@@ -396,7 +396,7 @@ body::before {
     font-size: clamp(0.9rem, 1.8vw, 1rem);
     position: relative;
     overflow: hidden;
-    user-select: none; /* Prevenir selección */
+    user-select: none; /* Prevent selection */
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -415,7 +415,7 @@ body::before {
 
 .message-time {
     font-size: clamp(0.7rem, 1.3vw, 0.8rem);
-    color: rgba(255, 255, 255, 0.8); /* Mejor contraste */
+    color: rgba(255, 255, 255, 0.8); /* Better contrast */
     margin-top: 0.3rem;
 }
 
@@ -459,9 +459,9 @@ body::before {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 42px; /* Estandarizado */
+    width: 42px; /* Standardized */
     height: 42px;
-    font-size: 1rem; /* Estandarizado */
+    font-size: 1rem; /* Standardized */
 }
 
 .btn-icon:hover:not(:disabled) {
@@ -489,11 +489,11 @@ body::before {
 }
 
 .history-btn {
-    width: 34px; /* Estandarizado */
+    width: 34px; /* Standardized */
     height: 34px;
     padding: 0;
     margin: 0 clamp(0.4rem, 0.8vw, 0.6rem);
-    font-size: 0.9rem; /* Estandarizado */
+    font-size: 0.9rem; /* Standardized */
 }
 
 .history-btn#clear-history {
@@ -543,11 +543,11 @@ body::before {
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: clamp(1rem, 2vw, 1.5rem); /* Estandarizado */
-    background: var(--section-bg); /* Alineado con otros modales */
-    border-radius: 16px; /* Estandarizado */
-    box-shadow: var(--card-shadow); /* Estandarizado */
-    border: 1px solid rgba(255, 255, 255, 0.05); /* Estandarizado */
+    padding: clamp(1rem, 2vw, 1.5rem); /* Standardized */
+    background: var(--section-bg); /* Aligned with other modals */
+    border-radius: 16px; /* Standardized */
+    box-shadow: var(--card-shadow); /* Standardized */
+    border: 1px solid rgba(255, 255, 255, 0.05); /* Standardized */
     position: relative;
 }
 
@@ -676,7 +676,7 @@ body::before {
     right: 1rem;
     bottom: 0.6rem;
     font-size: 0.8rem;
-    color: rgba(200, 200, 200, 0.9); /* Mejor contraste */
+    color: rgba(200, 200, 200, 0.9); /* Better contrast */
     padding: 0;
 }
 
@@ -844,7 +844,7 @@ body::before {
 
 .modal-header h2 {
     color: var(--primary-color);
-    font-size: clamp(1.4rem, 3.5vw, 1.8rem); /* Ajustado */
+    font-size: clamp(1.4rem, 3.5vw, 1.8rem); /* Adjusted */
     text-shadow: 0 0 8px var(--glow-color);
     display: flex;
     align-items: center;
@@ -874,7 +874,7 @@ body::before {
     padding: 1rem;
     border-radius: 12px;
     transition: transform 0.3s ease;
-    box-shadow: none; /* Optimizado para rendimiento */
+    box-shadow: none; /* Optimized for performance */
 }
 
 .feature-item:hover {
@@ -889,13 +889,13 @@ body::before {
 }
 
 .feature-item h3 {
-    font-size: clamp(1rem, 2vw, 1.1rem); /* Ajustado */
+    font-size: clamp(1rem, 2vw, 1.1rem); /* Adjusted */
     color: var(--text-color);
     margin-bottom: 0.3rem;
 }
 
 .feature-item p {
-    font-size: clamp(0.85rem, 1.8vw, 0.9rem); /* Ajustado */
+    font-size: clamp(0.85rem, 1.8vw, 0.9rem); /* Adjusted */
     color: rgba(255, 255, 255, 0.7);
 }
 
@@ -1025,21 +1025,21 @@ body::before {
     outline-offset: 2px;
 }
 
-/* Protección contra impresión */
+/* Print protection */
 @media print {
     .no-print, #qr-container, .message-container {
         display: none !important;
     }
 }
 
-/* Optimizar rendimiento */
+/* Performance optimization */
 @media (max-width: 768px) and (prefers-reduced-data: reduce) {
     .section, .camera-modal {
         backdrop-filter: none;
     }
 }
 
-/* Soporte para prefers-reduced-motion */
+/* Support for prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation: none !important;
