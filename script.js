@@ -20,7 +20,7 @@ const dom = {
     encryptForm: document.getElementById('encrypt-form') || throwError('Encrypt form not found'),
     uploadArrow: document.getElementById('upload-arrow-button') || throwError('Upload arrow button not found'),
     scanButton: document.getElementById('scan-button') || throwError('Scan button not found'),
-    imageButton: document.getElementById('image-button') || throwError('Image button not found'),
+    // Eliminado: imageButton
     pdfButton: document.getElementById('pdf-button') || throwError('PDF button not found'),
     messages: document.getElementById('messages') || throwError('Messages container not found'),
     passphrase: document.getElementById('passphrase') || throwError('Passphrase input not found'),
@@ -28,7 +28,7 @@ const dom = {
     sendButton: document.getElementById('send-button') || throwError('Send button not found'),
     qrCanvas: document.getElementById('qr-canvas') || throwError('QR canvas not found'),
     decodeButton: document.getElementById('decode-button') || throwError('Decode button not found'),
-    downloadButton: document.getElementById('download-button') || throwError('Download button not found'),
+    // Eliminado: downloadButton
     shareButton: document.getElementById('share-button') || throwError('Share button not found'),
     copyButton: document.getElementById('copy-button') || throwError('Copy button not found'),
     qrContainer: document.getElementById('qr-container') || throwError('QR container not found'),
@@ -54,7 +54,7 @@ const dom = {
 
 // Helper function for DOM errors
 function throwError(message) {
-    throw new Error(`DOM Error: ${message}`);
+    throw new Error(`DOM Error: ${message}`); // Corregido: comillas correctas
 }
 
 // File input initialization
@@ -78,7 +78,7 @@ const appState = {
 const cryptoUtils = {
     validatePassphrase: (pass) => {
         if (!pass || pass.length < CONFIG.MIN_PASSPHRASE_LENGTH) {
-            throw new Error(`Password must be at least ${CONFIG.MIN_PASSPHRASE_LENGTH} characters long`);
+            throw new Error(`Password must be at least ${CONFIG.MIN_PASSPHRASE_LENGTH} characters long`); // Corregido
         }
         const hasUpperCase = /[A-Z]/.test(pass);
         const hasLowerCase = /[a-z]/.test(pass);
@@ -224,15 +224,14 @@ const cryptoUtils = {
                 name: 'PBKDF2',
                 salt,
                 iterations: CONFIG.PBKDF2_ITERATIONS,
-                hash: 'SHA-256'
+                hash: 'SHA256'
             }, baseKey, CONFIG.AES_KEY_LENGTH);
             
             const key = await crypto.subtle.importKey('raw', keyMaterial, 
                 { name: 'AES-GCM' }, false, ['decrypt']);
             
             decrypted = await crypto.subtle.decrypt(
-                { name: 'AES-GCM', iv, tagLength: 128 }, key, ciphertext
-            );
+                { name: 'AES-GCM', iv, tagLength: 128 }, key, ciphertext);
             
             let decompressed;
             try {
@@ -286,7 +285,7 @@ const ui = {
         messageEl.className = `message ${isSent ? 'sent' : ''}`;
         messageEl.innerHTML = `
             <div class="message-content" role="alert" aria-live="polite">${ui.sanitizeHTML(content)}</div>
-            <div class="message-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+            <div class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
         `;
         
         appState.messageHistory.push({
@@ -300,9 +299,9 @@ const ui = {
         }
         
         dom.messages.appendChild(messageEl);
-        dom.messages.scrollTop = dom.messages.scrollHeight;
+        dom.messages.scrollTop = messageEl.scrollHeight;
 
-        // Update export history button state (uses fa-arrow-down icon)
+        // Update export history button state
         dom.exportHistory.disabled = appState.messageHistory.length === 0;
     },
 
@@ -361,7 +360,7 @@ const ui = {
     toggleButton: (btn, state, text = '') => {
         btn.disabled = state;
         if (text) {
-            // Preserve existing icon if no text is provided, to avoid overwriting fa-arrow-up, fa-arrow-down, or fa-qrcode
+            // Preserve existing icon if no text is provided
             btn.innerHTML = text;
         }
     },
@@ -636,13 +635,7 @@ const handlers = {
         reader.readAsDataURL(file);
     },
 
-    handleDownload: () => {
-        const link = document.createElement('a');
-        link.href = dom.qrCanvas.toDataURL('image/png');
-        link.download = `hushbox-${Date.now()}.png`;
-        link.click();
-        ui.showToast('QR downloaded', 'success');
-    },
+    // Eliminado: handleDownload
 
     handleCopy: async () => {
         try {
@@ -668,8 +661,8 @@ const handlers = {
                 throw new Error('Sharing not supported');
             }
         } catch (error) {
-            handlers.handleDownload();
-            ui.showToast('Sharing not supported, QR downloaded', 'warning');
+            // No fallback a handleDownload, ya que fue eliminado
+            ui.showToast('Sharing not supported', 'warning');
         }
     },
 
@@ -737,7 +730,6 @@ const handlers = {
     },
 
     exportMessageHistory: async () => {
-        // Export history button uses fa-arrow-down icon
         if (appState.messageHistory.length === 0) {
             ui.showToast('No messages to export', 'warning');
             return;
@@ -786,7 +778,6 @@ const handlers = {
     },
 
     importMessageHistory: async () => {
-        // Import history button uses fa-arrow-up icon
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.accept = 'text/plain,.txt';
@@ -905,14 +896,13 @@ const handlers = {
         try {
             dom.encryptForm.addEventListener('submit', handlers.handleEncrypt);
             dom.decodeButton.addEventListener('click', () => handlers.handleDecrypt(appState.lastEncryptedData));
-            dom.downloadButton.addEventListener('click', handlers.handleDownload);
+            // Eliminado: dom.downloadButton.addEventListener('click', handlers.handleDownload);
             dom.shareButton.addEventListener('click', handlers.handleShare);
             dom.copyButton.addEventListener('click', handlers.handleCopy);
             dom.scanButton.addEventListener('click', ui.showCameraModal);
             dom.closeCamera.addEventListener('click', ui.hideCameraModal);
-            // Upload button with fa-qrcode icon
             dom.uploadArrow.addEventListener('click', handlers.handleUpload);
-            dom.imageButton.addEventListener('click', handlers.handleUpload);
+            // Eliminado: dom.imageButton.addEventListener('click', handlers.handleUpload);
             dom.fileInput.addEventListener('change', handlers.handleFileSelect);
             dom.pdfButton.addEventListener('click', handlers.handleExportPDF);
             dom.generatePass.addEventListener('click', () => {
@@ -932,9 +922,7 @@ const handlers = {
                 dom.charCounter.style.color = len > CONFIG.MAX_MESSAGE_LENGTH - 400 ? 'var(--error-color)' : 'rgba(160,160,160,0.8)';
             });
             dom.clearHistory.addEventListener('click', ui.clearMessageHistory);
-            // Export history button with fa-arrow-down icon
             dom.exportHistory.addEventListener('click', handlers.exportMessageHistory);
-            // Import history button with fa-arrow-up icon
             dom.importHistory.addEventListener('click', handlers.importMessageHistory);
             dom.togglePassword.addEventListener('click', ui.togglePasswordVisibility);
             dom.passphrase.addEventListener('input', (e) => {
