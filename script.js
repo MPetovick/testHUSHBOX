@@ -34,6 +34,7 @@ const dom = {
   cameraModal: document.getElementById('camera-modal') || throwError('Camera modal not found'),
   cameraPreview: document.getElementById('camera-preview') || throwError('Camera preview not found'),
   closeCamera: document.getElementById('close-camera') || throwError('Close camera button not found'),
+  cameraContainer: document.querySelector('.camera-container') || throwError('Camera container not found'),
   fileInput: document.createElement('input'),
   charCounter: document.getElementById('char-counter') || throwError('Char counter not found'),
   generatePass: document.querySelector('.generate-password') || throwError('Generate password button not found'),
@@ -47,7 +48,15 @@ const dom = {
   tutorialModal: document.getElementById('tutorial-modal') || throwError('Tutorial modal not found'),
   closeTutorial: document.getElementById('close-tutorial') || throwError('Close tutorial button not found'),
   dontShowAgainCheckbox: document.getElementById('dont-show-again-checkbox') || throwError('Don\'t show again checkbox not found'),
-  dontShowAgainButton: document.getElementById('dont-show-again') || throwError('Don\'t show again button not found')
+  dontShowAgainButton: document.getElementById('dont-show-again') || throwError('Don\'t show again button not found'),
+  passphraseModal: document.getElementById('passphrase-modal') || throwError('Passphrase modal not found'),
+  modalPassphrase: document.getElementById('modal-passphrase') || throwError('Modal passphrase input not found'),
+  modalPassphraseError: document.getElementById('modal-passphrase-error') || throwError('Modal passphrase error not found'),
+  modalDecryptButton: document.getElementById('modal-decrypt-button') || throwError('Modal decrypt button not found'),
+  modalCancelButton: document.getElementById('modal-cancel-button') || throwError('Modal cancel button not found'),
+  closePassphraseModal: document.getElementById('close-passphrase') || throwError('Close passphrase modal button not found'),
+  detectionBox: null,
+  scanLine: null,
 };
 
 // Helper function for DOM errors
@@ -57,7 +66,7 @@ function throwError(message) {
 
 // File input initialization
 dom.fileInput.type = 'file';
-dom.fileInput.accept = 'image/*,.csv'; // Accepts images and CSV for history import
+dom.fileInput.accept = 'image/*,.csv';
 dom.fileInput.style.display = 'none';
 document.body.appendChild(dom.fileInput);
 
@@ -122,7 +131,6 @@ const cryptoUtils = {
       crypto.getRandomValues(values);
       let pass = Array.from(values, v => chars[v % chars.length]).join('');
 
-      // Ensure minimum requirements
       if (!/[A-Z]/.test(pass)) pass = 'A' + pass.slice(1);
       if (!/[a-z]/.test(pass)) pass = pass.slice(0, -1) + 'a';
       if (!/[0-9]/.test(pass)) pass = pass.slice(0, -1) + '1';
@@ -165,7 +173,6 @@ const cryptoUtils = {
       if (!message) throw new Error('Message cannot be empty');
       dataToEncrypt = new TextEncoder().encode(message);
 
-      // Compress if necessary
       if (typeof pako !== 'undefined' && message.length > CONFIG.COMPRESSION_THRESHOLD) {
         dataToEncrypt = pako.deflate(dataToEncrypt, { level: 6 });
       }
@@ -319,7 +326,6 @@ const ui = {
     dom.messages.appendChild(messageEl);
     dom.messages.scrollTop = dom.messages.scrollHeight;
 
-    // Update export history button state
     dom.exportHistory.disabled = appState.messageHistory.length === 0;
   },
 
@@ -397,12 +403,53 @@ const ui = {
     handlers.stopCamera();
   },
 
-  showScanEffect: () => {
-    const overlay = document.querySelector('.scanner-overlay');
-    if (overlay) {
-      overlay.classList.add('scan-success');
-      setTimeout(() => overlay.classList.remove('scan-success'), 1000);
+  showPassphraseModal: () => {
+    dom.passphraseModal.style.display = 'flex';
+    dom.modalPassphrase.focus();
+    dom.modalPassphraseError.classList.add('hidden');
+  },
+
+  hidePassphraseModal: () => {
+    dom.passphraseModal.style.display = 'none';
+    dom.modalPassphrase.value = '';
+    dom.modalPassphraseError.classList.add('hidden');
+  },
+
+  showDetectionBox: () => {
+    if (!dom.detectionBox) {
+      dom.detectionBox = document.createElement('div');
+      dom.detectionBox.className = 'detection-box';
+      dom.cameraContainer.appendChild(dom.detectionBox);
+      
+      dom.scanLine = document.createElement('div');
+      dom.scanLine.className = 'scan-line';
+      dom.detectionBox.appendChild(dom.scanLine);
     }
+    const containerRect = dom.cameraContainer.getBoundingClientRect();
+    dom.detectionBox.style.width = `${containerRect.width * 0.7}px`;
+    dom.detectionBox.style.height = `${containerRect.width * 0.7}px`;
+    dom.detectionBox.style.left = `${containerRect.width * 0.15}px`;
+    dom.detectionBox.style.top = `${containerRect.height * 0.15}px`;
+  },
+
+  hideDetectionBox: () => {
+    if (dom.detectionBox) {
+      dom.detectionBox.classList.remove('active');
+    }
+  },
+
+  updateDetectionBox: (location) => {
+    if (!dom.detectionBox) return;
+    
+    const { topLeft, topRight, bottomLeft, bottomRight } = location;
+    const width = Math.max(topRight.x - topLeft.x, bottomRight.x - bottomLeft.x);
+    const height = Math.max(bottomLeft.y - topLeft.y, bottomRight.y - topRight.y);
+    
+    dom.detectionBox.style.width = `${width}px`;
+    dom.detectionBox.style.height = `${height}px`;
+    dom.detectionBox.style.left = `${topLeft.x}px`;
+    dom.detectionBox.style.top = `${topLeft.y}px`;
+    dom.detectionBox.classList.add('active');
   },
 
   showToast: (message, type = 'info') => {
@@ -526,7 +573,6 @@ const csvUtils = {
   },
 
   parseCSV: (csvData) => {
-    // Normalize line endings and split
     const lines = csvData
       .replace(/\r\n/g, '\n')
       .replace(/\r/g, '\n')
@@ -537,7 +583,6 @@ const csvUtils = {
       throw new Error('Empty CSV file');
     }
     
-    // Validate header
     const header = csvUtils.parseCSVLine(lines[0]);
     const requiredHeaders = ['Type', 'Message', 'Date', 'Time'];
     if (!requiredHeaders.every(h => header.includes(h))) {
@@ -560,14 +605,12 @@ const csvUtils = {
       
       let timestamp;
       try {
-        // Try ISO format first
         if (date.includes('-') && time.includes(':')) {
           timestamp = new Date(`${date}T${time}`);
         } else {
           timestamp = new Date(`${date} ${time}`);
         }
         
-        // Fallback to current date if invalid
         if (isNaN(timestamp.getTime())) {
           timestamp = new Date();
         }
@@ -684,9 +727,30 @@ const handlers = {
     }
   },
 
+  handleModalDecrypt: async () => {
+    const passphrase = dom.modalPassphrase.value.trim();
+    
+    if (!passphrase) {
+      dom.modalPassphraseError.textContent = 'Please enter a passphrase';
+      dom.modalPassphraseError.classList.remove('hidden');
+      return;
+    }
+
+    try {
+      const decrypted = await cryptoUtils.decryptMessage(appState.lastEncryptedData, passphrase);
+      ui.displayMessage(`Decrypted message: ${ui.sanitizeHTML(decrypted)}`);
+      ui.hidePassphraseModal();
+      ui.showToast('Message decrypted successfully', 'success');
+    } catch (error) {
+      console.error('Decryption error:', error);
+      dom.modalPassphraseError.textContent = error.message || 'Invalid passphrase or corrupted data';
+      dom.modalPassphraseError.classList.remove('hidden');
+    }
+  },
+
   startCamera: () => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      ui.showToast('Camera access not available', 'error');
+      ui.showToast('Camera access not supported', 'error');
       return;
     }
     if (typeof jsQR === 'undefined') {
@@ -697,8 +761,32 @@ const handlers = {
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
       .then(stream => {
         dom.cameraPreview.srcObject = stream;
-        const scanLoop = () => {
-          if (!dom.cameraPreview.srcObject) return;
+        dom.cameraPreview.play();
+        ui.showDetectionBox();
+        
+        let lastScanTime = 0;
+        const scanInterval = 100;
+
+        const timeoutId = setTimeout(() => {
+          if (dom.cameraPreview.srcObject) {
+            handlers.stopCamera();
+            ui.hideCameraModal();
+            ui.showToast('Scanning timed out after 30 seconds', 'warning');
+          }
+        }, CONFIG.CAMERA_TIMEOUT);
+
+        const scanLoop = (timestamp) => {
+          if (!dom.cameraPreview.srcObject) {
+            clearTimeout(timeoutId);
+            return;
+          }
+
+          if (timestamp - lastScanTime < scanInterval) {
+            requestAnimationFrame(scanLoop);
+            return;
+          }
+
+          lastScanTime = timestamp;
 
           try {
             const canvas = document.createElement('canvas');
@@ -711,25 +799,35 @@ const handlers = {
             const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
 
             if (qrCode) {
-              ui.showScanEffect();
-              appState.lastEncryptedData = qrCode.data;
-              dom.decodeButton.disabled = false;
-              handlers.handleDecrypt(qrCode.data);
-              handlers.stopCamera();
-              ui.hideCameraModal();
+              ui.updateDetectionBox(qrCode.location);
+              setTimeout(() => {
+                handlers.stopCamera();
+                ui.hideCameraModal();
+                appState.lastEncryptedData = qrCode.data;
+                ui.showPassphraseModal();
+                clearTimeout(timeoutId);
+              }, 1000);
             } else {
+              ui.hideDetectionBox();
               requestAnimationFrame(scanLoop);
             }
           } catch (e) {
             console.error('Scan error:', e);
-            ui.showToast('Error scanning QR', 'error');
+            ui.showToast('Error scanning QR code', 'error');
+            setTimeout(() => requestAnimationFrame(scanLoop), 300);
           }
         };
-        scanLoop();
+
+        requestAnimationFrame(scanLoop);
+
+        dom.cameraPreview.addEventListener('ended', () => {
+          clearTimeout(timeoutId);
+        }, { once: true });
       })
       .catch(error => {
-        console.error('Camera error:', error);
-        ui.showToast('Error accessing camera', 'error');
+        console.error('Camera access error:', error);
+        ui.showToast('Unable to access camera', 'error');
+        ui.hideCameraModal();
       });
   },
 
@@ -738,17 +836,16 @@ const handlers = {
       dom.cameraPreview.srcObject.getTracks().forEach(track => track.stop());
       dom.cameraPreview.srcObject = null;
     }
+    ui.hideDetectionBox();
   },
 
   handleUpload: () => {
-    // Set for QR upload
     dom.fileInput.accept = 'image/*';
     appState.importingHistory = false;
     dom.fileInput.click();
   },
 
   handleImportHistory: () => {
-    // Set for history import
     dom.fileInput.accept = '.csv';
     appState.importingHistory = true;
     dom.fileInput.click();
@@ -760,14 +857,12 @@ const handlers = {
 
     try {
       if (appState.importingHistory) {
-        // Handle history import
         if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
           await handlers.importMessageHistory(file);
         } else {
           ui.showToast('Please select a CSV file for history import', 'error');
         }
       } else {
-        // Handle QR upload
         if (file.type.startsWith('image/')) {
           await handlers.handleQRUpload(file);
         } else {
@@ -778,7 +873,7 @@ const handlers = {
       console.error('File processing error:', error);
       ui.showToast(`Error: ${error.message}`, 'error');
     } finally {
-      dom.fileInput.value = ''; // Reset file input
+      dom.fileInput.value = '';
     }
   },
 
@@ -804,8 +899,7 @@ const handlers = {
 
           if (qrCode) {
             appState.lastEncryptedData = qrCode.data;
-            dom.decodeButton.disabled = false;
-            handlers.handleDecrypt(qrCode.data);
+            ui.showPassphraseModal();
             ui.showToast('QR code uploaded successfully', 'success');
           } else {
             ui.displayMessage('No QR code detected');
@@ -865,23 +959,19 @@ const handlers = {
         format: 'a4'
       });
 
-      // Set font and size for title
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(18);
       doc.setTextColor(0, 204, 153);
       doc.text('HushBox - Encrypted Message', 105, 20, null, null, 'center');
 
-      // Descriptive text
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(12);
       doc.setTextColor(240, 240, 240);
       doc.text('Scan the following QR code with HushBox to decrypt:', 105, 30, null, null, 'center');
 
-      // Add QR code
       const qrDataUrl = dom.qrCanvas.toDataURL('image/png');
       doc.addImage(qrDataUrl, 'PNG', 70, 40, 70, 70);
 
-      // Security instructions
       doc.setFontSize(10);
       doc.setTextColor(200, 200, 200);
       doc.text('Security Instructions:', 20, 120);
@@ -890,12 +980,10 @@ const handlers = {
       doc.text('- The message is protected with AES-256-GCM', 20, 150);
       doc.text('- Delete this document after use', 20, 160);
 
-      // Add security watermark
       doc.setFontSize(8);
       doc.setTextColor(100, 100, 100, 20);
       doc.text('SECURE DOCUMENT - DO NOT SHARE', 105, 280, null, null, 'center');
 
-      // Footer with generation info
       doc.setFont('courier', 'normal');
       doc.setFontSize(8);
       doc.setTextColor(160, 160, 160);
@@ -908,7 +996,6 @@ const handlers = {
         'center'
       );
 
-      // Save the PDF
       doc.save(`hushbox-message-${Date.now()}.pdf`);
       ui.showToast('PDF exported successfully', 'success');
     } catch (error) {
@@ -930,13 +1017,8 @@ const handlers = {
     }
 
     try {
-      // Generate CSV
       const csvContent = csvUtils.generateCSV(appState.messageHistory);
-
-      // Encrypt the CSV
       const encryptedCsv = await cryptoUtils.encryptMessage(csvContent, passphrase);
-
-      // Create and download the file
       const blob = new Blob([encryptedCsv], { type: 'text/csv;charset=utf-8' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
@@ -974,16 +1056,14 @@ const handlers = {
           const encryptedData = e.target.result;
           const decryptedCsv = await cryptoUtils.decryptMessage(encryptedData, passphrase);
           
-          // Parse CSV
           const messages = csvUtils.parseCSV(decryptedCsv);
           if (messages.length === 0) {
             ui.showToast('No messages found in the imported file', 'warning');
             return;
           }
 
-          // Append imported messages to history
           appState.messageHistory.push(...messages);
-          dom.messages.innerHTML = ''; // Clear current messages
+          dom.messages.innerHTML = '';
           messages.forEach(msg => {
             ui.displayMessage(msg.content, msg.isSent);
           });
@@ -1078,9 +1158,24 @@ const handlers = {
       dom.passphrase.addEventListener('input', (e) => {
         ui.updatePasswordStrength(e.target.value);
       });
+      dom.modalDecryptButton.addEventListener('click', handlers.handleModalDecrypt);
+      dom.modalCancelButton.addEventListener('click', ui.hidePassphraseModal);
+      dom.closePassphraseModal.addEventListener('click', ui.hidePassphraseModal);
+      const modalTogglePassword = document.querySelector('#passphrase-modal .toggle-password');
+      modalTogglePassword.addEventListener('click', () => {
+        const input = dom.modalPassphrase;
+        const icon = modalTogglePassword.querySelector('i');
+        input.type = input.type === 'password' ? 'text' : 'password';
+        icon.classList.toggle('fa-eye');
+        icon.classList.toggle('fa-eye-slash');
+      });
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && dom.cameraModal.style.display === 'flex') {
-          ui.hideCameraModal();
+        if (e.key === 'Escape') {
+          if (dom.cameraModal.style.display === 'flex') {
+            ui.hideCameraModal();
+          } else if (dom.passphraseModal.style.display === 'flex') {
+            ui.hidePassphraseModal();
+          }
         }
       });
       handlers.resetSessionTimer();
@@ -1123,8 +1218,8 @@ document.addEventListener('DOMContentLoaded', () => {
     handlers.initEventListeners();
     dom.qrContainer.classList.add('hidden');
     dom.cameraModal.style.display = 'none';
+    dom.passphraseModal.style.display = 'none';
 
-    // Show initial placeholder
     ui.showPlaceholder('Encrypted and decrypted messages will appear here. Secure history', 'fa-comments');
 
     const dontShowTutorial = localStorage.getItem('dontShowTutorial');
