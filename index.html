@@ -75,18 +75,14 @@
                     </div>
 
                     <div class="button-group">
-                        <button type="button" id="upload-arrow-button" class="btn-icon" title="Upload File" aria-label="Upload File">
+                        <button type="button" id="upload-arrow-button" class="btn-icon" title="Upload QR Image" aria-label="Upload QR Image">
                             <i class="fas fa-qrcode"></i>
                         </button>
                         <button type="button" id="scan-button" class="btn-icon" title="Scan QR" aria-label="Scan QR">
                             <i class="fas fa-camera"></i>
                         </button>
-                        <button type="button" id="image-button" class="btn-icon" title="Upload QR Image" aria-label="Upload QR Image">
-                            <i class="fas fa-image"></i>
-                        </button>
-                        <button type="button" id="pdf-button" class="btn-icon" title="Export to PDF" aria-label="Export to PDF">
-                            <i class="fas fa-file-pdf"></i>
-                        </button>
+                        <!-- Eliminado #image-button -->
+                        <!-- Movido #pdf-button a qr-actions -->
                         <div id="coming-soon-message" class="hidden">
                             <p>Coming Soon!</p>
                         </div>
@@ -106,8 +102,9 @@
                     <div class="qr-header">
                         <h3 id="qr-title"><i class="fas fa-qrcode" aria-hidden="true"></i> Secure QR Code</h3>
                         <div class="qr-actions">
-                            <button id="download-button" class="btn-secondary" aria-label="Download QR">
-                                <i class="fas fa-arrow-down"></i>
+                            <!-- Reemplazado #download-button por #pdf-button -->
+                            <button id="pdf-button" class="btn-secondary" title="Export to PDF" aria-label="Export to PDF">
+                                <i class="fas fa-file-pdf"></i>
                             </button>
                             <button id="share-button" class="btn-secondary" aria-label="Share QR">
                                 <i class="fas fa-share-alt"></i>
@@ -212,11 +209,11 @@
             </div>
             <div class="modal-actions">
                 <button id="close-tutorial" class="btn-primary" aria-label="Start Now">Start Securing Now</button>
-                <label class="disable-toggle">
+                <label class="dont-show-again">
                     <input type="checkbox" id="dont-show-again-checkbox" aria-label="Do not show this tutorial again">
-                    Don’t show this again
+                    Don’t show again
                 </label>
-                <button id="dont-show-again" class="btn-secondary hidden" aria-label="Save preference to not show again">Save Preference</button>
+                <button id="dont-show-again" class="btn-secondary hidden" aria-label="Save preference to not show again">Done</button>
             </div>
         </div>
     </div>
