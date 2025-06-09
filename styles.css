@@ -53,8 +53,8 @@ body::before {
 .header {
     display: flex;
     flex-direction: column;
-    padding: 1rem;
-    margin-bottom: 1rem;
+    padding: 0.6rem; /* Reducido de 1rem */
+    margin-bottom: 0.5rem; /* Reducido de 1rem */
     position: relative;
 }
 
@@ -97,7 +97,7 @@ body::before {
     font-size: 0.8em;
     color: var(--primary-color);
     cursor: pointer;
-    margin-right: 10px;
+    margin-right: 6px; /* Reducido de 10px */
     transition: var(--transition);
     text-decoration: none;
 }
@@ -573,12 +573,12 @@ body::before {
     position: fixed;
     z-index: 1000;
     left: 0;
-    top: 0;
+    top: 4.5rem; /* Ajustado para estar cerca del encabezado */
     width: 100%;
-    height: 100%;
+    height: calc(100% - 4.5rem); /* Compensar el top */
     background-color: var(--overlay-bg);
     justify-content: center;
-    align-items: center;
+    align-items: flex-start; /* Alineado arriba */
     backdrop-filter: blur(8px);
 }
 
@@ -587,7 +587,8 @@ body::before {
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: clamp(1rem, 2vw, 1.5rem);
+    padding: clamp(0.8rem, 1.5vw, 1rem); /* Reducido */
+    padding-top: 0.3rem; /* Padding superior más pequeño */
     background: var(--section-bg);
     border-radius: 16px;
     box-shadow: var(--card-shadow);
@@ -684,19 +685,20 @@ body::before {
     position: fixed;
     z-index: 1000;
     left: 0;
-    top: 0;
+    top: 4.5rem; /* Ajustado para estar cerca del encabezado */
     width: 100%;
-    height: 100%;
+    height: calc(100% - 4.5rem); /* Compensar el top */
     background-color: var(--overlay-bg);
     justify-content: center;
-    align-items: center;
+    align-items: flex-start; /* Alineado arriba */
     animation: fadeIn 0.3s ease;
     overflow-y: auto;
 }
 
 .modal-content {
     background: var(--section-bg);
-    padding: clamp(1.5rem, 3vw, 2rem);
+    padding: clamp(1rem, 2vw, 1.5rem); /* Reducido */
+    padding-top: 0.5rem; /* Padding superior más pequeño */
     border-radius: 20px;
     max-width: 600px;
     width: 90%;
@@ -1024,7 +1026,7 @@ body::before {
 }
 
 /* Support for prefers-reduced-motion */
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-data: reduce) {
     *, *::before, *::after {
         animation: none !important;
         transition: none !important;
@@ -1032,135 +1034,133 @@ body::before {
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
+    .header {
+        padding: 0.4rem;
+        margin-bottom: 0.3rem;
+    }
     .header-top {
         flex-direction: column;
         gap: 0.8rem;
         align-items: center;
     }
-
     .header-bottom {
         flex-direction: column;
         gap: 0.5rem;
         align-items: center;
     }
-
+    .lock-icon {
+        margin-right: 4px;
+    }
     .session-indicator, .security-badge {
         position: static;
         justify-content: center;
         margin-top: 0.4rem;
-        width: 100%;
+        width: auto;
     }
-
     .main-grid {
         gap: 1rem;
     }
-
     .action-buttons.compact {
         gap: clamp(0.6rem, 1.2vw, 0.8rem);
     }
-
-    .modal-content, .session-modal .modal-content {
-        width: 95%;
-        padding: clamp(1rem, 2vw, 1.5rem);
+    .modal, .camera-modal {
+        top: 3.8rem;
+        height: calc(100% - 3.8rem);
     }
-
+    .modal-content, .camera-modal .modal-content {
+        width: 95%;
+        padding: clamp(0.6rem, 1.5vw, 1rem);
+        padding-top: 0.3rem;
+    }
     .feature-grid {
         grid-template-columns: 1fr;
     }
-
     .modal-header h2 {
         font-size: clamp(1.3rem, 3.5vw, 1.6rem);
     }
-
     .modal-subtitle {
         font-size: clamp(0.8rem, 1.8vw, 0.9rem);
     }
-
     .feature-item h3 {
         font-size: 1rem;
     }
-
     .feature-item p {
         font-size: 0.85rem;
     }
-
     .btn-primary {
         padding: 0.8rem 1.5rem;
         font-size: 1rem;
     }
-
     .camera-modal .modal-content {
         width: 95%;
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 479px) {
+    .header {
+        padding: 0.3rem;
+        margin-bottom: 0.2rem;
+    }
     .header-top {
         flex-wrap: wrap;
         justify-content: center;
         gap: 1rem;
     }
-
+    .lock-icon {
+        margin-right: 3px;
+    }
     .logo {
         font-size: clamp(1.6rem, 5vw, 2rem);
     }
-
     .button-group {
         gap: 0.6rem;
     }
-
     .btn-icon, .btn-secondary {
         width: 38px;
         height: 38px;
         font-size: 0.9rem;
     }
-
     .history-btn {
         width: 32px;
         height: 32px;
         font-size: 0.85rem;
     }
-
     .qr-actions {
         gap: 0.5rem;
     }
-
     .compact-btn {
         padding: clamp(0.5rem, 1vw, 0.6rem) clamp(0.8rem, 1.5vw, 1rem);
         font-size: clamp(0.85rem, 1.8vw, 0.95rem);
     }
-
-    .modal-content {
-        padding: 1.2rem;
+    .modal, .camera-modal {
+        top: 3.5rem;
+        height: calc(100% - 3.5rem);
     }
-
+    .modal-content, .camera-modal .modal-content {
+        padding: clamp(0.5rem, 1vw, 0.8rem);
+        padding-top: 0.2rem;
+    }
     .security-tip p {
         font-size: 0.8rem;
     }
-
     #qr-canvas {
         max-height: 200px;
         padding: 0.8rem;
     }
-
     .main-grid {
         gap: 0.8rem;
     }
-
     .section {
         padding: 1rem;
     }
-
     #passphrase, #message-input {
         padding: 0.8rem 2.5rem;
         font-size: 0.9rem;
     }
-
     .input-group .icon-right, .input-group .icon-left {
         font-size: 1rem;
     }
-
     .char-counter {
         font-size: 0.75rem;
     }
