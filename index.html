@@ -1,25 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Metadatos básicos -->
+    <!-- Basic metadata -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="HushBox Enterprise - Secure messaging with enterprise-grade QR encryption">
     <meta name="keywords" content="secure messaging, encryption, QR, AES-256, privacy">
     <meta name="author" content="HushBox Team">
-    <!-- Seguridad: Añadir CSP para mitigar XSS -->
+    <!-- Security: Add CSP to mitigate XSS -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'wasm-unsafe-eval'; style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; font-src https://cdnjs.cloudflare.com; img-src 'self' data:;">
     <title>HushBox Enterprise - Secure Messaging</title>
-    <!-- Estilos -->
+    <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
-    <!-- Font Awesome actualizado a 6.5.2 con SRI -->
+    <!-- Font Awesome updated to 6.5.2 with SRI -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer">
-    <!-- Favicon y manifest para PWA -->
+    <!-- Favicon and manifest for PWA -->
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
-    <!-- Encabezado -->
+    <!-- Header -->
     <header class="header" role="banner">
         <h1 class="logo">
             <a href="#" class="lock-icon" title="Enterprise Security" aria-label="Enterprise Security" aria-controls="security-menu" aria-expanded="false">
@@ -43,21 +43,21 @@
         </a>
     </header>
 
-    <!-- Contenido principal -->
+    <!-- Main content -->
     <main class="container" role="main">
         <div class="main-grid">
-            <!-- Sección de encriptación -->
+            <!-- Encryption section -->
             <section class="section encrypt-section" aria-label="Encryption Section">
                 <form id="encrypt-form" novalidate>
                     <div class="input-group">
-                        <label class="input-label" for="passphrase">Password</label>
+                        <label class="input-label" for="passphrase">Passphrase</label>
                         <input type="password" id="passphrase" placeholder="Minimum 12 characters" required aria-describedby="passphrase-error">
                         <i class="fas fa-key icon icon-left" aria-hidden="true"></i>
                         <div class="right-icons">
-                            <button type="button" class="icon-right toggle-password" title="Show/Hide Password" aria-label="Show/Hide Password">
+                            <button type="button" class="icon-right toggle-password" title="Show/Hide Passphrase" aria-label="Show/Hide Passphrase">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button type="button" class="icon-right generate-password" title="Generate Secure Password" aria-label="Generate Secure Password">
+                            <button type="button" class="icon-right generate-password" title="Generate Secure Passphrase" aria-label="Generate Secure Passphrase">
                                 <i class="fas fa-dice"></i>
                             </button>
                         </div>
@@ -124,9 +124,9 @@
                 </div>
             </section>
 
-            <!-- Sección de mensajes -->
+            <!-- Messages section -->
             <section class="section decrypt-section" aria-label="Messages Section">
-                <div id="messages" class="message-container no-print" role="log" aria-live="polite">
+                <div id="messages" className="message-container" role="log" aria-live="polite">
                     <div class="message-placeholder">
                         <i class="fas fa-comments" aria-hidden="true"></i>
                         <p>Encrypted and decrypted messages will appear here</p>
@@ -146,7 +146,7 @@
         </div>
     </main>
 
-    <!-- Pie de página -->
+    <!-- Footer -->
     <footer class="footer" role="contentinfo">
         <div class="social-icons">
             <a href="https://t.me/HUSHBOX_QR" target="_blank" rel="noopener noreferrer" class="btn-icon social-icon telegram" title="Telegram" aria-label="Telegram Channel">
@@ -171,7 +171,7 @@
         </nav>
     </footer>
     
-    <!-- Modal de tutorial -->
+    <!-- Tutorial modal -->
     <div id="tutorial-modal" class="modal" role="dialog" aria-labelledby="tutorial-title" aria-modal="true" tabindex="-1">
         <div class="modal-content">
             <button class="close-modal" aria-label="Close Tutorial">×</button>
@@ -204,7 +204,7 @@
                 </div>
                 <div class="security-tip">
                     <i class="fas fa-info-circle"></i>
-                    <p lang="en"><strong>Pro Tip:</strong> Share your password via a secure channel (e.g., Signal) separately from the QR code for maximum security.</p>
+                    <p lang="en"><strong>Pro Tip:</strong> Share your passphrase via a secure channel (e.g., Signal) separately from the QR code for maximum security.</p>
                 </div>
             </div>
             <div class="modal-actions">
@@ -218,7 +218,7 @@
         </div>
     </div>
 
-    <!-- Modal de cámara -->
+    <!-- Camera modal -->
     <div id="camera-modal" class="camera-modal" role="dialog" aria-labelledby="camera-title" aria-modal="true" tabindex="-1">
         <div class="modal-content">
             <button class="close-modal" id="close-camera" aria-label="Close Camera">×</button>
@@ -236,20 +236,20 @@
         </div>
     </div>
 
-    <!-- Contenedor para notificaciones -->
+    <!-- Notification container -->
     <div id="toast-container" role="alert" aria-live="assertive"></div>
 
-    <!-- Contenedor para modal de sesión (opcional, creado dinámicamente) -->
+    <!-- Session modal container (optional, created dynamically) -->
     <div id="session-modal-container"></div>
 
-    <!-- Dependencias externas con SRI -->
+    <!-- External dependencies with SRI -->
     <script defer src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js" integrity="sha256-7eJpOkpqUSa501ZpBis1jsq2rnubhqHPMC/rRahRSQc=" crossorigin="anonymous"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js" integrity="sha256-7GTYmrMJbc6AhJEt7f+fLKWuZBRNDKzUoILCk9XQa1k=" crossorigin="anonymous"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js" integrity="sha256-TnzVZFlCkL9D75PtJfOP7JASQkdCGD+pc60Lus+IrjA=" crossorigin="anonymous"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" integrity="sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=" crossorigin="anonymous"></script>
-    <!-- Añadir zxcvbn para validación de contraseñas -->
+    <!-- Add zxcvbn for password validation -->
     <script defer src="https://cdn.jsdelivr.net/npm/zxcvbn@4.4.2/dist/zxcvbn.js" integrity="sha256-9CxlH0BQastrZiSQ8zjdR6WVHTMSA5xKuP5QkEhPNRo=" crossorigin="anonymous"></script>
-    <!-- Script principal -->
+    <!-- Main script -->
     <script defer src="script.js"></script>
 </body>
 </html>
