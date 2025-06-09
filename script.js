@@ -1,4 +1,4 @@
-// Configuración global
+// Global Configuration
 const CONFIG = {
     PBKDF2_ITERATIONS: 310000,
     SALT_LENGTH: 32,
@@ -11,11 +11,11 @@ const CONFIG = {
     DECRYPT_DELAY_INCREMENT: 100,
     MAX_DECRYPT_ATTEMPTS: 5,
     NOTICE_TIMEOUT: 8000,
-    SESSION_TIMEOUT: 1800000, // 30 minutos
+    SESSION_TIMEOUT: 1800000, // 30 minutes
     COMPRESSION_THRESHOLD: 100
 };
 
-// Elementos del DOM
+// DOM Elements
 const dom = {
     encryptForm: document.getElementById('encrypt-form') || throwError('Encrypt form not found'),
     uploadArrow: document.getElementById('upload-arrow-button') || throwError('Upload arrow button not found'),
@@ -51,18 +51,18 @@ const dom = {
     dontShowAgainButton: document.getElementById('dont-show-again') || throwError('Don\'t show again button not found')
 };
 
-// Función auxiliar para errores de DOM
+// Helper function for DOM errors
 function throwError(message) {
     throw new Error(`DOM Error: ${message}`);
 }
 
-// Inicialización del input de archivo
+// File input initialization
 dom.fileInput.type = 'file';
 dom.fileInput.accept = 'image/*';
 dom.fileInput.style.display = 'none';
 document.body.appendChild(dom.fileInput);
 
-// Estado de la aplicación
+// Application state
 const appState = {
     isEncrypting: false,
     isDecrypting: false,
@@ -73,11 +73,11 @@ const appState = {
     sessionTimer: null
 };
 
-// Utilidades criptográficas
+// Cryptographic utilities
 const cryptoUtils = {
     validatePassphrase: (pass) => {
-        if (pass.length < CONFIG.MIN_PASSPHRASE_LENGTH) {
-            throw new Error(`La contraseña debe tener al menos ${CONFIG.MIN_PASSPHRASE_LENGTH} caracteres`);
+        if (!pass || pass.length < CONFIG.MIN_PASSPHRASE_LENGTH) {
+            throw new Error(`The password must be at least ${CONFIG.MIN_PASSPHRASE_LENGTH} characters long`);
         }
         const hasUpperCase = /[A-Z]/.test(pass);
         const hasLowerCase = /[a-z]/.test(pass);
@@ -86,13 +86,16 @@ const cryptoUtils = {
         const uniqueChars = new Set(pass).size;
 
         if (!hasUpperCase || !hasLowerCase || !hasNumbers || !hasSymbols) {
-            throw new Error('La contraseña debe incluir mayúsculas, minúsculas, números y símbolos');
+            throw new Error('The password must include uppercase, lowercase, numbers, and symbols');
         }
         if (uniqueChars < CONFIG.MIN_PASSPHRASE_LENGTH * 0.7) {
-            throw new Error('La contraseña tiene demasiados caracteres repetidos');
+            throw new Error('The password has too many repeated characters');
         }
-        if (typeof zxcvbn !== 'undefined' && zxcvbn(pass).score < 3) {
-            throw new Error('La contraseña es demasiado débil');
+        if (typeof zxcvbn !== 'undefined') {
+            const score = zxcvbn(pass).score;
+            if (score < 3) {
+                throw new Error('The password is too weak');
+            }
         }
         return true;
     },
@@ -107,24 +110,32 @@ const cryptoUtils = {
         if (/[^A-Za-z0-9]/.test(pass)) strength += 15;
         if (/(.)\1{2,}/.test(pass)) strength -= 15;
         if (pass.length < 8) strength -= 30;
-        return Math.max(0, Math.min(999, strength));
+        return Math.max(0, Math.min(100, strength));
     },
 
-    generateSecurePass: (length = 16) => {
+    generateSecurePass: (length = 16, maxAttempts = 10) => {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=';
-        const values = new Uint32Array(length);
-        crypto.getRandomValues(values);
-        let pass = Array.from(values, v => chars[v % chars.length]).join('');
-        if (!/[A-Z]/.test(pass)) pass = 'A' + pass.slice(1);
-        if (!/[a-z]/.test(pass)) pass = pass.slice(0, -1) + 'a';
-        if (!/[0-9]/.test(pass)) pass = pass.slice(0, -1) + '1';
-        if (!/[^A-Za-z0-9]/.test(pass)) pass = pass.slice(0, -1) + '!';
-        try {
-            cryptoUtils.validatePassphrase(pass);
-            return pass;
-        } catch (error) {
-            return cryptoUtils.generateSecurePass(length);
+        let attempts = 0;
+
+        while (attempts < maxAttempts) {
+            const values = new Uint32Array(length);
+            crypto.getRandomValues(values);
+            let pass = Array.from(values, v => chars[v % chars.length]).join('');
+
+            // Ensure minimum requirements
+            if (!/[A-Z]/.test(pass)) pass = 'A' + pass.slice(1);
+            if (!/[a-z]/.test(pass)) pass = pass.slice(0, -1) + 'a';
+            if (!/[0-9]/.test(pass)) pass = pass.slice(0, -1) + '1';
+            if (!/[^A-Za-z0-9]/.test(pass)) pass = pass.slice(0, -1) + '!';
+
+            try {
+                cryptoUtils.validatePassphrase(pass);
+                return pass;
+            } catch (error) {
+                attempts++;
+            }
         }
+        throw new Error('Could not generate a secure password after multiple attempts');
     },
 
     constantTimeCompare: (a, b) => {
@@ -151,10 +162,11 @@ const cryptoUtils = {
         let dataToEncrypt = null;
         try {
             cryptoUtils.validatePassphrase(passphrase);
+            if (!message) throw new Error('The message cannot be empty');
             dataToEncrypt = new TextEncoder().encode(message);
 
-            // Comprimir si el mensaje supera el umbral
-            if (message.length > CONFIG.COMPRESSION_THRESHOLD) {
+            // Compress if necessary
+            if (typeof pako !== 'undefined' && message.length > CONFIG.COMPRESSION_THRESHOLD) {
                 dataToEncrypt = pako.deflate(dataToEncrypt, { level: 6 });
             }
 
@@ -175,8 +187,7 @@ const cryptoUtils = {
                 { name: 'AES-GCM' }, false, ['encrypt']);
             
             const encrypted = await crypto.subtle.encrypt(
-                { name: 'AES-GCM', iv, tagLength: 128 }, key, dataToEncrypt
-            );
+                { name: 'AES-GCM', iv, tagLength: 128 }, key, dataToEncrypt);
             
             const combined = new Uint8Array([...salt, ...iv, ...new Uint8Array(encrypted)]);
             const result = btoa(String.fromCharCode(...combined));
@@ -185,8 +196,8 @@ const cryptoUtils = {
             cryptoUtils.secureWipe(dataToEncrypt);
             return result;
         } catch (error) {
-            console.error(error);
-            throw new Error('Encriptación fallida: ' + error.message);
+            console.error('Encryption error:', error);
+            throw new Error('Encryption failed: ' + error.message);
         } finally {
             if (dataToEncrypt) cryptoUtils.secureWipe(dataToEncrypt);
         }
@@ -195,9 +206,10 @@ const cryptoUtils = {
     decryptMessage: async (encryptedBase64, passphrase) => {
         let decrypted = null;
         try {
+            if (!encryptedBase64 || !passphrase) throw new Error('Encrypted data and password are required');
             const encryptedData = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
             if (encryptedData.length < CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH + 16) {
-                throw new Error('Datos encriptados inválidos');
+                throw new Error('Invalid encrypted data');
             }
             
             const salt = encryptedData.slice(0, CONFIG.SALT_LENGTH);
@@ -223,7 +235,11 @@ const cryptoUtils = {
             
             let decompressed;
             try {
-                decompressed = pako.inflate(new Uint8Array(decrypted));
+                if (typeof pako !== 'undefined') {
+                    decompressed = pako.inflate(new Uint8Array(decrypted));
+                } else {
+                    decompressed = new Uint8Array(decrypted);
+                }
             } catch (e) {
                 decompressed = new Uint8Array(decrypted);
             }
@@ -234,15 +250,15 @@ const cryptoUtils = {
             cryptoUtils.secureWipe(decrypted);
             return result;
         } catch (error) {
-            console.error(error);
-            throw new Error('Desencriptación fallida: ' + error.message);
+            console.error('Decryption error:', error);
+            throw new Error('Decryption failed: ' + error.message);
         } finally {
             if (decrypted) cryptoUtils.secureWipe(decrypted);
         }
     }
 };
 
-// Controlador de UI
+// UI Controller
 const ui = {
     sanitizeHTML: (str) => {
         const div = document.createElement('div');
@@ -250,7 +266,21 @@ const ui = {
         return div.innerHTML;
     },
 
+    showPlaceholder: (message, iconClass) => {
+        dom.messages.innerHTML = `
+            <div class="message-placeholder">
+                <i class="fas ${iconClass}" aria-hidden="true"></i>
+                <p>${ui.sanitizeHTML(message)}</p>
+            </div>
+        `;
+    },
+
     displayMessage: (content, isSent = false) => {
+        const placeholder = dom.messages.querySelector('.message-placeholder');
+        if (placeholder) {
+            placeholder.remove();
+        }
+
         const messageEl = document.createElement('div');
         messageEl.className = `message ${isSent ? 'sent' : ''}`;
         messageEl.innerHTML = `
@@ -264,10 +294,6 @@ const ui = {
             timestamp: new Date()
         });
         
-        if (dom.messages.children.length === 0) {
-            dom.messages.querySelector('.message-placeholder')?.remove();
-        }
-        
         if (dom.messages.children.length >= 15) {
             dom.messages.removeChild(dom.messages.firstChild);
         }
@@ -279,6 +305,9 @@ const ui = {
     },
 
     generateQR: async (data) => {
+        if (typeof QRCode === 'undefined') {
+            throw new Error('QRCode library not loaded');
+        }
         return new Promise((resolve, reject) => {
             const qrSize = CONFIG.QR_SIZE;
             dom.qrCanvas.width = qrSize;
@@ -306,7 +335,7 @@ const ui = {
 
                 ctx.beginPath();
                 ctx.arc(circleX, circleY, circleRadius, 0, Math.PI * 2);
-                ctx.fillStyle = '#ffffff';
+                ctx.fillStyle = '#000000';
                 ctx.fill();
 
                 ctx.fillStyle = '#00cc99';
@@ -394,16 +423,11 @@ const ui = {
     },
 
     clearMessageHistory: () => {
-        if (confirm('¿Estás seguro de que quieres borrar el historial de mensajes?')) {
-            dom.messages.innerHTML = `
-                <div class="message-placeholder">
-                    <i class="fas fa-comments" aria-hidden="true"></i>
-                    <p>Historial de mensajes borrado</p>
-                </div>
-            `;
+        if (confirm('Are you sure you want to clear the message history?')) {
+            ui.showPlaceholder('Message history cleared', 'fa-trash-alt');
             appState.messageHistory = [];
             dom.exportHistory.disabled = true;
-            ui.showToast('Historial de mensajes borrado', 'success');
+            ui.showToast('Message history cleared', 'success');
         }
     },
 
@@ -423,7 +447,7 @@ const ui = {
     }
 };
 
-// Manejadores de eventos
+// Event Handlers
 const handlers = {
     decryptAttempts: 0,
 
@@ -435,20 +459,20 @@ const handlers = {
         const passphrase = dom.passphrase.value.trim();
         
         if (!message || !passphrase) {
-            ui.displayMessage('Por favor, ingrese un mensaje y una contraseña');
-            ui.showToast('Falta el mensaje o la contraseña', 'error');
+            ui.displayMessage('Please enter a message and a password');
+            ui.showToast('Missing message or password', 'error');
             return;
         }
         
         appState.isEncrypting = true;
-        ui.toggleButton(dom.sendButton, true, '<span class="loader"></span> Encriptando...');
+        ui.toggleButton(dom.sendButton, true, '<span class="loader"></span> Encrypting...');
         
         try {
             const encrypted = await cryptoUtils.encryptMessage(message, passphrase);
             appState.lastEncryptedData = encrypted;
             await ui.generateQR(encrypted);
-            ui.displayMessage(`Mensaje encriptado: ${ui.sanitizeHTML(encrypted.slice(0, 40))}...`, true);
-            ui.showToast('Mensaje encriptado exitosamente', 'success');
+            ui.displayMessage(`Encrypted message: ${ui.sanitizeHTML(encrypted.slice(0, 40))}...`, true);
+            ui.showToast('Message encrypted successfully', 'success');
             
             dom.messageInput.value = '';
             dom.passphrase.value = '';
@@ -460,7 +484,7 @@ const handlers = {
             ui.showError(error.message);
         } finally {
             appState.isEncrypting = false;
-            ui.toggleButton(dom.sendButton, false, '<i class="fas fa-lock"></i> Encriptar');
+            ui.toggleButton(dom.sendButton, false, '<i class="fas fa-lock"></i> Encrypt');
         }
     },
 
@@ -468,26 +492,26 @@ const handlers = {
         if (appState.isDecrypting) return;
         
         if (handlers.decryptAttempts >= CONFIG.MAX_DECRYPT_ATTEMPTS) {
-            ui.showToast('Demasiados intentos de desencriptación. Espere.', 'error');
+            ui.showToast('Too many decryption attempts. Please wait.', 'error');
             setTimeout(() => { handlers.decryptAttempts = 0; }, CONFIG.DECRYPT_DELAY_INCREMENT * 10);
             return;
         }
         
         const passphrase = dom.passphrase.value.trim();
         if (!passphrase) {
-            ui.displayMessage('Por favor, ingrese una contraseña');
-            ui.showToast('Falta la contraseña', 'error');
-            ui.showError('Falta la contraseña');
+            ui.displayMessage('Please enter a password');
+            ui.showError('Missing password');
+            ui.showToast('Missing password', 'error');
             return;
         }
         
         appState.isDecrypting = true;
-        ui.toggleButton(dom.decodeButton, true, '<span class="loader"></span> Desencriptando...');
+        ui.toggleButton(dom.decodeButton, true, '<span class="loader"></span> Decrypting...');
         
         try {
             const decrypted = await cryptoUtils.decryptMessage(qrData, passphrase);
-            ui.displayMessage(`Mensaje desencriptado: ${ui.sanitizeHTML(decrypted)}`);
-            ui.showToast('Mensaje desencriptado exitosamente', 'success');
+            ui.displayMessage(`Decrypted message: ${ui.sanitizeHTML(decrypted)}`);
+            ui.showToast('Message decrypted successfully', 'success');
             dom.passphrase.value = '';
             ui.updatePasswordStrength('');
             handlers.decryptAttempts = 0;
@@ -498,14 +522,18 @@ const handlers = {
             ui.showError(error.message);
         } finally {
             appState.isDecrypting = false;
-            ui.toggleButton(dom.decodeButton, false, '<i class="fas fa-unlock"></i> Desencriptar');
+            ui.toggleButton(dom.decodeButton, false, '<i class="fas fa-unlock"></i> Decrypt');
             dom.decodeButton.disabled = !appState.lastEncryptedData;
         }
     },
 
     startCamera: () => {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            ui.showToast('Acceso a la cámara no disponible', 'error');
+            ui.showToast('Camera access not available', 'error');
+            return;
+        }
+        if (typeof jsQR === 'undefined') {
+            ui.showToast('jsQR library not loaded', 'error');
             return;
         }
         
@@ -536,15 +564,15 @@ const handlers = {
                             requestAnimationFrame(scanLoop);
                         }
                     } catch (e) {
-                        console.error('Error de escaneo:', e);
-                        ui.showToast('Error al escanear QR', 'error');
+                        console.error('Scan error:', e);
+                        ui.showToast('Error scanning QR', 'error');
                     }
                 };
                 scanLoop();
             })
             .catch(error => {
-                console.error('Error de cámara:', error);
-                ui.showToast('Error al acceder a la cámara', 'error');
+                console.error('Camera error:', error);
+                ui.showToast('Error accessing camera', 'error');
             });
     },
 
@@ -558,6 +586,10 @@ const handlers = {
     handleUpload: () => dom.fileInput.click(),
 
     handleFileSelect: async () => {
+        if (typeof jsQR === 'undefined') {
+            ui.showToast('jsQR library not loaded', 'error');
+            return;
+        }
         const file = dom.fileInput.files[0];
         if (!file) return;
         
@@ -579,8 +611,8 @@ const handlers = {
                     dom.decodeButton.disabled = false;
                     handlers.handleDecrypt(qrCode.data);
                 } else {
-                    ui.displayMessage('No se detectó un código QR');
-                    ui.showToast('No se encontró un código QR', 'error');
+                    ui.displayMessage('No QR code detected');
+                    ui.showToast('No QR code found', 'error');
                 }
             };
             img.src = e.target.result;
@@ -593,15 +625,15 @@ const handlers = {
         link.href = dom.qrCanvas.toDataURL('image/png');
         link.download = `hushbox-${Date.now()}.png`;
         link.click();
-        ui.showToast('QR descargado', 'success');
+        ui.showToast('QR downloaded', 'success');
     },
 
     handleCopy: async () => {
         try {
             await navigator.clipboard.writeText(dom.qrCanvas.toDataURL('image/png'));
-            ui.showToast('QR copiado al portapapeles', 'success');
+            ui.showToast('QR copied to clipboard', 'success');
         } catch (err) {
-            ui.showToast('Error al copiar QR', 'error');
+            ui.showToast('Error copying QR', 'error');
         }
     },
 
@@ -615,58 +647,76 @@ const handlers = {
                     title: 'HushBox QR',
                     files: [file]
                 });
-                ui.showToast('QR compartido exitosamente', 'success');
+                ui.showToast('QR shared successfully', 'success');
             } else {
-                throw new Error('Compartir no soportado');
+                throw new Error('Sharing not supported');
             }
         } catch (error) {
             handlers.handleDownload();
-            ui.showToast('Compartición no soportada, QR descargado', 'warning');
+            ui.showToast('Sharing not supported, QR downloaded', 'warning');
         }
     },
 
     handleExportPDF: async () => {
         if (!appState.lastEncryptedData) {
-            ui.showToast('No hay mensaje encriptado para exportar', 'warning');
-            return;
-        }
-        
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        
-        doc.setFontSize(16);
-        doc.text('HushBox - Mensaje Encriptado', 20, 20);
-        doc.setFontSize(12);
-        doc.text('Escanee el siguiente código QR con HushBox:', 20, 40);
-        
-        const qrDataUrl = dom.qrCanvas.toDataURL('image/png');
-        doc.addImage(qrDataUrl, 'PNG', 20, 50, 80, 80);
-        
-        doc.text('Instrucciones:', 20, 140);
-        doc.text('- Use la contraseña original para desencriptar.', 20, 150);
-        doc.text('- El mensaje está protegido con AES-256.', 20, 160);
-        
-        doc.save(`hushbox-mensaje-${Date.now()}.pdf`);
-        ui.showToast('Mensaje exportado como PDF', 'success');
-    },
-
-    exportMessageHistory: async () => {
-        if (appState.messageHistory.length <= 1) {
-            ui.showToast('No hay mensajes para exportar', 'warning');
-            return;
-        }
-        
-        const passphrase = prompt('Ingrese una contraseña para encriptar el historial:');
-        if (!passphrase) {
-            ui.showToast('Se requiere una contraseña para exportar', 'error');
+            ui.showToast('No encrypted message to export', 'warning');
             return;
         }
         
         try {
-            const csvContent = "Tipo,Mensaje,Fecha,Hora\n" + appState.messageHistory.map(msg => {
+            console.log('jsPDF availability:', window.jspdf ? 'Available' : 'Not loaded'); // Debugging
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+            
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(16);
+            doc.text('HushBox - Encrypted Message', 20, 20);
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(12);
+            doc.text('Scan the following QR code with HushBox:', 20, 30);
+            
+            const qrDataUrl = dom.qrCanvas.toDataURL('image/png');
+            doc.addImage(qrDataUrl, 'PNG', 20, 40, 60, 60);
+            
+            doc.setFontSize(10);
+            doc.text('Instructions:', 20, 110);
+            doc.text('- Use the original password to decrypt.', 20, 120);
+            doc.text('- The message is protected with AES-256.', 20, 130);
+            
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'italic');
+            doc.text(`Generated by HushBox on ${new Date().toLocaleString()}`, 20, 280);
+            
+            doc.save(`hushbox-message-${Date.now()}.pdf`);
+            ui.showToast('PDF exported successfully', 'success');
+        } catch (error) {
+            console.error('Error exporting PDF:', error);
+            ui.showToast(`Error exporting PDF: ${error.message}`, 'error');
+        }
+    },
+
+    exportMessageHistory: async () => {
+        if (appState.messageHistory.length <= 1) {
+            ui.showToast('No messages to export', 'warning');
+            return;
+        }
+        
+        const passphrase = prompt('Enter a password to encrypt the history:');
+        if (!passphrase) {
+            ui.showToast('A password is required to export', 'error');
+            return;
+        }
+        
+        try {
+            const csvContent = "Type,Message,Date,Time\n" + appState.messageHistory.map(msg => {
                 const date = msg.timestamp.toLocaleDateString();
                 const time = msg.timestamp.toLocaleTimeString();
-                const type = msg.isSent ? "Enviado" : "Recibido";
+                const type = msg.isSent ? "Sent" : "Received";
                 const safeMessage = msg.content.replace(/"/g, '""');
                 return `"${type}","${safeMessage}","${date}","${time}"`;
             }).join('\n');
@@ -677,16 +727,16 @@ const handlers = {
             const url = URL.createObjectURL(blob);
             
             link.setAttribute('href', url);
-            link.setAttribute('download', `hushbox-mensajes-encriptados-${new Date().toISOString().slice(0, 10)}.txt`);
+            link.setAttribute('download', `hushbox-encrypted-messages-${new Date().toISOString().slice(0, 10)}.txt`);
             link.style.visibility = 'hidden';
             
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             
-            ui.showToast('Historial exportado encriptado', 'success');
+            ui.showToast('Encrypted history exported', 'success');
         } catch (error) {
-            ui.showToast('Error al exportar historial', 'error');
+            ui.showToast('Error exporting history', 'error');
         }
     },
 
@@ -697,7 +747,7 @@ const handlers = {
         dom.qrContainer.classList.add('hidden');
         ui.updatePasswordStrength('');
         dom.decodeButton.disabled = true;
-        ui.showToast('Datos sensibles borrados', 'success');
+        ui.showToast('Sensitive data cleared', 'success');
     },
 
     resetSessionTimer: () => {
@@ -708,9 +758,9 @@ const handlers = {
             modal.className = 'session-modal';
             modal.innerHTML = `
                 <div class="modal-content">
-                    <p>Su sesión está a punto de expirar. ¿Continuar?</p>
-                    <button id="continue-session">Continuar</button>
-                    <button id="end-session">Finalizar Sesión</button>
+                    <p>Your session is about to expire. Continue?</p>
+                    <button id="continue-session">Continue</button>
+                    <button id="end-session">End Session</button>
                 </div>
             `;
             document.body.appendChild(modal);
@@ -724,58 +774,67 @@ const handlers = {
             document.getElementById('end-session').addEventListener('click', () => {
                 appState.sessionActive = false;
                 handlers.clearSensitiveData();
-                ui.showToast('Sesión finalizada por inactividad', 'warning');
+                ui.showToast('Session ended due to inactivity', 'warning');
                 modal.remove();
             });
         }, CONFIG.SESSION_TIMEOUT);
     },
 
     initEventListeners: () => {
-        dom.encryptForm.addEventListener('submit', handlers.handleEncrypt);
-        dom.decodeButton.addEventListener('click', () => handlers.handleDecrypt(appState.lastEncryptedData));
-        dom.downloadButton.addEventListener('click', handlers.handleDownload);
-        dom.shareButton.addEventListener('click', handlers.handleShare);
-        dom.copyButton.addEventListener('click', handlers.handleCopy);
-        dom.scanButton.addEventListener('click', ui.showCameraModal);
-        dom.closeCamera.addEventListener('click', ui.hideCameraModal);
-        dom.uploadArrow.addEventListener('click', handlers.handleUpload);
-        dom.imageButton.addEventListener('click', handlers.handleUpload);
-        dom.fileInput.addEventListener('change', handlers.handleFileSelect);
-        dom.pdfButton.addEventListener('click', handlers.handleExportPDF);
-        dom.generatePass.addEventListener('click', () => {
-            const pass = cryptoUtils.generateSecurePass();
-            dom.passphrase.value = pass;
-            ui.updatePasswordStrength(pass);
-            ui.displayMessage(`Contraseña generada: ${ui.sanitizeHTML(pass)}`, true);
-            ui.showToast('Contraseña segura generada', 'success');
-        });
-        dom.messageInput.addEventListener('input', () => {
-            const len = dom.messageInput.value.length;
-            dom.charCounter.textContent = `${CONFIG.MAX_MESSAGE_LENGTH - len}/${CONFIG.MAX_MESSAGE_LENGTH}`;
-            dom.charCounter.style.color = len > CONFIG.MAX_MESSAGE_LENGTH - 400 ? 'var(--error-color)' : 'rgba(160,160,160,0.8)';
-        });
-        dom.clearHistory.addEventListener('click', ui.clearMessageHistory);
-        dom.exportHistory.addEventListener('click', handlers.exportMessageHistory);
-        dom.togglePassword.addEventListener('click', ui.togglePasswordVisibility);
-        dom.passphrase.addEventListener('input', (e) => {
-            ui.updatePasswordStrength(e.target.value);
-        });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && dom.cameraModal.style.display === 'flex') {
-                ui.hideCameraModal();
+        try {
+            dom.encryptForm.addEventListener('submit', handlers.handleEncrypt);
+            dom.decodeButton.addEventListener('click', () => handlers.handleDecrypt(appState.lastEncryptedData));
+            dom.downloadButton.addEventListener('click', handlers.handleDownload);
+            dom.shareButton.addEventListener('click', handlers.handleShare);
+            dom.copyButton.addEventListener('click', handlers.handleCopy);
+            dom.scanButton.addEventListener('click', ui.showCameraModal);
+            dom.closeCamera.addEventListener('click', ui.hideCameraModal);
+            dom.uploadArrow.addEventListener('click', handlers.handleUpload);
+            dom.imageButton.addEventListener('click', handlers.handleUpload);
+            dom.fileInput.addEventListener('change', handlers.handleFileSelect);
+            dom.pdfButton.addEventListener('click', handlers.handleExportPDF);
+            dom.generatePass.addEventListener('click', () => {
+                try {
+                    const pass = cryptoUtils.generateSecurePass();
+                    dom.passphrase.value = pass;
+                    ui.updatePasswordStrength(pass);
+                    ui.displayMessage(`Generated password: ${ui.sanitizeHTML(pass)}`, true);
+                    ui.showToast('Secure password generated', 'success');
+                } catch (error) {
+                    ui.showToast(`Error generating password: ${error.message}`, 'error');
+                }
+            });
+            dom.messageInput.addEventListener('input', () => {
+                const len = dom.messageInput.value.length;
+                dom.charCounter.textContent = `${CONFIG.MAX_MESSAGE_LENGTH - len}/${CONFIG.MAX_MESSAGE_LENGTH}`;
+                dom.charCounter.style.color = len > CONFIG.MAX_MESSAGE_LENGTH - 400 ? 'var(--error-color)' : 'rgba(160,160,160,0.8)';
+            });
+            dom.clearHistory.addEventListener('click', ui.clearMessageHistory);
+            dom.exportHistory.addEventListener('click', handlers.exportMessageHistory);
+            dom.togglePassword.addEventListener('click', ui.togglePasswordVisibility);
+            dom.passphrase.addEventListener('input', (e) => {
+                ui.updatePasswordStrength(e.target.value);
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && dom.cameraModal.style.display === 'flex') {
+                    ui.hideCameraModal();
+                }
+            });
+            handlers.resetSessionTimer();
+            document.addEventListener('click', handlers.resetSessionTimer);
+            document.addEventListener('keypress', handlers.resetSessionTimer);
+            if (navigator.userAgent.includes('Telegram')) {
+                document.documentElement.style.setProperty('--background-gradient', 'linear-gradient(135deg, #0d0d2d 0%, #1a1a3a 100%)');
+                ui.showToast('Telegram optimized mode', 'info');
             }
-        });
-        handlers.resetSessionTimer();
-        document.addEventListener('click', handlers.resetSessionTimer);
-        document.addEventListener('keypress', handlers.resetSessionTimer);
-        if (navigator.userAgent.includes('Telegram')) {
-            document.documentElement.style.setProperty('--background-gradient', 'linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%)');
-            ui.showToast('Modo Telegram optimizado', 'info');
+        } catch (error) {
+            console.error('Error initializing listeners:', error);
+            ui.showToast('Application initialization failed', 'error');
         }
     }
 };
 
-// Funciones para el modal de bienvenida
+// Functions for the welcome modal
 const tutorial = {
     showTutorialModal: () => {
         dom.tutorialModal.style.display = 'flex';
@@ -792,52 +851,77 @@ const tutorial = {
     }
 };
 
-// Inicialización
+// Initialization
 document.addEventListener('DOMContentLoaded', () => {
-    handlers.initEventListeners();
-    dom.qrContainer.classList.add('hidden');
-    dom.cameraModal.style.display = 'none';
-    
-    const dontShowTutorial = localStorage.getItem('dontShowTutorial');
-    if (!dontShowTutorial) {
-        tutorial.showTutorialModal();
-    } else {
-        setTimeout(() => {
-            ui.displayMessage('Bienvenido a HushBox Enterprise. Su mensajería segura.', false);
-            ui.showToast('Sesión segura iniciada', 'success');
-            dom.exportHistory.disabled = true;
-        }, 1000);
+    try {
+        // Initial debugging for jsPDF
+        console.log('Checking jsPDF:', window.jspdf ? 'Loaded' : 'Not loaded');
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+            ui.showToast('Warning: jsPDF not loaded correctly. PDF export will not work.', 'warning');
+        }
+
+        handlers.initEventListeners();
+        dom.qrContainer.classList.add('hidden');
+        dom.cameraModal.style.display = 'none';
+        
+        // Show initial placeholder
+        ui.showPlaceholder('Encrypted and decrypted messages will appear here. Secure history', 'fa-comments');
+
+        const dontShowTutorial = localStorage.getItem('dontShowTutorial');
+        if (!dontShowTutorial) {
+            tutorial.showTutorialModal();
+        } else {
+            setTimeout(() => {
+                ui.showToast('Welcome to HushBox Enterprise. Your secure messaging.', 'success');
+                dom.exportHistory.disabled = true;
+            }, 1000);
+        }
+
+        dom.closeTutorial.addEventListener('click', () => {
+            tutorial.hideTutorialModal();
+            setTimeout(() => {
+                ui.showToast('Welcome to HushBox Enterprise. Your secure messaging.', 'success');
+                dom.exportHistory.disabled = true;
+            }, 500);
+        });
+
+        const closeModalButton = dom.tutorialModal.querySelector('.close-modal');
+        if (closeModalButton) {
+            closeModalButton.addEventListener('click', () => {
+                tutorial.hideTutorialModal();
+                setTimeout(() => {
+                    ui.showToast('Welcome to HushBox Enterprise. Your secure messaging.', 'success');
+                    dom.exportHistory.disabled = true;
+                }, 500);
+            });
+        }
+
+        dom.dontShowAgainButton.addEventListener('click', () => {
+            tutorial.saveDontShowPreference();
+            tutorial.hideTutorialModal();
+            setTimeout(() => {
+                ui.showToast('Welcome to HushBox Enterprise. Your secure messaging.', 'success');
+                dom.exportHistory.disabled = true;
+            }, 500);
+        });
+
+        dom.dontShowAgainCheckbox.addEventListener('change', () => {
+            dom.dontShowAgainButton.classList.toggle('hidden', !dom.dontShowAgainCheckbox.checked);
+        });
+
+        // Error handler for jsPDF script
+        const jsPDFScript = document.querySelector('script[src*="jspdf.umd.min.js"]');
+        if (jsPDFScript) {
+            jsPDFScript.addEventListener('error', () => {
+                console.error('Error loading jsPDF script');
+                ui.showToast('Error: Could not load jsPDF. PDF export not available.', 'error');
+            });
+            jsPDFScript.addEventListener('load', () => {
+                console.log('jsPDF script loaded successfully');
+            });
+        }
+    } catch (error) {
+        console.error('Initialization error:', error);
+        ui.showToast('Application initialization failed', 'error');
     }
-
-    dom.closeTutorial.addEventListener('click', () => {
-        tutorial.hideTutorialModal();
-        setTimeout(() => {
-            ui.displayMessage('Bienvenido a HushBox Enterprise. Su mensajería segura.', false);
-            ui.showToast('Sesión segura iniciada', 'success');
-            dom.exportHistory.disabled = true;
-        }, 500);
-    });
-
-    dom.tutorialModal.querySelector('.close-modal').addEventListener('click', () => {
-        tutorial.hideTutorialModal();
-        setTimeout(() => {
-            ui.displayMessage('Bienvenido a HushBox Enterprise. Su mensajería segura.', false);
-            ui.showToast('Sesión segura iniciada', 'success');
-            dom.exportHistory.disabled = true;
-        }, 500);
-    });
-
-    dom.dontShowAgainButton.addEventListener('click', () => {
-        tutorial.saveDontShowPreference();
-        tutorial.hideTutorialModal();
-        setTimeout(() => {
-            ui.displayMessage('Bienvenido a HushBox Enterprise. Su mensajería segura.', false);
-            ui.showToast('Sesión segura iniciada', 'success');
-            dom.exportHistory.disabled = true;
-        }, 500);
-    });
-
-    dom.dontShowAgainCheckbox.addEventListener('change', () => {
-        dom.dontShowAgainButton.classList.toggle('hidden', !dom.dontShowAgainCheckbox.checked);
-    });
 });
