@@ -76,7 +76,7 @@
 
                     <div class="button-group">
                         <button type="button" id="upload-arrow-button" class="btn-icon" title="Upload File" aria-label="Upload File">
-                            <i class="fas fa-arrow-up"></i>
+                            <i class="fas fa-qrcode"></i>
                         </button>
                         <button type="button" id="scan-button" class="btn-icon" title="Scan QR" aria-label="Scan QR">
                             <i class="fas fa-camera"></i>
@@ -126,7 +126,7 @@
 
             <!-- Messages section -->
             <section class="section decrypt-section" aria-label="Messages Section">
-                <div id="messages" className="message-container" role="log" aria-live="polite">
+                <div id="messages" class="message-container" role="log" aria-live="polite">
                     <div class="message-placeholder">
                         <i class="fas fa-comments" aria-hidden="true"></i>
                         <p>Encrypted and decrypted messages will appear here</p>
@@ -139,7 +139,10 @@
                         <i class="fas fa-trash-alt"></i>
                     </button>
                     <button id="export-history" class="btn-icon history-btn" title="Export History" disabled aria-label="Export History">
-                        <i class="fas fa-file-export"></i>
+                        <i class="fas fa-arrow-down"></i>
+                    </button>
+                    <button id="import-history" class="btn-icon history-btn" title="Import History" aria-label="Import History">
+                        <i class="fas fa-arrow-up"></i>
                     </button>
                 </div>
             </section>
