@@ -58,7 +58,7 @@ cd HUSHBOX
 # Serve using local web server
 python3 -m http.server 8000
 ```
-Open `http://localhost:8000` in modern browser
+Open `http://localhost:8000` in modern browser or just click index.html
 
 ### 🌐 Web Version  
 [https://www.hushbox.online](https://mpetovick.github.io/HUSHBOX)
