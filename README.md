@@ -140,6 +140,21 @@ sequenceDiagram
    - Secondary Channel: For passphrase exchange (e.g., Signal)
    - Time-Based Protection: QR contains encrypted timestamp for expiration *Coming soon
 
+### Arquitectura del Sistema
+```mermaid
+graph TD
+    A[Cliente Web] --> B[Interfaz de Usuario]
+    B --> C[Módulo de Encriptación]
+    B --> D[Módulo de Desencriptación]
+    C --> E[Generación QR]
+    D --> F[Escaneo QR]
+    C --> G[Almacenamiento Local]
+    D --> G
+    G --> H[Historial de Mensajes]
+    C & D --> I[Criptografía AES-256-GCM]
+    I --> J[PBKDF2]
+
+
 **Security Best Practices for Social Sharing:**
 - 🔒 Never share passphrase on same platform as QR
 - 🌐 Use different networks for QR and credential exchange
