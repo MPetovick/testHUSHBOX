@@ -48,6 +48,15 @@ Key Characteristics:
 - **UI Framework**: Pure CSS Grid/Flex
 - **Icons**: Font Awesome 6
 
+### Dependencies
+| Library      | Version | Use                           | SRI Integrity                            |
+|--------------|---------|-------------------------------|------------------------------------------|
+| **pako**     | 2.1.0   | Compresión DEFLATE            | `sha256-7eJpOkpqUSa501ZpBis1jsq2rnubhqHPMC/rRahRSQc=` |
+| **qrcode**   | 1.5.1   | Generación QR                 | `sha256-7GTYmrMJbc6AhJEt7f+fLKWuZBRNDKzUoILCk9XQa1k=` |
+| **jsqr**     | 1.4.0   | Decodificación QR             | `sha256-TnzVZFlCkL9D75PtJfOP7JASQkdCGD+pc60Lus+IrjA=` |
+| **jspdf**    | 2.5.1   | Exportación PDF               | `sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=` |
+| **zxcvbn**   | 4.4.2   | Validación passphrase         | `sha256-9CxlH0BQastrZiSQ8zjdR6WVHTMSA5xKuP5QkEhPNRo=` |
+
 ## Installation & Usage
 
 ### 📁 Project Structure
