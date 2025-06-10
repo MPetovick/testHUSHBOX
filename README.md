@@ -9,13 +9,6 @@ Key Characteristics:
 - **PWA Ready**: Installable as a progressive web app
 - **Offline Ready**: Works without an internet connection
 
-## 🚀 Key Features
-
-### 🛡️ Advanced Protections
-- IV time-stamping for replay attack prevention
-- Memory sanitization after operations
-- Secure content disposal
-- Tamper-evident payload design
 
 |       **Category**       |        **Key Features**                                                                   |
 |--------------------------|-------------------------------------------------------------------------------------------|
