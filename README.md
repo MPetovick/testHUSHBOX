@@ -153,7 +153,7 @@ graph TD
     G --> H[Historial de Mensajes]
     C & D --> I[Criptografía AES-256-GCM]
     I --> J[PBKDF2]
-
+```
 
 **Security Best Practices for Social Sharing:**
 - 🔒 Never share passphrase on same platform as QR
