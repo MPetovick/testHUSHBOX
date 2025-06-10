@@ -62,11 +62,11 @@ Key Characteristics:
 ### 📁 Project Structure
 ```bash
 HUSHBOX/
-├── index.html          # Página principal
-├── script.js           # Lógica de la aplicación (7,000+ líneas)
-├── styles.css          # Estilos CSS (1,500+ líneas)
-├── manifest.json       # Configuración PWA
-└── favicon.png         # Icono de la aplicación
+├── index.html          
+├── script.js           
+├── styles.css          
+├── manifest.json       
+└── favicon.png        
 ```
 
 ### 📥 Local Deployment
