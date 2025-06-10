@@ -24,7 +24,7 @@ Key Characteristics:
 |------------------------|----------------------------------------|
 | Encryption Algorithm   | AES-GCM 256-bit                       |
 | Key Derivation         | PBKDF2-HMAC-SHA256                    |
-| Iterations             | 250,000                               |
+| Iterations             | 310,000                               |
 | IV Generation          | Crypto-safe RNG + timestamp           |
 | Data Integrity         | HMAC-SHA256                           |
 
