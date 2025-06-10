@@ -66,15 +66,15 @@ Open `http://localhost:8000` in modern browser or just click index.html
 ## System Architecture
 ```mermaid
 graph TD
-    A[Cliente Web] --> B[Interfaz de Usuario]
-    B --> C[Módulo de Encriptación]
-    B --> D[Módulo de Desencriptación]
-    C --> E[Generación QR]
-    D --> F[Escaneo QR]
-    C --> G[Almacenamiento Local]
+    A[Web Client] --> B[User Interface]
+    B --> C[Encryption Module]
+    B --> D[Decryption Module]
+    C --> E[QR Generation]
+    D --> F[QR Scanning]
+    C --> G[Local Storage]
     D --> G
-    G --> H[Historial de Mensajes]
-    C & D --> I[Criptografía AES-256-GCM]
+    G --> H[Message History]
+    C & D --> I[AES-256-GCM Cryptography]
     I --> J[PBKDF2]
 ```
 ## 🔄 Workflow Diagram
