@@ -42,13 +42,6 @@ Key Characteristics:
 | Data Integrity         | HMAC-SHA256                           |
 
 ### Frontend
-- **QR Generation**: `qrcode@1.5.1`
-- **QR Decoding**: `jsqr@1.4.0`
-- **Compression**: `pako@2.1.0`
-- **UI Framework**: Pure CSS Grid/Flex
-- **Icons**: Font Awesome 6
-
-### Dependencies
 | Library      | Version | Use                           | SRI Integrity                            |
 |--------------|---------|-------------------------------|------------------------------------------|
 | **pako**     | 2.1.0   | Compression DEFLATE           | `sha256-7eJpOkpqUSa501ZpBis1jsq2rnubhqHPMC/rRahRSQc=` |
