@@ -9,6 +9,7 @@ Key Characteristics:
 - **PWA Ready**: Installable as a progressive web app
 - **Offline Ready**: Works without an internet connection
 
+## 🛠️ Technical Stack
 
 |       **Category**       |        **Key Features**                                                                   |
 |--------------------------|-------------------------------------------------------------------------------------------|
@@ -16,8 +17,6 @@ Key Characteristics:
 | 📱 **User Experience**   | - Responsive design with mobile-first approach <br> - Real-time passphrase strength indicators <br> - Animated QR codes with custom branding <br> - Camera QR scanning (mobile devices) *Coming Soon <br> - Social media integration for secure sharing |
 | 🛡️ **Advanced Protections** | - IV time-stamping for replay attack prevention <br> - Memory sanitization after operations <br> - Secure content disposal <br> - Tamper-evident payload design|
 
-
-## 🛠️ Technical Stack
 
 ### Cryptography
 | Component              | Specification                          |
