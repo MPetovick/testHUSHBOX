@@ -47,7 +47,7 @@ Key Characteristics:
 - **UI Framework**: Pure CSS Grid/Flex
 - **Icons**: Font Awesome 6
 
-## 📥 Installation & Usage
+## Installation & Usage
 
 ### 📁 Project Structure
 ```bash
@@ -59,7 +59,7 @@ HUSHBOX/
 └── favicon.png         # Icono de la aplicación
 ```
 
-### Local Deployment
+### 📥 Local Deployment
 ```bash
 git clone https://github.com/MPetovick/HUSHBOX.git
 cd HUSHBOX
