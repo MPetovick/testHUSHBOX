@@ -16,7 +16,7 @@ Key Characteristics:
 - PBKDF2 key derivation (250,000 iterations)
 - Compressed payloads for efficient QR encoding
 - Anti-brute force protection (5 attempts limit)
-
+ 
 ### 📱 User Experience
 - Responsive design with mobile-first approach
 - Real-time passphrase strength indicators
