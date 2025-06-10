@@ -425,16 +425,23 @@ const ui = {
       dom.scanLine.className = 'scan-line';
       dom.detectionBox.appendChild(dom.scanLine);
     }
-    const containerRect = dom.cameraContainer.getBoundingClientRect();
-    dom.detectionBox.style.width = `${containerRect.width * 0.7}px`;
-    dom.detectionBox.style.height = `${containerRect.width * 0.7}px`;
-    dom.detectionBox.style.left = `${containerRect.width * 0.15}px`;
-    dom.detectionBox.style.top = `${containerRect.height * 0.15}px`;
+    
+    // Usar tamaño proporcional al contenedor
+    const size = Math.min(
+      dom.cameraContainer.clientWidth, 
+      dom.cameraContainer.clientHeight
+    ) * 0.7;
+    
+    dom.detectionBox.style.width = `${size}px`;
+    dom.detectionBox.style.height = `${size}px`;
+    dom.detectionBox.style.left = `calc(50% - ${size/2}px)`;
+    dom.detectionBox.style.top = `calc(50% - ${size/2}px)`;
+    dom.detectionBox.style.display = 'block';
   },
 
   hideDetectionBox: () => {
     if (dom.detectionBox) {
-      dom.detectionBox.classList.remove('active');
+      dom.detectionBox.style.display = 'none';
     }
   },
 
@@ -445,11 +452,11 @@ const ui = {
     const width = Math.max(topRight.x - topLeft.x, bottomRight.x - bottomLeft.x);
     const height = Math.max(bottomLeft.y - topLeft.y, bottomRight.y - topRight.y);
     
+    dom.detectionBox.style.display = 'block';
     dom.detectionBox.style.width = `${width}px`;
     dom.detectionBox.style.height = `${height}px`;
     dom.detectionBox.style.left = `${topLeft.x}px`;
     dom.detectionBox.style.top = `${topLeft.y}px`;
-    dom.detectionBox.classList.add('active');
   },
 
   showToast: (message, type = 'info') => {
@@ -761,79 +768,94 @@ const handlers = {
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
       .then(stream => {
         dom.cameraPreview.srcObject = stream;
-        dom.cameraPreview.play();
         ui.showDetectionBox();
         
-        let lastScanTime = 0;
-        const scanInterval = 100;
+        let scanning = true;
+        const scanInterval = 300; // Reducir frecuencia de escaneo
 
+        // Manejar timeout de cámara
         const timeoutId = setTimeout(() => {
-          if (dom.cameraPreview.srcObject) {
+          if (scanning) {
             handlers.stopCamera();
             ui.hideCameraModal();
-            ui.showToast('Scanning timed out after 30 seconds', 'warning');
+            ui.showToast('Scanning timed out', 'warning');
           }
         }, CONFIG.CAMERA_TIMEOUT);
 
-        const scanLoop = (timestamp) => {
-          if (!dom.cameraPreview.srcObject) {
-            clearTimeout(timeoutId);
-            return;
-          }
+        // Esperar a que el video esté listo
+        dom.cameraPreview.onloadedmetadata = () => {
+          dom.cameraPreview.play().then(() => {
+            const scanFrame = () => {
+              if (!scanning) return;
+              
+              try {
+                // Usar dimensiones reales del video
+                const width = dom.cameraPreview.videoWidth;
+                const height = dom.cameraPreview.videoHeight;
+                
+                if (width === 0 || height === 0) {
+                  requestAnimationFrame(scanFrame);
+                  return;
+                }
 
-          if (timestamp - lastScanTime < scanInterval) {
-            requestAnimationFrame(scanLoop);
-            return;
-          }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(dom.cameraPreview, 0, 0, width, height);
+                
+                const imageData = ctx.getImageData(0, 0, width, height);
+                const qrCode = jsQR(imageData.data, width, height, {
+                  inversionAttempts: 'dontInvert',
+                });
 
-          lastScanTime = timestamp;
-
-          try {
-            const canvas = document.createElement('canvas');
-            canvas.width = dom.cameraPreview.videoWidth;
-            canvas.height = dom.cameraPreview.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(dom.cameraPreview, 0, 0, canvas.width, canvas.height);
-
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
-
-            if (qrCode) {
-              ui.updateDetectionBox(qrCode.location);
-              setTimeout(() => {
-                handlers.stopCamera();
-                ui.hideCameraModal();
-                appState.lastEncryptedData = qrCode.data;
-                ui.showPassphraseModal();
-                clearTimeout(timeoutId);
-              }, 1000);
-            } else {
-              ui.hideDetectionBox();
-              requestAnimationFrame(scanLoop);
-            }
-          } catch (e) {
-            console.error('Scan error:', e);
-            ui.showToast('Error scanning QR code', 'error');
-            setTimeout(() => requestAnimationFrame(scanLoop), 300);
-          }
+                if (qrCode) {
+                  ui.updateDetectionBox(qrCode.location);
+                  scanning = false;
+                  
+                  setTimeout(() => {
+                    handlers.stopCamera();
+                    ui.hideCameraModal();
+                    appState.lastEncryptedData = qrCode.data;
+                    ui.showPassphraseModal();
+                    clearTimeout(timeoutId);
+                  }, 500);
+                } else {
+                  ui.hideDetectionBox();
+                  requestAnimationFrame(scanFrame);
+                }
+              } catch (e) {
+                console.error('Scan error:', e);
+                requestAnimationFrame(scanFrame);
+              }
+            };
+            
+            requestAnimationFrame(scanFrame);
+          }).catch(err => {
+            console.error('Camera play error:', err);
+            ui.showToast('Camera error: ' + err.message, 'error');
+          });
         };
-
-        requestAnimationFrame(scanLoop);
-
-        dom.cameraPreview.addEventListener('ended', () => {
-          clearTimeout(timeoutId);
-        }, { once: true });
       })
       .catch(error => {
         console.error('Camera access error:', error);
-        ui.showToast('Unable to access camera', 'error');
+        let message = 'Camera access denied';
+        if (error.name === 'NotFoundError') {
+          message = 'No camera found';
+        } else if (error.name === 'NotAllowedError') {
+          message = 'Camera permission denied';
+        }
+        ui.showToast(message, 'error');
         ui.hideCameraModal();
       });
   },
 
   stopCamera: () => {
     if (dom.cameraPreview.srcObject) {
-      dom.cameraPreview.srcObject.getTracks().forEach(track => track.stop());
+      const tracks = dom.cameraPreview.srcObject.getTracks();
+      tracks.forEach(track => {
+        track.stop();
+      });
       dom.cameraPreview.srcObject = null;
     }
     ui.hideDetectionBox();
