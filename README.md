@@ -52,7 +52,7 @@ Open `http://localhost:8000` in modern browser or just click index.html
 ### 🌐 Web Version  
 [https://www.hushbox.online](https://mpetovick.github.io/HUSHBOX)
 
-## System Architecture
+## ⚙️ System Architecture
 ```mermaid
 graph TD
     A[Web Client] --> B[User Interface]
