@@ -49,6 +49,16 @@ Key Characteristics:
 
 ## 📥 Installation & Usage
 
+### 📁 Project Structure
+```bash
+HUSHBOX/
+├── index.html          # Página principal
+├── script.js           # Lógica de la aplicación (7,000+ líneas)
+├── styles.css          # Estilos CSS (1,500+ líneas)
+├── manifest.json       # Configuración PWA
+└── favicon.png         # Icono de la aplicación
+```
+
 ### Local Deployment
 ```bash
 git clone https://github.com/MPetovick/HUSHBOX.git
