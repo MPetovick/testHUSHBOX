@@ -125,27 +125,6 @@ sequenceDiagram
     Note over SocialMedia: Public QR Hosting<br>(Twitter DMs/Telegram Chats/Posts)
 ```
 
-### 3. Compartición Online con Redes Sociales
-
-```mermaid
-sequenceDiagram
-    participant UserA
-    participant HUSHBOX_A
-    participant SocialMedia
-    participant HUSHBOX_B
-    participant UserB
-
-    UserA->>HUSHBOX_A: Crear mensaje + passphrase
-    HUSHBOX_A->>HUSHBOX_A: Encriptar + generar QR
-    HUSHBOX_A->>UserA: Mostrar QR cifrado
-    UserA->>SocialMedia: Compartir QR (Twitter, Telegram)
-    SocialMedia->>UserB: Usuario B recibe QR
-    UserB->>HUSHBOX_B: Escanear QR + ingresar passphrase
-    HUSHBOX_B->>UserB: Mostrar mensaje desencriptado
-
-    Note over UserA,UserB: Passphrase se comparte vía canal seguro separado (Signal, email cifrado, encuentro físico)
-```
-
 1. **Secure Creation Phase:**
    - User A crafts message + 12+ character passphrase
    - HUSHBOX performs AES-256 encryption with time-stamped IV
