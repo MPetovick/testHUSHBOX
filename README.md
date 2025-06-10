@@ -30,6 +30,13 @@ Key Characteristics:
 - Secure content disposal
 - Tamper-evident payload design
 
+| 🚀 **Categoría**         | **Key Features**                                                                 |
+|--------------------------|-------------------------------------------------------------------------------------------|
+| 🔐 **Core Security**     | - AES-256-GCM encryption con protección de integridad HMAC  <br> - Derivación de claves PBKDF2 (250,000 iteraciones) <br> - Payloads comprimidos para codificación QR eficiente <br> - Protección anti-fuerza bruta (límite de 5 intentos) |
+| 📱 **User Experience**   | - Diseño responsive enfocado en móviles <br> - Indicadores en tiempo real de fuerza de frase de paso <br> - Códigos QR animados con marca personalizada <br> - Escaneo de QR con cámara (dispositivos móviles) *Próximamente <br> - Integración con redes sociales para compartición segura |
+| 🛡️ **Advanced Protections** | - Sellado de tiempo del IV para prevenir ataques de repetición <br> - Saneamiento de memoria tras operaciones <br> - Eliminación segura del contenido <br> - Diseño de payloads a prueba de manipulaciones |
+
+
 ## 🛠️ Technical Stack
 
 ### Cryptography
