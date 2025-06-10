@@ -56,7 +56,7 @@ Key Characteristics:
 | **jsqr**     | 1.4.0   | Decodificación QR             | `sha256-TnzVZFlCkL9D75PtJfOP7JASQkdCGD+pc60Lus+IrjA=` |
 | **jspdf**    | 2.5.1   | Exportación PDF               | `sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=` |
 | **zxcvbn**   | 4.4.2   | Validación passphrase         | `sha256-9CxlH0BQastrZiSQ8zjdR6WVHTMSA5xKuP5QkEhPNRo=` |
-|----------------------------------------------------------------------------------------------------------------|
+|--------------|-----------------------------------------|-------------------------------------------------------|
 | **UI Framework**: Pure CSS Grid/Flex|
 
 ## Installation & Usage
