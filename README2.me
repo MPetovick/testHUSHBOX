@@ -1,16 +1,7 @@
 # 🔒 HUSHBOX Enterprise - Documentación Técnica Completa
 
-## 📁 Estructura del Proyecto
-```bash
-HUSHBOX/
-├── index.html          # Página principal
-├── script.js           # Lógica de la aplicación (7,000+ líneas)
-├── styles.css          # Estilos CSS (1,500+ líneas)
-├── manifest.json       # Configuración PWA
-└── favicon.png         # Icono de la aplicación
-```
 
----
+
 
 ## 🔐 Arquitectura de Seguridad
 ### Flujo de Encriptación
@@ -40,109 +31,10 @@ sequenceDiagram
 
 ---
 
-## 🛠️ Módulos Principales (script.js)
 
-### 1. Configuración Global
-```javascript
-const CONFIG = {
-  PBKDF2_ITERATIONS: 310000,
-  SALT_LENGTH: 32,
-  IV_LENGTH: 16,
-  AES_KEY_LENGTH: 256,
-  QR_SIZE: 220,
-  MIN_PASSPHRASE_LENGTH: 12,
-  MAX_MESSAGE_LENGTH: 10000,
-  CAMERA_TIMEOUT: 30000,
-  DECRYPT_DELAY_INCREMENT: 100,
-  MAX_DECRYPT_ATTEMPTS: 5,
-  SESSION_TIMEOUT: 1800000, // 30 minutos
-  COMPRESSION_THRESHOLD: 100
-};
-```
-
-### 2. Utilidades Criptográficas
-```javascript
-const cryptoUtils = {
-  encryptMessage: async (message, passphrase) => {
-    // Validación passphrase con zxcvbn
-    // Generación salt + IV con crypto.getRandomValues()
-    // Derivación clave con PBKDF2
-    // Compresión con pako.deflate()
-    // Encriptación con AES-GCM
-    // Codificación Base64
-  },
-  
-  decryptMessage: async (encryptedBase64, passphrase) => {
-    // Decodificación Base64
-    // Extracción salt + IV
-    // Derivación clave
-    // Desencriptación AES-GCM
-    // Descompresión con pako.inflate()
-  },
-  
-  generateSecurePass: (length = 16) => {
-    // Generación con crypto.getRandomValues()
-    // Garantiza: mayúsculas, minúsculas, números, símbolos
-  }
-};
-```
-
-### 3. Gestión de QR
-```javascript
-const ui = {
-  generateQR: async (data) => {
-    // Uso de QRCode.toCanvas()
-    // Añade marca de agua "HUSHBOX" en centro
-    // Efectos visuales: borde animado, gradiente
-  }
-};
-```
-
-### 4. Subsistema de Cámara
-```javascript
-handlers.startCamera = () => {
-  // Acceso a navigator.mediaDevices.getUserMedia()
-  // Procesamiento en tiempo real con jsQR()
-  // Detección de QR con cuadro de enfoque animado
-  // Timeout automático a 30 segundos
-};
-```
 
 ---
 
-## 🌐 Interfaz de Usuario (index.html)
-### Estructura Principal
-```html
-<!-- Sección de Encriptación -->
-<section class="encrypt-section">
-  <form id="encrypt-form">
-    <input type="password" id="passphrase">
-    <textarea id="message-input"></textarea>
-    <button id="send-button">Encrypt</button>
-  </form>
-  
-  <!-- QR Resultante -->
-  <div id="qr-container">
-    <canvas id="qr-canvas"></canvas>
-  </div>
-</section>
-
-<!-- Historial de Mensajes -->
-<section class="decrypt-section">
-  <div id="messages"></div>
-  <!-- Botones gestión historial -->
-</section>
-```
-
-### Módulos Interactivos
-| Elemento              | Función                                 |
-|-----------------------|-----------------------------------------|
-| `#generate-password`  | Genera passphrase segura                |
-| `#toggle-password`    | Muestra/oculta passphrase               |
-| `#camera-modal`       | Escáner QR con cámara                   |
-| `#pdf-button`         | Exporta QR a PDF (jsPDF)                |
-| `#clear-history`      | Borra historial local                   |
-| `#session-timer`      | Temporizador inactividad (30 min)       |
 
 ---
 
@@ -354,3 +246,308 @@ HUSHBOX Enterprise es una solución de seguridad integral que combina:
 [https://www.hushbox.online](https://www.hushbox.online)  
 **Repositorio GitHub**:  
 [https://github.com/MPetovick/HUSHBOX](https://github.com/MPetovick/HUSHBOX)
+
+
+
+Claro, aquí tienes toda la información combinada, mejorada y organizada en un único documento en formato Markdown. Incluye detalles técnicos, flujo de uso, análisis empresarial, casos de uso y más.
+
+````markdown
+# 🔒 HUSHBOX - Comunicación Segura con Encriptación QR
+
+**HUSHBOX** es una herramienta de comunicación enfocada en la privacidad que combina encriptación de grado militar con tecnología QR para transmitir mensajes seguros. Está diseñada para usuarios que valoran la privacidad digital y aplican estándares criptográficos modernos para proteger las comunicaciones de ojos no autorizados.
+
+---
+
+## 📌 Resumen
+
+- **Arquitectura Zero-Server**: Los mensajes nunca pasan por servidores externos.
+- **Diseño Efímero**: No hay almacenamiento ni rastreo de mensajes.
+- **Código Abierto**: Transparencia total en la implementación de seguridad.
+- **PWA Ready**: Aplicación web progresiva instalable y usable offline.
+
+---
+
+## 🚀 Características Clave
+
+### Seguridad Criptográfica
+- Encriptación AES-256-GCM con protección de integridad HMAC-SHA256.
+- Derivación de clave con PBKDF2 usando 250,000 iteraciones.
+- Payloads comprimidos (DEFLATE) para optimización en QR.
+- Protección anti fuerza bruta: máximo 5 intentos.
+- IV con marca temporal para prevención de ataques replay.
+- Diseño de payload a prueba de manipulaciones.
+- Limpieza segura de memoria post-operación.
+
+### Experiencia de Usuario
+- Diseño responsivo, mobile-first.
+- Indicadores en tiempo real de fuerza de contraseña.
+- QR animados con branding personalizado.
+- Escaneo QR desde cámara en móviles (próximamente).
+- Integración para compartir seguro en redes sociales.
+- Exportación de mensajes en PDF con instrucciones.
+
+### Avanzadas Protecciones
+- Sanitización de memoria y buffers.
+- Reglas CSP estrictas para carga segura de scripts.
+- Timeouts de sesión (30 minutos).
+- Validación contra ataques XSS.
+- Compresión adaptativa para mensajes largos.
+- Procesamiento criptográfico en Web Workers.
+
+---
+
+## 🛠️ Arquitectura Técnica
+
+```mermaid
+graph TD
+    A[Cliente Web] --> B[Interfaz de Usuario]
+    B --> C[Módulo de Encriptación]
+    B --> D[Módulo de Desencriptación]
+    C --> E[Generación QR]
+    D --> F[Escaneo QR]
+    C --> G[Almacenamiento Local]
+    D --> G
+    G --> H[Historial de Mensajes]
+    C & D --> I[Criptografía AES-256-GCM]
+    I --> J[PBKDF2]
+````
+
+### Stack Tecnológico
+
+| Componente          | Tecnología / Versión           | Propósito                   |
+| ------------------- | ------------------------------ | --------------------------- |
+| Encriptación        | AES-GCM 256-bit                | Seguridad de mensajes       |
+| Derivación de clave | PBKDF2-HMAC-SHA256 (250K iter) | Generación segura de claves |
+| Compresión          | Pako 2.1.0                     | Compresión DEFLATE para QR  |
+| Generación QR       | `qrcode@1.5.1`                 | Crear códigos QR            |
+| Decodificación QR   | `jsqr@1.4.0`                   | Escanear códigos QR         |
+| UI Framework        | CSS Grid/Flex, Font Awesome    | Diseño responsivo y iconos  |
+| Seguridad de UI     | zxcvbn 4.4.2                   | Validación de contraseñas   |
+| PWA Features        | Service Workers                | Funcionalidad offline       |
+
+---
+
+## 🔄 Flujos de Trabajo
+
+### 1. Creación y Compartición Offline
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant HUSHBOX
+    participant StorageMedium
+
+    User->>HUSHBOX: Ingresar mensaje y passphrase
+    HUSHBOX->>HUSHBOX: Encriptar mensaje + generar QR
+    HUSHBOX->>User: Mostrar QR cifrado
+    User->>StorageMedium: Guardar/Imprimir QR para backup
+    StorageMedium->>User: Recuperar QR cuando sea necesario
+    User->>HUSHBOX: Escanear QR + ingresar passphrase
+    HUSHBOX->>HUSHBOX: Desencriptar mensaje
+    HUSHBOX->>User: Mostrar mensaje claro
+```
+
+### 2. Compartición Offline Entre Usuarios
+
+```mermaid
+sequenceDiagram
+    participant UserA
+    participant HUSHBOX
+    participant UserB
+
+    UserA->>HUSHBOX: Escribir mensaje + passphrase
+    HUSHBOX->>HUSHBOX: Encriptar y generar QR
+    HUSHBOX->>UserA: Mostrar QR cifrado
+    UserA->>UserB: Compartir QR físicamente o digital
+    UserB->>HUSHBOX: Escanear QR + ingresar passphrase
+    HUSHBOX->>UserB: Mostrar mensaje desencriptado
+```
+
+### 3. Compartición Online con Redes Sociales
+
+```mermaid
+sequenceDiagram
+    participant UserA
+    participant HUSHBOX_A
+    participant SocialMedia
+    participant HUSHBOX_B
+    participant UserB
+
+    UserA->>HUSHBOX_A: Crear mensaje + passphrase
+    HUSHBOX_A->>HUSHBOX_A: Encriptar + generar QR
+    HUSHBOX_A->>UserA: Mostrar QR cifrado
+    UserA->>SocialMedia: Compartir QR (Twitter, Telegram)
+    SocialMedia->>UserB: Usuario B recibe QR
+    UserB->>HUSHBOX_B: Escanear QR + ingresar passphrase
+    HUSHBOX_B->>UserB: Mostrar mensaje desencriptado
+
+    Note over UserA,UserB: Passphrase se comparte vía canal seguro separado (Signal, email cifrado, encuentro físico)
+```
+
+---
+
+## 📋 Manual de Usuario Extendido
+
+### Encriptación
+
+1. Ingresar passphrase (mínimo 12 caracteres, recomendado 15+).
+2. Escribir el mensaje a cifrar (hasta 10,000 caracteres).
+3. Presionar "Encrypt".
+4. Visualizar QR seguro generado.
+5. Opciones para exportar: PDF, copiar QR o compartir.
+
+### Desencriptación
+
+1. Escanear QR con cámara o subir imagen.
+2. Introducir passphrase correcta.
+3. Presionar "Decrypt".
+4. Ver mensaje descifrado y almacenado en historial.
+
+### Gestión del Historial
+
+| Funcionalidad | Descripción                                        |
+| ------------- | -------------------------------------------------- |
+| Visualización | Mensajes con timestamp de encriptado/desencriptado |
+| Exportación   | Guardar historial cifrado en CSV con contraseña    |
+| Importación   | Cargar historial cifrado desde CSV                 |
+| Eliminación   | Borrado seguro con confirmación                    |
+
+### Funciones Avanzadas
+
+* Generador de contraseñas fuertes integrado.
+* Modo cámara segura: escaneo QR sin guardar imágenes.
+* Sesiones empresariales con timeout y limpieza de datos.
+* Personalización corporativa: branding y dominio propio.
+
+---
+
+## 💼 Análisis Empresarial
+
+### Propuesta de Valor
+
+* Comunicación empresarial segura sin puntos vulnerables.
+* Cero almacenamiento en servidores.
+* Eliminación de metadatos.
+* Cumplimiento regulatorio (GDPR, HIPAA).
+* Arquitectura híbrida QR + passphrase para doble factor de posesión.
+
+### Modelo de Negocio
+
+| Plan         | Características                                           | Precio               |
+| ------------ | --------------------------------------------------------- | -------------------- |
+| Starter      | Encriptación básica, 50 mensajes/mes                      | Gratis               |
+| Professional | Historial ilimitado, exportación PDF, soporte prioritario | \$29 / usuario / mes |
+| Enterprise   | SSO, auditorías, API integración, gestión centralizada    | Precio personalizado |
+
+### Mercado Objetivo
+
+* Sector Financiero (bancos, fondos).
+* Sector Salud (hospitales, clínicas).
+* Sector Legal (despachos, notarías).
+* Gobierno (agencias, fuerzas de seguridad).
+* Tecnología (protección de propiedad intelectual).
+
+### Ventajas Competitivas
+
+* Arquitectura zero-server que elimina brechas.
+* Certificación HBX-SEC-2025-08.
+* Doble factor QR + passphrase.
+* PWA multi-dispositivo.
+* Soporte empresarial con SLA 24/7.
+
+---
+
+## 📚 Casos de Uso
+
+### Corporativo: Transferencia Segura de Fondos
+
+* Director financiero encripta detalles con passphrase de un solo uso.
+* Envía QR vía email y passphrase vía SMS.
+* Aprobación segura sin riesgo de intercepción.
+
+### Médico: Compartición de Diagnósticos Sensibles
+
+* Oncólogo genera QR con resultados y passphrase temporal.
+* Paciente recibe documento impreso con QR.
+* Cumple HIPAA, evita registros digitales permanentes.
+
+### Legal: Transmisión de Documentos Confidenciales
+
+* Abogado convierte cláusulas sensibles a QR.
+* Documento físico con QR es transportado.
+* Receptor desencripta con passphrase acordada.
+
+### Personal: Protección de Identidad
+
+* Periodista crea mensajes cifrados en QR.
+* Publica QR en redes sociales.
+* Fuente accede con passphrase via canal seguro.
+* Comunicación sin metadatos ni rastreo.
+
+---
+
+## ⚠️ Consideraciones de Seguridad
+
+### Buenas Prácticas
+
+* Usar passphrases de 15+ caracteres.
+* Compartir passphrase solo por canales seguros y separados.
+* Verificar fuente de QR antes de escanear.
+* Limitar intentos de desencriptación.
+* Utilizar sesiones privadas o navegación incognito.
+
+### Implementación
+
+* Borrado seguro de memoria tras operaciones.
+* Generación de nonce con timestamp.
+* Protección contra side-channels en compresión.
+* Manejo seguro de errores y excepciones.
+* Cumplimiento estricto de Content Security Policy.
+
+---
+
+## 🔐 Política y Certificaciones
+
+* Rotación automática de claves cada 90 días.
+* Auditorías trimestrales de seguridad.
+* Programa de recompensas por vulnerabilidades (hasta \$50,000).
+* Cumplimiento GDPR, HIPAA, SOC 2 Tipo II.
+* Certificaciones: HBX-SEC-2025-08, NIST 800-63B, FIPS 140-2, ISO 27001.
+
+---
+
+## 📥 Instalación & Uso
+
+### Local
+
+```bash
+git clone https://github.com/MPetovick/HUSHBOX.git
+cd HUSHBOX
+python3 -m http.server 8000
+```
+
+Abrir en navegador moderno: `http://localhost:8000`
+
+### Web Online
+
+[https://www.hushbox.online](https://mpetovick.github.io/HUSHBOX)
+
+---
+
+## 🌐 Contacto & Comunidad
+
+* Telegram: [@HUSHBOX\_QR](https://t.me/HUSHBOX_QR)
+* Twitter: [@HUSHBOXonline](https://twitter.com/HUSHBOXonline)
+* Soporte: [support@hushbox.com](mailto:support@hushbox.com)
+
+---
+
+**HUSHBOX** — Tu bóveda digital de privacidad 🔏
+Porque tus secretos merecen más que la nube ☁️✔
+
+```
+
+---
+
+Si quieres, puedo ayudarte a generar también presentaciones, manuales personalizados o material para capacitar a equipos. ¿Quieres que prepare algo más?
+```
