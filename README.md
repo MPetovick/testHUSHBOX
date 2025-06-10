@@ -17,16 +17,6 @@ Key Characteristics:
 | 📱 **User Experience**   | - Responsive design with mobile-first approach <br> - Real-time passphrase strength indicators <br> - Animated QR codes with custom branding <br> - Camera QR scanning (mobile devices) *Coming Soon <br> - Social media integration for secure sharing |
 | 🛡️ **Advanced Protections** | - IV time-stamping for replay attack prevention <br> - Memory sanitization after operations <br> - Secure content disposal <br> - Tamper-evident payload design|
 
-
-### Cryptography
-| Component              | Specification                          |
-|------------------------|----------------------------------------|
-| Encryption Algorithm   | AES-GCM 256-bit                       |
-| Key Derivation         | PBKDF2-HMAC-SHA256                    |
-| Iterations             | 310,000                               |
-| IV Generation          | Crypto-safe RNG + timestamp           |
-| Data Integrity         | HMAC-SHA256                           |
-
 ### Frontend
 | Library      | Version | Use                           | SRI Integrity                            |
 |--------------|---------|-------------------------------|------------------------------------------|
