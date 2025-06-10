@@ -7,6 +7,7 @@ Key Characteristics:
 - **Ephemeral Design**: No message storage or tracking
 - **Open Source**: Fully transparent security implementation
 - **PWA Ready**: Installable as a progressive web app
+- **Offline Ready**: Works without an internet connection
 
 ## 🚀 Key Features
 
