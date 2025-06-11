@@ -2,7 +2,6 @@
 
 **HUSHBOX** is a privacy-first communication tool that combines military-grade encryption with QR code technology to enable secure message transmission. Designed for users who value digital privacy, it implements modern cryptographic standards to protect your communications from prying eyes.
 
-Key Characteristics:
 - **Zero-Server Architecture**: Messages never touch external servers
 - **Ephemeral Design**: No message storage or tracking
 - **Open Source**: Fully transparent security implementation
