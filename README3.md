@@ -15,15 +15,15 @@ Unlike traditional platforms, all encryption and decryption occur locally on you
 
 Key features include:
 
-🔐 Zero-Server Architecture – No message ever touches the cloud
+🔐 **Zero-Server Architecture** – No message ever touches the cloud
 
-🕵️ Ephemeral Design – No tracking, no storage, no metadata
+🕵️ **Ephemeral Design** – No tracking, no storage, no metadata
 
-🔓 Open Source – Transparent and auditable security
+🔓 **Open Source** – Transparent and auditable security
 
-📱 PWA Ready – Install as a lightweight progressive web app
+📱 **PWA Ready** – Install as a lightweight progressive web app
 
-📴 Offline Functionality – Works seamlessly without internet access
+📴 **Offline Functionality** – Works seamlessly without internet access
 
 **Perfect For**:  
 🔏 Privacy-conscious individuals | 🏢 Enterprises handling sensitive data | 💼 Legal/medical professionals | 🛡️ Security researchers | ✈️ Travelers in high-risk areas  
