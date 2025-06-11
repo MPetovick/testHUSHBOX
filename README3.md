@@ -69,6 +69,16 @@ graph TD
 
 ## 🛠️ Installation & Usage  
 
+### 📁 Project Structure
+```bash
+HUSHBOX/
+├── index.html          
+├── script.js           
+├── styles.css          
+├── manifest.json       
+└── favicon.png        
+```
+
 ### For Users  
 1. Visit **[hushbox.online](https://www.hushbox.online)**  
 2. **Encrypt a message**:  
