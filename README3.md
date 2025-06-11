@@ -2,7 +2,7 @@
 **Your Digital Privacy Vault - Because secrets deserve better than the cloud**  
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/MPetovick/testHUSHBOX/main/logoHBX.png" width="100" alt="HUSHBOX logo">
+  <img src="https://github.com/MPetovick/testHUSHBOX/blob/main/logoHBX.png" width="100" alt="HUSHBOX logo">
   <p>
     <a href="https://www.hushbox.online">Live Demo</a> • 
     <a href="https://github.com/MPetovick/HUSHBOX">GitHub</a> • 
