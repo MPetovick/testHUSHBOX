@@ -28,16 +28,16 @@ Unlike traditional platforms, all encryption and decryption occur locally on you
 
 ---
 
-## 🚀 Key Features  
+## 🚀 Key Features
 
-### 🔐 Military-Grade Security  
-| Feature | Description |
-|---------|-------------|
-| **AES-256-GCM Encryption** | Industry-standard encryption with authenticated integrity |
-| **Zero-Server Architecture** | Messages never leave your device |
-| **Ephemeral Design** | No message history stored in the cloud |
-| **Anti-Brute Force** | 5-attempt limit with incremental delays |
-| **Memory Sanitization** | Sensitive data wiped after operations |
+## 🛠️ Technical Stack
+
+|       **Category**       |        **Key Features**                                                                   |
+|--------------------------|-------------------------------------------------------------------------------------------|
+| 🔐 **Core Security**     | - AES-256-GCM encryption with HMAC integrity protection <br> - PBKDF2 key derivation (310,000 iterations) <br> - Compressed payloads for efficient QR encoding <br> - Anti-brute force protection (5 attempts limit) |
+| 📱 **User Experience**   | - Responsive design with mobile-first approach <br> - Real-time passphrase strength indicators <br> - Animated QR codes with custom branding <br> - Camera QR scanning (mobile devices) *Coming Soon <br> - Social media integration for secure sharing |
+| 🛡️ **Advanced Protections** | - IV time-stamping for replay attack prevention <br> - Memory sanitization after operations <br> - Secure content disposal <br> - Tamper-evident payload design|
+
 
 ### 💻 User Experience  
 | Feature | Description |
