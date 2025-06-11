@@ -69,15 +69,15 @@ sequenceDiagram
 ### Decryption flow
 ```mermaid
 sequenceDiagram
-    A[Iniciar desencriptación] --> B{QR válido?}
-    B -->|Sí| C[Ingresar passphrase]
-    B -->|No| D[Error: QR inválido]
-    C --> E{Passphrase correcta?}
-    E -->|Sí| F[Desencriptar y mostrar]
-    E -->|No| G[Contador intentos++]
-    G --> H{Intentos > 5?}
-    H -->|Sí| I[Bloquear temporalmente]
-    H -->|No| C
+    Usuario->>Aplicación: Escanea QR + ingresa passphrase
+    Aplicación->>QR: Decodificar Base64
+    QR->>Crypto: Extraer salt + IV + ciphertext
+    Crypto->>Crypto: Validar passphrase (zxcvbn)
+    Crypto->>Crypto: Derivar clave (PBKDF2-HMAC-SHA256)
+    Crypto->>Crypto: Desencriptar (AES-256-GCM)
+    Crypto->>Crypto: Descomprimir mensaje (pako INFLATE)
+    Crypto->>UI: Mostrar mensaje plano
+    UI->>Usuario: Ver mensaje desencriptado
 ```
 
 
