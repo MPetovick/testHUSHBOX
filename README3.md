@@ -118,7 +118,7 @@ Open `http://localhost:8000` in modern browser or just click index.html
 [https://www.hushbox.online](https://mpetovick.github.io/HUSHBOX)
 
 
-### For Users  
+### User manual
 1. Visit **[hushbox.online](https://www.hushbox.online)**  
 2. **Encrypt a message**:  
    - Enter passphrase (12+ characters)  
@@ -129,31 +129,6 @@ Open `http://localhost:8000` in modern browser or just click index.html
    - Scan/upload a QR code  
    - Enter the passphrase (shared separately)  
    - Click "Decrypt"  
-
-### For Enterprises  
-```bash
-# Clone repository
-git clone https://github.com/MPetovick/HUSHBOX.git
-
-# Deploy internally:
-docker build -t hushbox-enterprise .
-docker run -d -p 8080:80 hushbox-enterprise
-
-# Access at: http://your-company-server:8080
-```
-
-### For Developers  
-```bash
-git clone https://github.com/MPetovick/HUSHBOX.git
-cd HUSHBOX
-
-# Install dependencies (optional for PWA):
-npm install
-
-# Run local server:
-npx serve
-```
-
 ---
 
 ## 🔄 Workflow Examples  
