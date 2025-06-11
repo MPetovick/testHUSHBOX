@@ -39,8 +39,6 @@ Unlike traditional platforms, all encryption and decryption occur locally on you
 ---
 
 ## ⚙️ System Architecture
-
-
 ### Frontend Architecture  
 ```mermaid
 graph TD
@@ -59,11 +57,13 @@ graph TD
 ### Dependencies  
 | Library | Version | Purpose | SRI Hash |
 |---------|---------|---------|----------|
-| **pako** | 2.1.0 | DEFLATE Compression | `sha256-7eJpOkpqUSa501ZpBis1jsq2rnubhqHPMC/rRahRSQc=` |
-| **qrcode.js** | 1.5.1 | QR Generation | `sha256-7GTYmrMJbc6AhJEt7f+fLKWuZBRNDKzUoILCk9XQa1k=` |
-| **jsQR** | 1.4.0 | QR Decoding | `sha256-TnzVZFlCkL9D75PtJfOP7JASQkdCGD+pc60Lus+IrjA=` |
-| **jsPDF** | 2.5.1 | PDF Export | `sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=` |
-| **zxcvbn** | 4.4.2 | Password Strength | `sha256-9CxlH0BQastrZiSQ8zjdR6WVHTMSA5xKuP5QkEhPNRo=` |
+| **pako**     | 2.1.0   | Compression DEFLATE           | `sha256-7eJpOkpqUSa501ZpBis1jsq2rnubhqHPMC/rRahRSQc=` |
+| **qrcode**   | 1.5.1   | QR Generation                 | `sha256-7GTYmrMJbc6AhJEt7f+fLKWuZBRNDKzUoILCk9XQa1k=` |
+| **jsqr**     | 1.4.0   | QR Decoding                   | `sha256-TnzVZFlCkL9D75PtJfOP7JASQkdCGD+pc60Lus+IrjA=` |
+| **jspdf**    | 2.5.1   | PDF export                    | `sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=` |
+| **zxcvbn**   | 4.4.2   | Passphrase validation         | `sha256-9CxlH0BQastrZiSQ8zjdR6WVHTMSA5xKuP5QkEhPNRo=` |
+- **UI Framework**: Pure CSS Grid/Flex
+- **Icons**: Font Awesome 6
 
 ---
 
