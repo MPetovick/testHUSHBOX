@@ -4,6 +4,8 @@ const CONFIG = {
   SALT_LENGTH: 32,
   IV_LENGTH: 16,
   AES_KEY_LENGTH: 256,
+  HMAC_KEY_LENGTH: 256,
+  HMAC_LENGTH: 32,  // SHA-256 HMAC length
   QR_SIZE: 220,
   MIN_PASSPHRASE_LENGTH: 12,
   MAX_MESSAGE_LENGTH: 10000,
@@ -166,97 +168,152 @@ const cryptoUtils = {
     }
   },
 
+  deriveKeys: async (passphrase, salt) => {
+    const baseKey = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(passphrase),
+      { name: 'PBKDF2' },
+      false,
+      ['deriveBits']
+    );
+
+    const derivedBits = await crypto.subtle.deriveBits(
+      {
+        name: 'PBKDF2',
+        salt,
+        iterations: CONFIG.PBKDF2_ITERATIONS,
+        hash: 'SHA-256'
+      },
+      baseKey,
+      CONFIG.AES_KEY_LENGTH + CONFIG.HMAC_KEY_LENGTH
+    );
+
+    const derivedBitsArray = new Uint8Array(derivedBits);
+    const aesKeyBytes = derivedBitsArray.slice(0, CONFIG.AES_KEY_LENGTH / 8);
+    const hmacKeyBytes = derivedBitsArray.slice(CONFIG.AES_KEY_LENGTH / 8);
+
+    const aesKey = await crypto.subtle.importKey(
+      'raw',
+      aesKeyBytes,
+      { name: 'AES-GCM' },
+      false,
+      ['encrypt', 'decrypt']
+    );
+
+    const hmacKey = await crypto.subtle.importKey(
+      'raw',
+      hmacKeyBytes,
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign', 'verify']
+    );
+
+    cryptoUtils.secureWipe(derivedBitsArray);
+    cryptoUtils.secureWipe(aesKeyBytes);
+    cryptoUtils.secureWipe(hmacKeyBytes);
+
+    return { aesKey, hmacKey };
+  },
+
   encryptMessage: async (message, passphrase) => {
     let dataToEncrypt = null;
+    let salt = null;
+    let iv = null;
+    let aesKey = null;
+    let hmacKey = null;
+    
     try {
       cryptoUtils.validatePassphrase(passphrase);
       if (!message) throw new Error('Message cannot be empty');
+      
       dataToEncrypt = new TextEncoder().encode(message);
 
       if (typeof pako !== 'undefined' && message.length > CONFIG.COMPRESSION_THRESHOLD) {
         dataToEncrypt = pako.deflate(dataToEncrypt, { level: 6 });
       }
 
-      const salt = crypto.getRandomValues(new Uint8Array(CONFIG.SALT_LENGTH));
-      const iv = crypto.getRandomValues(new Uint8Array(CONFIG.IV_LENGTH));
+      salt = crypto.getRandomValues(new Uint8Array(CONFIG.SALT_LENGTH));
+      iv = crypto.getRandomValues(new Uint8Array(CONFIG.IV_LENGTH));
 
-      const baseKey = await crypto.subtle.importKey(
-        'raw',
-        new TextEncoder().encode(passphrase),
-        { name: 'PBKDF2' },
-        false,
-        ['deriveBits', 'deriveKey']
-      );
-
-      const key = await crypto.subtle.deriveKey(
-        {
-          name: 'PBKDF2',
-          salt,
-          iterations: CONFIG.PBKDF2_ITERATIONS,
-          hash: 'SHA-256'
-        },
-        baseKey,
-        { name: 'AES-GCM', length: CONFIG.AES_KEY_LENGTH },
-        false,
-        ['encrypt']
-      );
+      const { aesKey: derivedAesKey, hmacKey: derivedHmacKey } = await cryptoUtils.deriveKeys(passphrase, salt);
+      aesKey = derivedAesKey;
+      hmacKey = derivedHmacKey;
 
       const encrypted = await crypto.subtle.encrypt(
         { name: 'AES-GCM', iv, tagLength: 128 },
-        key,
+        aesKey,
         dataToEncrypt
       );
 
-      const combined = new Uint8Array([...salt, ...iv, ...new Uint8Array(encrypted)]);
-      const result = btoa(String.fromCharCode(...combined));
+      const ciphertext = new Uint8Array(encrypted);
+      const hmac = await crypto.subtle.sign(
+        'HMAC',
+        hmacKey,
+        ciphertext
+      );
 
-      cryptoUtils.secureWipe(dataToEncrypt);
+      const combined = new Uint8Array([
+        ...salt,
+        ...iv,
+        ...ciphertext,
+        ...new Uint8Array(hmac)
+      ]);
+      
+      const result = btoa(String.fromCharCode(...combined));
       return result;
     } catch (error) {
       console.error('Encryption error:', error);
       throw new Error('Encryption failed: ' + error.message);
     } finally {
       if (dataToEncrypt) cryptoUtils.secureWipe(dataToEncrypt);
+      if (salt) cryptoUtils.secureWipe(salt);
+      if (iv) cryptoUtils.secureWipe(iv);
     }
   },
 
   decryptMessage: async (encryptedBase64, passphrase) => {
     let decrypted = null;
+    let salt = null;
+    let iv = null;
+    let aesKey = null;
+    let hmacKey = null;
+    
     try {
       if (!encryptedBase64 || !passphrase) throw new Error('Encrypted data and passphrase are required');
+      
       const encryptedData = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
-      if (encryptedData.length < CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH + 16) {
-        throw new Error('Invalid encrypted data');
+      
+      // Validate minimum length
+      const minLength = CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH + CONFIG.HMAC_LENGTH;
+      if (encryptedData.length < minLength) {
+        throw new Error('Invalid encrypted data: too short');
       }
+      
+      // Extract components
+      salt = encryptedData.slice(0, CONFIG.SALT_LENGTH);
+      iv = encryptedData.slice(CONFIG.SALT_LENGTH, CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH);
+      const ciphertext = encryptedData.slice(CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH, -CONFIG.HMAC_LENGTH);
+      const hmac = encryptedData.slice(-CONFIG.HMAC_LENGTH);
 
-      const salt = encryptedData.slice(0, CONFIG.SALT_LENGTH);
-      const iv = encryptedData.slice(CONFIG.SALT_LENGTH, CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH);
-      const ciphertext = encryptedData.slice(CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH);
+      const { aesKey: derivedAesKey, hmacKey: derivedHmacKey } = await cryptoUtils.deriveKeys(passphrase, salt);
+      aesKey = derivedAesKey;
+      hmacKey = derivedHmacKey;
 
-      const baseKey = await crypto.subtle.importKey(
-        'raw',
-        new TextEncoder().encode(passphrase),
-        { name: 'PBKDF2' },
-        false,
-        ['deriveBits', 'deriveKey']
+      // Verify HMAC before decryption
+      const isValid = await crypto.subtle.verify(
+        'HMAC',
+        hmacKey,
+        hmac,
+        ciphertext
       );
 
-      const key = await crypto.subtle.deriveKey(
-        {
-          name: 'PBKDF2',
-          salt,
-          iterations: CONFIG.PBKDF2_ITERATIONS,
-          hash: 'SHA-256'
-        },
-        baseKey,
-        { name: 'AES-GCM', length: CONFIG.AES_KEY_LENGTH },
-        false,
-        ['decrypt']
-      );
+      if (!isValid) {
+        throw new Error('Integrity check failed: Data has been tampered with');
+      }
 
       decrypted = await crypto.subtle.decrypt(
         { name: 'AES-GCM', iv, tagLength: 128 },
-        key,
+        aesKey,
         ciphertext
       );
 
@@ -272,13 +329,14 @@ const cryptoUtils = {
       }
       const result = new TextDecoder().decode(decompressed);
 
-      cryptoUtils.secureWipe(ciphertext);
       return result;
     } catch (error) {
       console.error('Decryption error:', error);
       throw new Error('Decryption failed: ' + error.message);
     } finally {
       if (decrypted) cryptoUtils.secureWipe(decrypted);
+      if (salt) cryptoUtils.secureWipe(salt);
+      if (iv) cryptoUtils.secureWipe(iv);
     }
   }
 };
@@ -420,18 +478,18 @@ const ui = {
       dom.detectionBox = document.createElement('div');
       dom.detectionBox.className = 'detection-box';
       dom.cameraContainer.appendChild(dom.detectionBox);
-      
+
       dom.scanLine = document.createElement('div');
       dom.scanLine.className = 'scan-line';
       dom.detectionBox.appendChild(dom.scanLine);
     }
-    
+
     // Usar tamaño proporcional al contenedor
     const size = Math.min(
       dom.cameraContainer.clientWidth, 
       dom.cameraContainer.clientHeight
     ) * 0.7;
-    
+
     dom.detectionBox.style.width = `${size}px`;
     dom.detectionBox.style.height = `${size}px`;
     dom.detectionBox.style.left = `calc(50% - ${size/2}px)`;
@@ -447,11 +505,11 @@ const ui = {
 
   updateDetectionBox: (location) => {
     if (!dom.detectionBox) return;
-    
+
     const { topLeft, topRight, bottomLeft, bottomRight } = location;
     const width = Math.max(topRight.x - topLeft.x, bottomRight.x - bottomLeft.x);
     const height = Math.max(bottomLeft.y - topLeft.y, bottomRight.y - topRight.y);
-    
+
     dom.detectionBox.style.display = 'block';
     dom.detectionBox.style.width = `${width}px`;
     dom.detectionBox.style.height = `${height}px`;
@@ -541,21 +599,21 @@ const csvUtils = {
     let current = '';
     let inQuotes = false;
     let escapeNext = false;
-    
+
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
-      
+
       if (escapeNext) {
         current += char;
         escapeNext = false;
         continue;
       }
-      
+
       if (char === '\\') {
         escapeNext = true;
         continue;
       }
-      
+
       if (char === '"') {
         if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
           current += '"';
@@ -565,16 +623,16 @@ const csvUtils = {
         }
         continue;
       }
-      
+
       if (char === ',' && !inQuotes) {
         result.push(current);
         current = '';
         continue;
       }
-      
+
       current += char;
     }
-    
+
     result.push(current);
     return result.map(field => field.trim());
   },
@@ -585,31 +643,31 @@ const csvUtils = {
       .replace(/\r/g, '\n')
       .split('\n')
       .filter(line => line.trim());
-    
+
     if (lines.length === 0) {
       throw new Error('Empty CSV file');
     }
-    
+
     const header = csvUtils.parseCSVLine(lines[0]);
     const requiredHeaders = ['Type', 'Message', 'Date', 'Time'];
     if (!requiredHeaders.every(h => header.includes(h))) {
       throw new Error('Invalid CSV format: Missing required headers');
     }
-    
+
     const messages = [];
-    
+
     for (let i = 1; i < lines.length; i++) {
       const fields = csvUtils.parseCSVLine(lines[i]);
       if (fields.length < 4) {
         console.warn(`Skipping invalid line ${i + 1}: ${lines[i]}`);
         continue;
       }
-      
+
       const type = fields[0];
       const content = fields[1].replace(/\\n/g, '\n');
       const date = fields[2];
       const time = fields[3];
-      
+
       let timestamp;
       try {
         if (date.includes('-') && time.includes(':')) {
@@ -617,21 +675,21 @@ const csvUtils = {
         } else {
           timestamp = new Date(`${date} ${time}`);
         }
-        
+
         if (isNaN(timestamp.getTime())) {
           timestamp = new Date();
         }
       } catch (e) {
         timestamp = new Date();
       }
-      
+
       messages.push({
         content,
         isSent: type === 'Sent',
         timestamp
       });
     }
-    
+
     return messages;
   },
 
@@ -644,10 +702,10 @@ const csvUtils = {
         .replace(/\n/g, '\\n')}"`;
       const date = msg.timestamp.toLocaleDateString();
       const time = msg.timestamp.toLocaleTimeString();
-      
+
       return [type, safeMessage, date, time];
     });
-    
+
     return [header, ...rows]
       .map(row => row.join(','))
       .join('\n');
@@ -736,7 +794,7 @@ const handlers = {
 
   handleModalDecrypt: async () => {
     const passphrase = dom.modalPassphrase.value.trim();
-    
+
     if (!passphrase) {
       dom.modalPassphraseError.textContent = 'Please enter a passphrase';
       dom.modalPassphraseError.classList.remove('hidden');
@@ -769,7 +827,7 @@ const handlers = {
       .then(stream => {
         dom.cameraPreview.srcObject = stream;
         ui.showDetectionBox();
-        
+
         let scanning = true;
         const scanInterval = 300; // Reducir frecuencia de escaneo
 
@@ -787,12 +845,12 @@ const handlers = {
           dom.cameraPreview.play().then(() => {
             const scanFrame = () => {
               if (!scanning) return;
-              
+
               try {
                 // Usar dimensiones reales del video
                 const width = dom.cameraPreview.videoWidth;
                 const height = dom.cameraPreview.videoHeight;
-                
+
                 if (width === 0 || height === 0) {
                   requestAnimationFrame(scanFrame);
                   return;
@@ -803,7 +861,7 @@ const handlers = {
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(dom.cameraPreview, 0, 0, width, height);
-                
+
                 const imageData = ctx.getImageData(0, 0, width, height);
                 const qrCode = jsQR(imageData.data, width, height, {
                   inversionAttempts: 'dontInvert',
@@ -812,7 +870,7 @@ const handlers = {
                 if (qrCode) {
                   ui.updateDetectionBox(qrCode.location);
                   scanning = false;
-                  
+
                   setTimeout(() => {
                     handlers.stopCamera();
                     ui.hideCameraModal();
@@ -829,7 +887,7 @@ const handlers = {
                 requestAnimationFrame(scanFrame);
               }
             };
-            
+
             requestAnimationFrame(scanFrame);
           }).catch(err => {
             console.error('Camera play error:', err);
@@ -999,7 +1057,7 @@ const handlers = {
       doc.text('Security Instructions:', 20, 120);
       doc.text('- Share this document only with authorized recipients', 20, 130);
       doc.text('- Transmit the passphrase via a separate channel (e.g., Signal)', 20, 140);
-      doc.text('- The message is protected with AES-256-GCM', 20, 150);
+      doc.text('- The message is protected with AES-256-GCM + HMAC-SHA256', 20, 150);
       doc.text('- Delete this document after use', 20, 160);
 
       doc.setFontSize(8);
@@ -1077,7 +1135,7 @@ const handlers = {
         try {
           const encryptedData = e.target.result;
           const decryptedCsv = await cryptoUtils.decryptMessage(encryptedData, passphrase);
-          
+
           const messages = csvUtils.parseCSV(decryptedCsv);
           if (messages.length === 0) {
             ui.showToast('No messages found in the imported file', 'warning');
