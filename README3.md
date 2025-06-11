@@ -1,5 +1,4 @@
 # 🔒 HUSHBOX - Your Digital Privacy Vault  
-**Because secrets deserve better than the cloud**  
 
 <div align="center">
     <a href="https://www.hushbox.online">Live Demo</a> • 
