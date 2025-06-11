@@ -30,8 +30,6 @@ Unlike traditional platforms, all encryption and decryption occur locally on you
 
 ## 🚀 Key Features
 
-## 🛠️ Technical Stack
-
 |       **Category**       |        **Key Features**                                                                   |
 |--------------------------|-------------------------------------------------------------------------------------------|
 | 🔐 **Core Security**     | - AES-256-GCM encryption with HMAC integrity protection <br> - PBKDF2 key derivation (310,000 iterations) <br> - Compressed payloads for efficient QR encoding <br> - Anti-brute force protection (5 attempts limit) |
