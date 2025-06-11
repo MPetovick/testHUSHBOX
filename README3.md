@@ -229,4 +229,6 @@ MIT License - [View License](https://github.com/MPetovick/HUSHBOX/blob/main/LICE
   <br>
   <strong>Your Secrets Deserve Better Than the Cloud</strong> ☁️❌<br>
   <strong>Try HUSHBOX Today → </strong> <a href="https://www.hushbox.online">www.hushbox.online</a>
+  <img src="https://github.com/MPetovick/testHUSHBOX/blob/main/logoHBX.png" width="100" alt="HUSHBOX logo">
+
 </div>
