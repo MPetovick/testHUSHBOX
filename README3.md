@@ -105,6 +105,18 @@ HUSHBOX/
 ├── manifest.json       
 └── favicon.png        
 ```
+### Local Deployment
+```bash
+git clone https://github.com/MPetovick/HUSHBOX.git
+cd HUSHBOX
+# Serve using local web server
+python3 -m http.server 8000
+```
+Open `http://localhost:8000` in modern browser or just click index.html
+
+### Web Version  
+[https://www.hushbox.online](https://mpetovick.github.io/HUSHBOX)
+
 
 ### For Users  
 1. Visit **[hushbox.online](https://www.hushbox.online)**  
