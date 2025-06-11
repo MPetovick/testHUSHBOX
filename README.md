@@ -66,6 +66,21 @@ graph TD
     C & D --> I[AES-256-GCM Cryptography]
     I --> J[PBKDF2]
 ```
+## 🔐 Security Architecture
+### Flujo de Encriptación
+```mermaid
+sequenceDiagram
+    Usuario->>Aplicación: Ingresa mensaje + passphrase
+    Aplicación->>Crypto: Validar passphrase (zxcvbn)
+    Crypto->>Crypto: Generar salt (32B) + IV (16B)
+    Crypto->>Crypto: Derivar clave (PBKDF2-HMAC-SHA256)
+    Crypto->>Crypto: Comprimir mensaje (pako DEFLATE)
+    Crypto->>Crypto: Encriptar (AES-256-GCM)
+    Crypto->>QR: Convertir a Base64
+    QR->>UI: Generar código QR animado
+    UI->>Usuario: Mostrar QR seguro
+```
+
 ## 🔄 Workflow Diagram
 
 **Backup Workflow:**
