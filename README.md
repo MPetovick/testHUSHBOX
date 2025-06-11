@@ -80,6 +80,38 @@ sequenceDiagram
     QR->>UI: Generar código QR animado
     UI->>Usuario: Mostrar QR seguro
 ```
+### Parámetros Criptográficos
+| Parámetro              | Valor                  | Descripción                          |
+|------------------------|------------------------|--------------------------------------|
+| Algoritmo              | AES-256-GCM            | Cifrado autenticado                  |
+| Modo                   | Galois/Counter Mode    | Protección integridad                |
+| Iteraciones PBKDF2     | 310,000                | Resistencia fuerza bruta             |
+| Longitud salt          | 32 bytes               | Unicidad por mensaje                 |
+| Longitud IV            | 16 bytes               | Vector de inicialización             |
+| Tamaño tag             | 128 bits               | Autenticación GCM                    |
+| Compresión             | DEFLATE (nivel 6)      | Para mensajes >100 caracteres        |
+
+### 1. Requisitos Passphrase
+| Parámetro               | Valor                     |
+|-------------------------|---------------------------|
+| Longitud mínima         | 12 caracteres             |
+| Complejidad             | 4 de 4 (zxcvbn)           |
+| Caracteres únicos       | >70% de longitud          |
+| Tipos requeridos        | A-Z, a-z, 0-9, símbolos  |
+
+### 2. Proceso de Desencriptación
+```mermaid
+flowchart TD
+    A[Iniciar desencriptación] --> B{QR válido?}
+    B -->|Sí| C[Ingresar passphrase]
+    B -->|No| D[Error: QR inválido]
+    C --> E{Passphrase correcta?}
+    E -->|Sí| F[Desencriptar y mostrar]
+    E -->|No| G[Contador intentos++]
+    G --> H{Intentos > 5?}
+    H -->|Sí| I[Bloquear temporalmente]
+    H -->|No| C
+```
 
 ## 🔄 Workflow Diagram
 
