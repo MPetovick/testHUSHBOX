@@ -1,7 +1,7 @@
 # 🔒 HUSHBOX - Your Digital Privacy Vault  
 
 <div align="center">
-    <a href="https://www.hushbox.online">Live Demo</a> • 
+    <a href="https://www.hushbox.online">Web</a> • 
     <a href="https://github.com/MPetovick/HUSHBOX">GitHub</a> • 
     <a href="https://t.me/HUSHBOX_QR">Telegram</a> • 
     <a href="https://twitter.com/HUSHBOXonline">Twitter</a>
