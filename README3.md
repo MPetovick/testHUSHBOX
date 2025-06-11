@@ -15,7 +15,7 @@ Unlike traditional platforms, all encryption and decryption occur locally on you
 
 Key features include:
 
-🔐 **Zero-Server Architecture** – No message ever touches the cloud
+🔐 **Zero-Server Architecture** – Messages never touch external servers
 
 🕵️ **Ephemeral Design** – No tracking, no storage, no metadata
 
