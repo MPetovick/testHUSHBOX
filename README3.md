@@ -131,8 +131,66 @@ Open `http://localhost:8000` in modern browser or just click index.html
    - Click "Decrypt"  
 ---
 
-## 🔄 Workflow Examples  
+## 🔄 Workflow Diagram
 
+**Backup Workflow:**
+```mermaid
+sequenceDiagram
+    participant User
+    participant HUSHBOX
+    participant StorageMedium
+
+    User->>HUSHBOX: 1. Enter data + passphrase
+    HUSHBOX->>HUSHBOX: 2. Encrypt data + Generate QR
+    HUSHBOX->>User: 3. Display secure QR
+    User->>StorageMedium: 4. Save/Print QR (offline backup)
+    StorageMedium->>User: 5. Retrieve QR (when needed)
+    User->>HUSHBOX: 6. Scan QR + Enter passphrase
+    HUSHBOX->>HUSHBOX: 7. Decrypt data
+    HUSHBOX->>User: 8. Display decrypted data
+```
+**Offline Workflow:**
+```mermaid
+sequenceDiagram
+    participant UserA
+    participant HUSHBOX
+    participant UserB
+
+    UserA->>HUSHBOX: 1. Enter message + passphrase
+    HUSHBOX->>HUSHBOX: 2. Encrypt + Generate QR
+    HUSHBOX->>UserA: 3. Display secure QR
+    UserA->>UserB: 4. Share QR (offline)
+    UserB->>HUSHBOX: 5. Scan QR + Enter passphrase
+    HUSHBOX->>UserB: 6. Decrypted message
+```
+**Online Workflow:**
+
+```mermaid
+sequenceDiagram
+    participant UserA
+    participant HUSHBOX_A
+    participant SocialMedia
+    participant HUSHBOX_B
+    participant UserB
+
+    UserA->>HUSHBOX_A: 1. Compose message + set passphrase
+    HUSHBOX_A->>HUSHBOX_A: 2. Encrypt & Generate Secured QR
+    HUSHBOX_A->>UserA: 3. Display Protected QR Code
+    
+    UserA->>SocialMedia: 4. Share QR via Twitter/Telegram/Other
+    Note right of SocialMedia: Platform-Neutral Exchange
+    SocialMedia->>UserB: 5. Notification of QR Post
+    
+    UserB->>HUSHBOX_B: 6. Import QR from Social Media
+    UserB->>HUSHBOX_B: 7. Input Passphrase (via secure channel)
+    HUSHBOX_B->>HUSHBOX_B: 8. Validate & Decrypt Contents
+    HUSHBOX_B->>UserB: 9. Display Clear-Text Message
+    
+    Note over UserA,UserB: Passphrase Exchange via<br>Signal/Encrypted Email/Physical Meet
+    Note over SocialMedia: Public QR Hosting<br>(Twitter DMs/Telegram Chats/Posts)
+```
+
+### Examples
 ### Secure Board Communication  
 ```mermaid
 sequenceDiagram
