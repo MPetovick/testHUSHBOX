@@ -13,8 +13,6 @@ HUSHBOX is a next-generation, privacy-first communication tool that redefines se
 
 Unlike traditional platforms, all encryption and decryption occur locally on your device, ensuring your data remains completely under your control. Messages are never stored, logged, or transmitted through third-party infrastructure. Instead, encrypted QR codes can be shared via any medium, while your passphrase remains separate—ensuring maximum security even if the message is intercepted.
 
-Key features include:
-
 🔐 **Zero-Server Architecture** – Messages never touch external servers
 
 🕵️ **Ephemeral Design** – No tracking, no storage, no metadata
