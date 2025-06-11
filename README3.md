@@ -68,7 +68,7 @@ sequenceDiagram
 ```
 ### Decryption flow
 ```mermaid
-flowchart TD
+sequenceDiagram
     A[Iniciar desencriptación] --> B{QR válido?}
     B -->|Sí| C[Ingresar passphrase]
     B -->|No| D[Error: QR inválido]
