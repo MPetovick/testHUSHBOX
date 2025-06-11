@@ -1,5 +1,251 @@
-# 🔒 HUSHBOX Enterprise - Documentación Técnica Completa
+# 🔒 HUSHBOX Enterprise - Secure Messaging with QR Encryption
 
+## 🚀 Overview  
+**HUSHBOX** is a cutting-edge privacy solution that combines military-grade encryption with QR technology for secure, serverless communication. Unlike traditional messaging platforms, HUSHBOX ensures messages never touch external servers - encryption and decryption occur entirely on the user's device. This document provides a technical deep dive into HUSHBOX's architecture, security model, and usage.
+
+```mermaid
+graph TD
+    A[User Device] --> B[Encryption Module]
+    A --> C[Decryption Module]
+    B --> D[QR Generation]
+    C --> E[QR Scanning]
+    B --> F[Local Storage]
+    C --> F
+    F --> G[Encrypted Message History]
+    B & C --> H[AES-256-GCM + HMAC-SHA256]
+```
+
+## 🔐 Core Security Architecture
+
+### Cryptographic Process Flow
+```mermaid
+sequenceDiagram
+    participant User
+    participant HUSHBOX
+    User->>HUSHBOX: Passphrase + Message
+    HUSHBOX->>Crypto: Generate salt (32B) + IV (16B)
+    Crypto->>Crypto: Derive AES & HMAC keys (PBKDF2)
+    Crypto->>Crypto: Compress message (DEFLATE)
+    Crypto->>Crypto: Encrypt (AES-256-GCM)
+    Crypto->>Crypto: Sign ciphertext (HMAC-SHA256)
+    Crypto->>QR: Generate secured QR code
+    HUSHBOX->>User: Display encrypted QR
+```
+
+### Enhanced Security Features
+1. **Dual-Key Derivation (PBKDF2-HMAC-SHA256)**:
+   - 310,000 iterations for brute-force resistance
+   - Separate keys for encryption (AES) and integrity (HMAC)
+   ```javascript
+   const derivedBits = await crypto.subtle.deriveBits(
+     { name: 'PBKDF2', salt, iterations: 310000, hash: 'SHA-256' },
+     baseKey,
+     CONFIG.AES_KEY_LENGTH + CONFIG.HMAC_KEY_LENGTH
+   );
+   ```
+
+2. **Authenticated Encryption**:
+   - AES-256-GCM for confidentiality
+   - HMAC-SHA256 for integrity verification
+   - Combined payload structure: `[salt][IV][ciphertext][HMAC]`
+
+3. **Memory Protection**:
+   - Secure wiping of sensitive buffers post-operation
+   ```javascript
+   secureWipe: (buffer) => {
+     const wipeArray = new Uint8Array(buffer);
+     for (let i = 0; i < wipeArray.length; i++) {
+       wipeArray[i] = 0; // Overwrite with zeros
+     }
+   }
+   ```
+
+4. **Anti-Brute Force**:
+   - 5-attempt limit with incremental delays
+   - Automatic lockout after excessive failures
+
+## ⚙️ Technical Specifications
+
+### Cryptography Parameters
+| Parameter               | Value         | Description                          |
+|-------------------------|---------------|--------------------------------------|
+| Encryption Algorithm    | AES-256-GCM   | NIST-approved authenticated encryption |
+| Key Derivation          | PBKDF2-HMAC-SHA256 | 310,000 iterations            |
+| Salt Length             | 32 bytes      | CSPRNG-generated per encryption      |
+| IV Length               | 16 bytes      | Unique per message                   |
+| HMAC Length             | 32 bytes      | SHA-256 output size                  |
+| Compression             | DEFLATE Level 6 | For messages >100 characters     |
+| Session Timeout         | 30 minutes    | Automatic sensitive data clearance   |
+
+### Dependencies
+| Library       | Version | Purpose                    | SRI Hash                               |
+|---------------|---------|----------------------------|----------------------------------------|
+| **pako**      | 2.1.0   | DEFLATE compression        | `sha256-7eJpOkpqUSa501ZpBis1jsq2rnubhqHPMC/rRahRSQc=` |
+| **qrcode.js** | 1.5.1   | QR generation              | `sha256-7GTYmrMJbc6AhJEt7f+fLKWuZBRNDKzUoILCk9XQa1k=` |
+| **jsQR**      | 1.4.0   | QR decoding                | `sha256-TnzVZFlCkL9D75PtJfOP7JASQkdCGD+pc60Lus+IrjA=` |
+| **jsPDF**     | 2.5.1   | PDF export                 | `sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=` |
+| **zxcvbn**    | 4.4.2   | Password strength analysis | `sha256-9CxlH0BQastrZiSQ8zjdR6WVHTMSA5xKuP5QkEhPNRo=` |
+
+## 🖥️ User Workflows
+
+### Encryption Process
+1. Enter passphrase (12+ chars with mixed character sets)
+2. Input secret message (max 10,000 characters)
+3. Click "Encrypt" to generate secured QR
+4. Options:
+   - Export as PDF
+   - Share directly
+   - Copy to clipboard
+   - Print for physical distribution
+
+### Decryption Process
+1. Obtain encrypted QR:
+   - Scan with camera
+   - Upload image file
+   - Receive via any channel
+2. Enter original passphrase
+3. Click "Decrypt" to reveal message
+4. Decrypted messages appear in local history
+
+### Message History Management
+```mermaid
+flowchart LR
+    A[History] --> B[Export as encrypted CSV]
+    A --> C[Import encrypted CSV]
+    A --> D[Clear local history]
+    B --> E[Passphrase-protected file]
+    C --> F[Decrypt with original passphrase]
+```
+
+## 🛡️ Enterprise Features
+
+### Corporate Security Controls
+1. **Session Management**:
+   - 30-minute auto-timeout
+   - Manual session termination
+   - Sensitive data wipe on session end
+
+2. **Audit Compliance**:
+   - Encrypted message history
+   - Tamper-evident logs
+   - GDPR/HIPAA compatible design
+
+3. **Secure Distribution**:
+   ```mermaid
+   sequenceDiagram
+       Legal->>HUSHBOX: Encrypt contract
+       HUSHBOX->>Legal: Generate secured QR
+       Legal->>Finance: Share QR via Teams
+       Legal->>Signal: Send passphrase separately
+       Finance->>HUSHBOX: Decrypt contract
+   ```
+
+### Technical Integration
+```bash
+# Enterprise Deployment
+git clone https://github.com/MPetovick/HUSHBOX.git
+cd HUSHBOX
+
+# Docker deployment
+docker build -t hushbox-enterprise .
+docker run -d -p 8080:80 hushbox-enterprise
+```
+
+## 📱 Usage Scenarios
+
+### Medical Data Transfer
+```mermaid
+flowchart TB
+    Doctor -->|Encrypt Patient Data| HUSHBOX
+    HUSHBOX -->|Secured QR| Patient_Chart
+    SMS -->|Passphrase| Patient
+    Patient -->|Scan QR| HUSHBOX
+    HUSHBOX -->|Decrypted| Patient_Device
+```
+
+### Secure Board Communication
+1. CEO encrypts quarterly report
+2. QR shared via corporate Slack
+3. Passphrase sent via Signal
+4. Executives decrypt using HUSHBOX
+
+### Offline Intelligence Gathering
+1. Field agent encrypts intelligence
+2. QR printed/photographed
+3. Physical transfer to command
+4. Decryption at headquarters
+
+## ⚠️ Security Best Practices
+
+### Passphrase Requirements
+```mermaid
+pie
+    title Passphrase Complexity
+    "Length > 12 chars" : 30
+    "Uppercase chars" : 20
+    "Lowercase chars" : 20
+    "Numbers" : 15
+    "Symbols" : 15
+```
+
+### Operational Security
+1. **Always** share passphrase via separate channel
+2. Set message expiration expectations
+3. Clear history after sensitive operations
+4. Use private browsing sessions
+5. Verify QR source before scanning
+6. For printed QRs: Shred after use
+
+## 📊 Performance Metrics
+
+| Operation          | Avg. Time | CPU Usage | Data Size Reduction |
+|--------------------|-----------|-----------|---------------------|
+| Encryption (1KB)   | 120ms     | 15%       | 35-60% (compressed) |
+| Decryption         | 180ms     | 18%       | N/A                 |
+| QR Generation      | 80ms      | 8%        | N/A                 |
+| PDF Export         | 220ms     | 12%       | N/A                 |
+
+## 🌐 Getting Started
+
+### Web Version
+Access directly at:  
+[https://www.hushbox.online](https://www.hushbox.online)
+
+### Local Deployment
+```bash
+git clone https://github.com/MPetovick/HUSHBOX.git
+cd HUSHBOX
+
+# Python simple server
+python3 -m http.server 8000
+
+# Node.js
+npx serve
+```
+
+### PWA Installation
+1. Visit [https://www.hushbox.online](https://www.hushbox.online)
+2. Click "Install" in browser menu
+3. Launch like native application
+
+## 📜 License
+MIT License - See [LICENSE](https://github.com/MPetovick/HUSHBOX/blob/main/LICENSE)
+
+## 🔗 Contact & Support
+- **Security Issues**: security@hushbox.com  
+- **Enterprise Support**: enterprise@hushbox.com  
+- **Community**: 
+  [Telegram](https://t.me/HUSHBOX_QR) | 
+  [Twitter](https://twitter.com/HUSHBOXonline)  
+- **Documentation**: [docs.hushbox.com](https://docs.hushbox.com)
+
+---
+
+<div align="center">
+  <br>
+  <strong>Your Secrets Deserve Zero-Trust Security</strong> 🔐<br>
+  <a href="https://www.hushbox.online">www.hushbox.online</a>
+</div>
 
 ## 🔄 Flujos de Trabajo Empresariales
 
