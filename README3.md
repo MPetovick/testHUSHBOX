@@ -36,28 +36,10 @@ Unlike traditional platforms, all encryption and decryption occur locally on you
 | 📱 **User Experience**   | - Responsive design with mobile-first approach <br> - Real-time passphrase strength indicators <br> - Animated QR codes with custom branding <br> - Camera QR scanning (mobile devices) *Coming Soon <br> - Social media integration for secure sharing |
 | 🛡️ **Advanced Protections** | - IV time-stamping for replay attack prevention <br> - Memory sanitization after operations <br> - Secure content disposal <br> - Tamper-evident payload design|
 
-
-### 💻 User Experience  
-| Feature | Description |
-|---------|-------------|
-| **QR Code Encryption** | Convert messages to secure scannable codes |
-| **Real-time Passphrase Analysis** | Visual strength meter with zxcvbn validation |
-| **Cross-Platform** | Works on any modern browser (PWA installable) |
-| **Offline Capable** | Full functionality without internet |
-| **Export Options** | Save as PDF/image or share directly |
-
-### 🏢 Enterprise Ready  
-| Feature | Benefit |
-|---------|---------|
-| **30-Minute Session Timeout** | Automatic sensitive data clearance |
-| **Encrypted History Export** | CSV export with passphrase protection |
-| **No Metadata Collection** | Complete communication anonymity |
-| **Audit-Ready Design** | Transparent security implementation |
-| **GDPR/HIPAA Compliant** | Meets strict data protection standards |
-
 ---
 
-## ⚙️ Technical Stack  
+## ⚙️ System Architecture
+
 
 ### Frontend Architecture  
 ```mermaid
