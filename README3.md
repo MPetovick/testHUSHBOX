@@ -38,7 +38,7 @@ Unlike traditional platforms, all encryption and decryption occur locally on you
 
 ---
 
-## ⚙️ System Architecture
+## ⚙️ Technical Stack
 ### Frontend Architecture  
 ```mermaid
 graph TD
@@ -53,6 +53,33 @@ graph TD
     C & D --> I[AES-256-GCM Cryptography]
     I --> J[PBKDF2 Key Derivation]
 ```
+### Encryption flow
+```mermaid
+sequenceDiagram
+    Usuario->>Aplicación: Ingresa mensaje + passphrase
+    Aplicación->>Crypto: Validar passphrase (zxcvbn)
+    Crypto->>Crypto: Generar salt (32B) + IV (16B)
+    Crypto->>Crypto: Derivar clave (PBKDF2-HMAC-SHA256)
+    Crypto->>Crypto: Comprimir mensaje (pako DEFLATE)
+    Crypto->>Crypto: Encriptar (AES-256-GCM)
+    Crypto->>QR: Convertir a Base64
+    QR->>UI: Generar código QR animado
+    UI->>Usuario: Mostrar QR seguro
+```
+### Decryption flow
+```mermaid
+flowchart TD
+    A[Iniciar desencriptación] --> B{QR válido?}
+    B -->|Sí| C[Ingresar passphrase]
+    B -->|No| D[Error: QR inválido]
+    C --> E{Passphrase correcta?}
+    E -->|Sí| F[Desencriptar y mostrar]
+    E -->|No| G[Contador intentos++]
+    G --> H{Intentos > 5?}
+    H -->|Sí| I[Bloquear temporalmente]
+    H -->|No| C
+```
+
 
 ### Dependencies  
 | Library | Version | Purpose | SRI Hash |
