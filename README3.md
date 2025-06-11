@@ -1,6 +1,6 @@
 # 🔒 HUSHBOX - Secure Messaging with QR Encryption  
 **Your Digital Privacy Vault - Because secrets deserve better than the cloud**  
-#<img src="https://github.com/MPetovick/testHUSHBOX/blob/main/logoHBX.png" width="100" alt="HUSHBOX logo">
+
 <div align="center">
   <img src="https://github.com/MPetovick/testHUSHBOX/blob/main/logoHBX.png" width="100" alt="HUSHBOX logo">
   <p>
