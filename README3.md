@@ -69,7 +69,7 @@ graph TD
 
 ## 🛠️ Installation & Usage  
 
-### 📁 Project Structure
+### Project Structure
 ```bash
 HUSHBOX/
 ├── index.html          
