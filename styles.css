@@ -1,4 +1,3 @@
-/* Global variables */
 :root {
     --primary-color: #00cc99;
     --secondary-color: #2a2a2a;
@@ -18,7 +17,6 @@
     --security-level-low: #ff4d4d;
 }
 
-/* General styles */
 * {
     margin: 0;
     padding: 0;
@@ -616,7 +614,6 @@ body::before {
     outline-offset: 1px;
 }
 
-/* Camera Modal */
 .camera-modal {
     display: none;
     position: fixed;
@@ -1002,7 +999,6 @@ body::before {
     accent-color: var(--primary-color);
 }
 
-/* Session Modal */
 .session-modal {
     position: fixed;
     top: 0;
@@ -1074,7 +1070,6 @@ body::before {
     outline-offset: 2px;
 }
 
-/* Footer */
 .footer {
     text-align: center;
     padding: 0.5rem;
@@ -1137,7 +1132,6 @@ body::before {
     display: none !important;
 }
 
-/* Loader */
 .loader {
     display: inline-block;
     width: 1.1em;
@@ -1153,7 +1147,6 @@ body::before {
     to { transform: rotate(360deg); }
 }
 
-/* Toast Notifications */
 .toast {
     position: fixed;
     bottom: 1.5rem;
@@ -1205,7 +1198,6 @@ body::before {
     color: var(--warning-color);
 }
 
-/* Error Message */
 .error-message {
     color: var(--error-color);
     font-size: 0.8rem;
@@ -1213,14 +1205,12 @@ body::before {
     display: block;
 }
 
-/* Print protection */
 @media print {
     .no-print, #qr-container, .message-container {
         display: none !important;
     }
 }
 
-/* Performance optimization */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation: none !important;
@@ -1228,7 +1218,6 @@ body::before {
     }
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
     .main-grid {
         grid-template-columns: 1fr;
@@ -1335,7 +1324,6 @@ body::before {
         height: 50vh;
     }
     
-    /* Ajustes para el placeholder en móviles */
     .message-placeholder {
         font-size: 1.1rem;
         padding: 1.2rem;
@@ -1394,7 +1382,6 @@ body::before {
     }
 }
 
-/* Copy icon for messages */
 .copy-icon {
     font-size: 0.9rem;
     color: var(--primary-color);
@@ -1408,14 +1395,12 @@ body::before {
     transform: scale(1.2);
 }
 
-/* Password text adjustment */
 .passphrase-text {
     flex-grow: 1;
     text-align: left;
     word-break: break-all;
 }
 
-/* History controls */
 .history-controls {
     display: flex;
     justify-content: center;
@@ -1423,7 +1408,6 @@ body::before {
     margin-top: 1rem;
 }
 
-/* Scrollbar styling */
 ::-webkit-scrollbar {
     width: 8px;
 }
@@ -1442,7 +1426,6 @@ body::before {
     background: var(--primary-color);
 }
 
-/* Settings Modal */
 #settings-modal .modal-content {
     max-width: 500px;
 }
@@ -1481,7 +1464,7 @@ body::before {
     box-shadow: 0 0 10px var(--glow-color);
 }
 
-/* Ajustes para select */
+
 #security-level,
 #auto-wipe,
 #qr-error-correction {
