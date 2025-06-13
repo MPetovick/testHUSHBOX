@@ -73,6 +73,7 @@ body::before {
     justify-content: center;
     gap: 1.5rem;
     flex-wrap: wrap;
+    width: 100%;
 }
 
 .logo {
@@ -150,6 +151,8 @@ body::before {
     padding: 0.2rem 0.6rem;
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.1);
+    max-width: 300px;
+    margin: 0 auto;
 }
 
 .security-level.high {
@@ -456,6 +459,7 @@ body::before {
     overflow-y: auto;
     box-shadow: none;
     position: relative;
+    min-height: 200px; /* Altura mínima para mejor visibilidad */
 }
 
 .message {
@@ -505,15 +509,15 @@ body::before {
 }
 
 .message-placeholder {
-    font-size: clamp(0.9rem, 1.8vw, 1rem);
+    font-size: clamp(1.1rem, 1.8vw, 1.2rem);
     text-align: center;
     color: rgba(255, 255, 255, 0.6);
     margin: auto;
     padding: 1.5rem;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    position: static;
+    transform: none;
+    top: auto;
+    left: auto;
 }
 
 .message-placeholder i {
@@ -522,7 +526,7 @@ body::before {
     color: rgba(0, 204, 153, 0.3);
 }
 
-.message-placeholder p:last-child {
+.message-placeholder p {
     font-size: 0.85rem;
     margin-top: 0.4rem;
     color: rgba(255, 255, 255, 0.5);
@@ -1133,10 +1137,6 @@ body::before {
     display: none !important;
 }
 
-#coming-soon-message.visible {
-    opacity: 1;
-}
-
 /* Loader */
 .loader {
     display: inline-block;
@@ -1255,11 +1255,6 @@ body::before {
         max-height: 200px;
     }
 
-    #coming-soon-message {
-        font-size: 0.9rem;
-        padding: 8px 16px;
-    }
-
     .modal-content, .passphrase-modal .modal-content {
         max-width: 95%;
         padding: 1rem;
@@ -1339,13 +1334,32 @@ body::before {
     .camera-container {
         height: 50vh;
     }
+    
+    /* Ajustes para el placeholder en móviles */
+    .message-placeholder {
+        font-size: 1.1rem;
+        padding: 1.2rem;
+    }
+    
+    .message-placeholder i {
+        font-size: 2.8rem;
+    }
+    
+    .message-placeholder p {
+        font-size: 1rem;
+        margin-top: 0.8rem;
+    }
+    
+    .message-container {
+        min-height: 200px;
+    }
 }
 
 @media (min-width: 769px) and (max-width: 1024px) {
     .feature-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-})
+}
 
 @media (max-width: 480px) {
     .btn-secondary {
