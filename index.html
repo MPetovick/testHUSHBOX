@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <meta name="description" content="HushBox Enterprise - Secure messaging with enterprise-grade QR encryption">
-    <meta name="keywords" content="secure messaging, encryption, QR, AES-256, privacy">
+    <meta name="keywords" content="secure messaging, encryption, QR, AES-256, privacy, enterprise security">
     <meta name="author" content="HushBox Team">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'wasm-unsafe-eval'; style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; font-src https://cdnjs.cloudflare.com; img-src 'self' data:;">
     <title>HushBox Enterprise - Secure Messaging</title>
@@ -22,6 +22,12 @@
                 </a>
                 HUSH<span class="white-text">B</span><i class="fas fa-qrcode qr-icon" aria-hidden="true"></i><span class="white-text">X</span> 
             </h1>
+        </div>
+        <div class="header-bottom">
+			<div class="security-level high">
+				<i class="fas fa-shield-alt"></i>
+				<span>Security Level: High</span>
+			</div>        
         </div>
     </header>
     
@@ -63,9 +69,10 @@
                         <button type="button" id="scan-button" class="btn-icon" title="Scan QR" aria-label="Scan QR">
                             <i class="fas fa-camera"></i>
                         </button>
-                        <div id="coming-soon-message" class="hidden">
-                            <p>Coming Soon!</p>
-                        </div>
+                        <!-- Cambiado a botón de configuración -->
+                        <button type="button" id="settings-button" class="btn-icon" title="Settings" aria-label="Settings">
+                            <i class="fas fa-cog"></i>
+                        </button>
                     </div>
 
                     <div class="action-buttons compact">
@@ -94,9 +101,10 @@
                         </div>
                     </div>
                     <canvas id="qr-canvas" aria-label="Encrypted QR Code"></canvas>
-                    <p class="qr-note">
-                        <i class="fas fa-info-circle" aria-hidden="true"></i> This QR contains your securely encrypted message
-                    </p>
+                    <div class="qr-meta">
+                        <span><i class="fas fa-shield-alt"></i> Security Level: High</span>
+                        <span><i class="fas fa-clock"></i> Generated: <span id="qr-time">--:--</span></span>
+                    </div>
                 </div>
             </section>
 
@@ -125,7 +133,7 @@
         </div>
     </main>
 
-    <!-- Footer -->
+    <!-- Footer con nuevo botón de información -->
     <footer class="footer" role="contentinfo">
         <div class="social-icons">
             <a href="https://t.me/HUSHBOX_QR" target="_blank" rel="noopener noreferrer" class="btn-icon social-icon telegram" title="Telegram" aria-label="Telegram Channel">
@@ -140,6 +148,10 @@
             <a href="mailto:support@hushbox.com" class="btn-icon social-icon support" title="Support" aria-label="Support">
                 <i class="fas fa-headset"></i>
             </a>
+            <!-- Nuevo botón de información -->
+            <button id="info-button" class="btn-icon social-icon" title="Security Information" aria-label="Security Information">
+                <i class="fas fa-info-circle"></i>
+            </button>
         </div>
         <p>© 2025 HushBox Enterprise. All rights reserved.</p>
         <p id="app-version">Version 3.2.2 | Security Certificate: HBX-SEC-2025-08</p>
@@ -206,6 +218,8 @@
             </div>
             <div class="camera-container">
                 <video id="camera-preview" autoplay playsinline aria-hidden="true"></video>
+                <div class="detection-box" id="detection-box"></div>
+                <div class="scan-beam" id="scan-beam" aria-hidden="true"></div>
             </div>
             <div class="camera-hint">
                 <p lang="en">Point the camera at the QR code to scan</p>
@@ -223,6 +237,9 @@
                 <p class="modal-subtitle" lang="en">Enter the passphrase to decrypt the QR code</p>
             </div>
             <div class="modal-body">
+                <div class="qr-meta" aria-live="polite">
+                    <span id="scan-time" lang="en">Scanned at: --:--</span>
+                </div>
                 <div class="input-group">
                     <label class="input-label" for="modal-passphrase">Passphrase</label>
                     <input type="password" id="modal-passphrase" placeholder="Enter passphrase" required aria-describedby="modal-passphrase-error">
@@ -237,6 +254,7 @@
             </div>
             <div class="modal-actions">
                 <button id="modal-decrypt-button" class="btn-primary" aria-label="Decrypt Message">Decrypt</button>
+                <button id="modal-rescan-button" class="btn-secondary" aria-label="Rescan QR Code">Rescan</button>
                 <button id="modal-cancel-button" class="btn-secondary" aria-label="Cancel">Cancel</button>
             </div>
         </div>
@@ -247,6 +265,65 @@
 
     <!-- Session modal container (optional, created dynamically) -->
     <div id="session-modal-container"></div>
+
+    <!-- Nuevo modal de configuración -->
+    <div id="settings-modal" class="modal" role="dialog" aria-labelledby="settings-title" aria-modal="true" tabindex="-1">
+        <div class="modal-content">
+            <button class="close-modal" aria-label="Close Settings">×</button>
+            <div class="modal-header">
+                <h2 id="settings-title"><i class="fas fa-cog" aria-hidden="true"></i> Security Settings</h2>
+                <p class="modal-subtitle" lang="en">Customize encryption parameters</p>
+            </div>
+            <div class="modal-body">
+                <form id="settings-form">
+                    <div class="input-group">
+                        <label class="input-label" for="pbkdf2-iterations">PBKDF2 Iterations</label>
+                        <input type="number" id="pbkdf2-iterations" min="100000" max="1000000" step="10000" value="310000" required>
+                        <p class="hint">Higher values increase security but slow down processing (Default: 310,000)</p>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label" for="security-level">Security Level</label>
+                        <select id="security-level">
+                            <option value="high">High (AES-256 + HMAC-SHA256)</option>
+                            <option value="medium">Medium (AES-256)</option>
+                            <option value="low">Low (AES-128)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label" for="session-timeout">Session Timeout (minutes)</label>
+                        <input type="number" id="session-timeout" min="1" max="120" value="30">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label" for="auto-wipe">Auto Wipe Sensitive Data</label>
+                        <select id="auto-wipe">
+                            <option value="5">After 5 minutes</option>
+                            <option value="10">After 10 minutes</option>
+                            <option value="30">After 30 minutes</option>
+                            <option value="0" selected>Never</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label" for="qr-error-correction">QR Error Correction</label>
+                        <select id="qr-error-correction">
+                            <option value="H">High (30%)</option>
+                            <option value="Q">Medium (25%)</option>
+                            <option value="M">Low (15%)</option>
+                            <option value="L">Lowest (7%)</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-actions">
+                <button id="save-settings" class="btn-primary" aria-label="Save Settings">Save Settings</button>
+                <button id="reset-settings" class="btn-secondary" aria-label="Reset to Defaults">Reset Defaults</button>
+                <button id="cancel-settings" class="btn-secondary" aria-label="Cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
 
     <!-- External dependencies with SRI -->
     <script defer src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js" integrity="sha256-7eJpOkpqUSa501ZpBis1jsq2rnubhqHPMC/rRahRSQc=" crossorigin="anonymous"></script>
