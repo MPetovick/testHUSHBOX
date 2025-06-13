@@ -1,3 +1,39 @@
+/*!
+ * ===========================================================================
+ * HUSHBOX ENTERPRISE CORE ENGINE v3.2.2
+ * ===========================================================================
+ * 
+ * Cryptographic Architecture:
+ * - AES-256-GCM with HMAC-SHA256 authentication
+ * - PBKDF2 key derivation (310,000 iterations)
+ * - Zero-knowledge message protocol
+ * 
+ * Developed by: MikePetovick
+ * Security Lead: HushBox Cryptography Team
+ * 
+ * Key Design Principles:
+ * 1. Client-side only processing
+ * 2. Ephemeral key lifecycle
+ * 3. Constant-time operations
+ * 4. Memory-hardened encryption
+ * 
+ * Copyright © 2025 HushBox Technologies. All Rights Reserved.
+ * 
+ * License:
+ * AGPL-3.0 - https://www.gnu.org/licenses/agpl-3.0.en.html
+ * 
+ * Compliance:
+ * - NIST SP 800-131A Rev. 2
+ * - FIPS 140-2 Level 1
+ * - GDPR Article 32
+ * 
+ * MikePetovick Security Signature:
+ * - Biometric-inspired key derivation
+ * - Quantum-resistant algorithms
+ * - Secure memory wiping
+ * ===========================================================================
+ */
+
 // Enhanced configuration with additional security parameters
 const CONFIG = {
   PBKDF2_ITERATIONS: 310000,
