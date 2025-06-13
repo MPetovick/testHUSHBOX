@@ -1,3 +1,15 @@
+/*! ======================================================================
+ *  HUSHBOX ENTERPRISE v3.2.2 - Secure QR Messaging Platform
+ *  CSS Architecture & Design: MikePetovick
+ *  Copyright © 2025 HushBox Technologies. All rights reserved.
+ *  Security Certificate: HBX-SEC-2025-08 | Authored: 2025-06-14
+ *  License: AGPL-3.0 (https://www.gnu.org/licenses/agpl-3.0.en.html)
+ *  Code Style: Modular BEM | Variables | Responsive-first
+ *  Core Features: Crypto-grade UI | Accessibility AA+ | Zero-dependency
+ *  MikePetovick Design Signature: Dark theme with biometric-inspired accents
+ *  HushBox Technology Stack: WebCrypto API | Military-grade encryption
+ * ====================================================================== */
+
 :root {
     --primary-color: #00cc99;
     --secondary-color: #2a2a2a;
