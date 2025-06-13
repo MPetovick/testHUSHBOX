@@ -40,7 +40,6 @@ const dom = {
   messageInput: document.getElementById('message-input'),
   sendButton: document.getElementById('send-button'),
   qrCanvas: document.getElementById('qr-canvas'),
-  decodeButton: document.getElementById('decode-button'),
   shareButton: document.getElementById('share-button'),
   copyButton: document.getElementById('copy-button'),
   qrContainer: document.getElementById('qr-container'),
@@ -72,7 +71,6 @@ const dom = {
   scanLine: null,
   settingsButton: document.getElementById('settings-button'),
   qrTime: document.getElementById('qr-time'),
-  infoButton: document.getElementById('info-button'),
   settingsModal: document.getElementById('settings-modal'),
   closeSettings: document.querySelector('#settings-modal .close-modal'),
   saveSettings: document.getElementById('save-settings'),
@@ -800,13 +798,6 @@ const ui = {
     setTimeout(() => {
       element.classList.add('hidden');
     }, CONFIG.NOTICE_TIMEOUT);
-  },
-  
-  showSecurityInfo: () => {
-    ui.showToast(
-      `Security Level: ${appState.securityLevel.toUpperCase()}\nEncryption: AES-256-GCM + HMAC-SHA256`,
-      'info'
-    );
   }
 };
 
@@ -961,13 +952,6 @@ const handlers = {
       dom.messageInput.value = '';
       dom.passphrase.value = '';
       ui.updatePasswordStrength('');
-      dom.decodeButton.disabled = false;
-      
-      // Update security level display
-      const securityLevelElement = document.querySelector('.security-level');
-      if (securityLevelElement) {
-        securityLevelElement.className = `security-level ${appState.securityLevel}`;
-      }
     } catch (error) {
       ui.displayMessage(error.message);
       ui.showToast(error.message, 'error');
@@ -975,45 +959,6 @@ const handlers = {
     } finally {
       appState.isEncrypting = false;
       ui.toggleButton(dom.sendButton, false, '<i class="fas fa-lock"></i> Encrypt');
-    }
-  },
-
-  handleDecrypt: async (qrData) => {
-    if (appState.isDecrypting) return;
-
-    if (handlers.decryptAttempts >= CONFIG.MAX_DECRYPT_ATTEMPTS) {
-      ui.showToast('Too many decryption attempts. Please wait.', 'error');
-      setTimeout(() => { handlers.decryptAttempts = 0; }, CONFIG.DECRYPT_DELAY_INCREMENT * 10);
-      return;
-    }
-
-    const passphrase = dom.passphrase.value.trim();
-    if (!passphrase) {
-      ui.displayMessage('Please enter a passphrase');
-      ui.showError(dom.passphraseError, 'Passphrase missing');
-      ui.showToast('Passphrase missing', 'error');
-      return;
-    }
-
-    appState.isDecrypting = true;
-    ui.toggleButton(dom.decodeButton, true, '<span class="loader"></span> Decrypting...');
-
-    try {
-      const decrypted = await cryptoUtils.decryptMessage(qrData, passphrase);
-      ui.displayMessage(`Decrypted message: ${ui.sanitizeHTML(decrypted)}`);
-      ui.showToast('Message decrypted successfully', 'success');
-      dom.passphrase.value = '';
-      ui.updatePasswordStrength('');
-      handlers.decryptAttempts = 0;
-    } catch (error) {
-      handlers.decryptAttempts++;
-      ui.displayMessage(error.message);
-      ui.showToast(error.message, 'error');
-      ui.showError(dom.passphraseError, error.message);
-    } finally {
-      appState.isDecrypting = false;
-      ui.toggleButton(dom.decodeButton, false, '<i class="fas fa-unlock"></i> Decrypt');
-      dom.decodeButton.disabled = !appState.lastEncryptedData;
     }
   },
 
@@ -1378,7 +1323,6 @@ const handlers = {
     appState.lastEncryptedData = null;
     dom.qrContainer.classList.add('hidden');
     ui.updatePasswordStrength('');
-    dom.decodeButton.disabled = true;
     ui.showToast('Sensitive data cleared', 'success');
   },
 
@@ -1415,7 +1359,6 @@ const handlers = {
   initEventListeners: () => {
     try {
       dom.encryptForm.addEventListener('submit', handlers.handleEncrypt);
-      dom.decodeButton.addEventListener('click', () => handlers.handleDecrypt(appState.lastEncryptedData));
       dom.shareButton.addEventListener('click', handlers.handleShare);
       dom.copyButton.addEventListener('click', handlers.handleCopy);
       dom.scanButton.addEventListener('click', ui.showCameraModal);
@@ -1480,7 +1423,6 @@ const handlers = {
       document.addEventListener('click', handlers.resetSessionTimer);
       document.addEventListener('keypress', handlers.resetSessionTimer);
       
-      // Nuevos listeners para configuración
       dom.settingsButton.addEventListener('click', () => {
         updateSettingsUI();
         dom.settingsModal.style.display = 'flex';
@@ -1501,9 +1443,6 @@ const handlers = {
       });
       
       dom.resetSettings.addEventListener('click', resetSettings);
-      
-      // Mover la funcionalidad de info al nuevo botón
-      dom.infoButton.addEventListener('click', ui.showSecurityInfo);
       
       // Add PWA installation prompt
       window.addEventListener('beforeinstallprompt', (e) => {
