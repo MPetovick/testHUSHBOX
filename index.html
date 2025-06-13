@@ -24,10 +24,10 @@
             </h1>
         </div>
         <div class="header-bottom">
-			<div class="security-level high">
-				<i class="fas fa-shield-alt"></i>
-				<span>Security Level: High</span>
-			</div>        
+            <div class="security-level high">
+                <i class="fas fa-shield-alt"></i>
+                <span>Security Level: High</span>
+            </div>
         </div>
     </header>
     
@@ -69,7 +69,6 @@
                         <button type="button" id="scan-button" class="btn-icon" title="Scan QR" aria-label="Scan QR">
                             <i class="fas fa-camera"></i>
                         </button>
-                        <!-- Cambiado a botón de configuración -->
                         <button type="button" id="settings-button" class="btn-icon" title="Settings" aria-label="Settings">
                             <i class="fas fa-cog"></i>
                         </button>
@@ -113,8 +112,8 @@
                 <div id="messages" class="message-container" role="log" aria-live="polite">
                     <div class="message-placeholder">
                         <i class="fas fa-comments" aria-hidden="true"></i>
-                        <p>Encrypted and decrypted messages will appear here</p>
-                        <p>Secure message history</p>
+                        <p>Messages will appear here</p>
+                        <p>Secure history</p>
                     </div>
                 </div>
                 
@@ -133,7 +132,7 @@
         </div>
     </main>
 
-    <!-- Footer con nuevo botón de información -->
+    <!-- Footer -->
     <footer class="footer" role="contentinfo">
         <div class="social-icons">
             <a href="https://t.me/HUSHBOX_QR" target="_blank" rel="noopener noreferrer" class="btn-icon social-icon telegram" title="Telegram" aria-label="Telegram Channel">
@@ -148,7 +147,6 @@
             <a href="mailto:support@hushbox.com" class="btn-icon social-icon support" title="Support" aria-label="Support">
                 <i class="fas fa-headset"></i>
             </a>
-            <!-- Nuevo botón de información -->
             <button id="info-button" class="btn-icon social-icon" title="Security Information" aria-label="Security Information">
                 <i class="fas fa-info-circle"></i>
             </button>
@@ -263,10 +261,10 @@
     <!-- Notification container -->
     <div id="toast-container" role="alert" aria-live="assertive"></div>
 
-    <!-- Session modal container (optional, created dynamically) -->
+    <!-- Session modal container -->
     <div id="session-modal-container"></div>
 
-    <!-- Nuevo modal de configuración -->
+    <!-- Settings modal -->
     <div id="settings-modal" class="modal" role="dialog" aria-labelledby="settings-title" aria-modal="true" tabindex="-1">
         <div class="modal-content">
             <button class="close-modal" aria-label="Close Settings">×</button>
@@ -325,12 +323,11 @@
         </div>
     </div>
 
-    <!-- External dependencies with SRI -->
+    <!-- External dependencies -->
     <script defer src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js" integrity="sha256-7eJpOkpqUSa501ZpBis1jsq2rnubhqHPMC/rRahRSQc=" crossorigin="anonymous"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js" integrity="sha256-7GTYmrMJbc6AhJEt7f+fLKWuZBRNDKzUoILCk9XQa1k=" crossorigin="anonymous"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js" integrity="sha256-TnzVZFlCkL9D75PtJfOP7JASQkdCGD+pc60Lus+IrjA=" crossorigin="anonymous"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" integrity="sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=" crossorigin="anonymous"></script>
-    <!-- Add zxcvbn for password validation -->
     <script defer src="https://cdn.jsdelivr.net/npm/zxcvbn@4.4.2/dist/zxcvbn.js" integrity="sha256-9CxlH0BQastrZiSQ8zjdR6WVHTMSA5xKuP5QkEhPNRo=" crossorigin="anonymous"></script>
     <!-- Main script -->
     <script defer src="script.js"></script>
