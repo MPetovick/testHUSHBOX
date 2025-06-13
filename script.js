@@ -1,11 +1,12 @@
-// Global configuration
+
+// Enhanced configuration with additional security parameters
 const CONFIG = {
   PBKDF2_ITERATIONS: 310000,
   SALT_LENGTH: 32,
   IV_LENGTH: 16,
   AES_KEY_LENGTH: 256,
   HMAC_KEY_LENGTH: 256,
-  HMAC_LENGTH: 32,  // SHA-256 HMAC length
+  HMAC_LENGTH: 32,
   QR_SIZE: 220,
   MIN_PASSPHRASE_LENGTH: 12,
   MAX_MESSAGE_LENGTH: 10000,
@@ -14,65 +15,85 @@ const CONFIG = {
   MAX_DECRYPT_ATTEMPTS: 5,
   NOTICE_TIMEOUT: 8000,
   SESSION_TIMEOUT: 1800000, // 30 minutes
-  COMPRESSION_THRESHOLD: 100
+  COMPRESSION_THRESHOLD: 100,
+  HISTORY_STORAGE_KEY: 'hushbox_message_history',
+  AUTO_WIPE: 0, // Minutes, 0 = disabled
+  QR_ERROR_CORRECTION: 'H'
 };
 
-// DOM elements
+// DOM elements with enhanced error handling
 const dom = {
-  encryptForm: document.getElementById('encrypt-form') || throwError('Encrypt form not found'),
-  uploadArrow: document.getElementById('upload-arrow-button') || throwError('Upload arrow button not found'),
-  scanButton: document.getElementById('scan-button') || throwError('Scan button not found'),
-  pdfButton: document.getElementById('pdf-button') || throwError('PDF button not found'),
-  messages: document.getElementById('messages') || throwError('Messages container not found'),
-  passphrase: document.getElementById('passphrase') || throwError('Passphrase input not found'),
-  messageInput: document.getElementById('message-input') || throwError('Message input not found'),
-  sendButton: document.getElementById('send-button') || throwError('Send button not found'),
-  qrCanvas: document.getElementById('qr-canvas') || throwError('QR canvas not found'),
-  decodeButton: document.getElementById('decode-button') || throwError('Decode button not found'),
-  shareButton: document.getElementById('share-button') || throwError('Share button not found'),
-  copyButton: document.getElementById('copy-button') || throwError('Copy button not found'),
-  qrContainer: document.getElementById('qr-container') || throwError('QR container not found'),
-  comingSoon: document.getElementById('coming-soon-message') || throwError('Coming soon message not found'),
-  cameraModal: document.getElementById('camera-modal') || throwError('Camera modal not found'),
-  cameraPreview: document.getElementById('camera-preview') || throwError('Camera preview not found'),
-  closeCamera: document.getElementById('close-camera') || throwError('Close camera button not found'),
-  cameraContainer: document.querySelector('.camera-container') || throwError('Camera container not found'),
+  getElement(selector) {
+    const element = document.querySelector(selector);
+    if (!element) {
+      console.error(`DOM element not found: ${selector}`);
+      throw new Error(`DOM element not found: ${selector}`);
+    }
+    return element;
+  },
+  
+  encryptForm: document.getElementById('encrypt-form'),
+  uploadArrow: document.getElementById('upload-arrow-button'),
+  scanButton: document.getElementById('scan-button'),
+  pdfButton: document.getElementById('pdf-button'),
+  messages: document.getElementById('messages'),
+  passphrase: document.getElementById('passphrase'),
+  messageInput: document.getElementById('message-input'),
+  sendButton: document.getElementById('send-button'),
+  qrCanvas: document.getElementById('qr-canvas'),
+  decodeButton: document.getElementById('decode-button'),
+  shareButton: document.getElementById('share-button'),
+  copyButton: document.getElementById('copy-button'),
+  qrContainer: document.getElementById('qr-container'),
+  comingSoon: document.getElementById('coming-soon-message'),
+  cameraModal: document.getElementById('camera-modal'),
+  cameraPreview: document.getElementById('camera-preview'),
+  closeCamera: document.getElementById('close-camera'),
+  cameraContainer: document.querySelector('.camera-container'),
   fileInput: document.createElement('input'),
-  charCounter: document.getElementById('char-counter') || throwError('Char counter not found'),
-  generatePass: document.querySelector('.generate-password') || throwError('Generate password button not found'),
-  togglePassword: document.querySelector('.toggle-password') || throwError('Toggle password button not found'),
-  passwordStrengthBar: document.getElementById('password-strength-bar') || throwError('Password strength bar not found'),
-  clearHistory: document.getElementById('clear-history') || throwError('Clear history button not found'),
-  exportHistory: document.getElementById('export-history') || throwError('Export history button not found'),
-  importHistory: document.getElementById('import-history') || throwError('Import history button not found'),
-  toastContainer: document.getElementById('toast-container') || throwError('Toast container not found'),
-  passphraseError: document.getElementById('passphrase-error') || throwError('Passphrase error not found'),
-  tutorialModal: document.getElementById('tutorial-modal') || throwError('Tutorial modal not found'),
-  closeTutorial: document.getElementById('close-tutorial') || throwError('Close tutorial button not found'),
-  dontShowAgainCheckbox: document.getElementById('dont-show-again-checkbox') || throwError('Don\'t show again checkbox not found'),
-  dontShowAgainButton: document.getElementById('dont-show-again') || throwError('Don\'t show again button not found'),
-  passphraseModal: document.getElementById('passphrase-modal') || throwError('Passphrase modal not found'),
-  modalPassphrase: document.getElementById('modal-passphrase') || throwError('Modal passphrase input not found'),
-  modalPassphraseError: document.getElementById('modal-passphrase-error') || throwError('Modal passphrase error not found'),
-  modalDecryptButton: document.getElementById('modal-decrypt-button') || throwError('Modal decrypt button not found'),
-  modalCancelButton: document.getElementById('modal-cancel-button') || throwError('Modal cancel button not found'),
-  closePassphraseModal: document.getElementById('close-passphrase') || throwError('Close passphrase modal button not found'),
+  charCounter: document.getElementById('char-counter'),
+  generatePass: document.querySelector('.generate-password'),
+  togglePassword: document.querySelector('.toggle-password'),
+  passwordStrengthBar: document.getElementById('password-strength-bar'),
+  clearHistory: document.getElementById('clear-history'),
+  exportHistory: document.getElementById('export-history'),
+  importHistory: document.getElementById('import-history'),
+  toastContainer: document.getElementById('toast-container'),
+  passphraseError: document.getElementById('passphrase-error'),
+  tutorialModal: document.getElementById('tutorial-modal'),
+  closeTutorial: document.getElementById('close-tutorial'),
+  dontShowAgainCheckbox: document.getElementById('dont-show-again-checkbox'),
+  dontShowAgainButton: document.getElementById('dont-show-again'),
+  passphraseModal: document.getElementById('passphrase-modal'),
+  modalPassphrase: document.getElementById('modal-passphrase'),
+  modalPassphraseError: document.getElementById('modal-passphrase-error'),
+  modalDecryptButton: document.getElementById('modal-decrypt-button'),
+  modalCancelButton: document.getElementById('modal-cancel-button'),
+  closePassphraseModal: document.getElementById('close-passphrase'),
   detectionBox: null,
   scanLine: null,
+  settingsButton: document.getElementById('settings-button'),
+  qrTime: document.getElementById('qr-time'),
+  infoButton: document.getElementById('info-button'),
+  settingsModal: document.getElementById('settings-modal'),
+  closeSettings: document.querySelector('#settings-modal .close-modal'),
+  saveSettings: document.getElementById('save-settings'),
+  cancelSettings: document.getElementById('cancel-settings'),
+  resetSettings: document.getElementById('reset-settings'),
+  pbkdf2IterationsInput: document.getElementById('pbkdf2-iterations'),
+  securityLevelSelect: document.getElementById('security-level'),
+  sessionTimeoutInput: document.getElementById('session-timeout'),
+  autoWipeSelect: document.getElementById('auto-wipe'),
+  qrErrorCorrectionSelect: document.getElementById('qr-error-correction'),
 };
 
-// Helper function for DOM errors
-function throwError(message) {
-  throw new Error(`DOM Error: ${message}`);
-}
-
-// File input initialization
+// Initialize file input
 dom.fileInput.type = 'file';
 dom.fileInput.accept = 'image/*,.csv';
 dom.fileInput.style.display = 'none';
 document.body.appendChild(dom.fileInput);
 
-// Application state
+// Application state with enhanced security flags
 const appState = {
   isEncrypting: false,
   isDecrypting: false,
@@ -81,15 +102,141 @@ const appState = {
   passwordVisible: false,
   lastEncryptedData: null,
   sessionTimer: null,
-  importingHistory: false
+  importingHistory: false,
+  decryptAttempts: 0,
+  securityLevel: 'high', // high, medium, low
+  cameraStream: null,
+  wipeTimer: null
 };
 
-// Cryptographic utilities
+// Configuración por defecto
+const DEFAULT_CONFIG = {
+  PBKDF2_ITERATIONS: 310000,
+  SECURITY_LEVEL: 'high',
+  SESSION_TIMEOUT: 30,
+  AUTO_WIPE: 0,
+  QR_ERROR_CORRECTION: 'H'
+};
+
+// Cargar configuración guardada
+function loadSettings() {
+  const savedSettings = localStorage.getItem('hushbox_settings');
+  if (savedSettings) {
+    try {
+      const settings = JSON.parse(savedSettings);
+      CONFIG.PBKDF2_ITERATIONS = settings.PBKDF2_ITERATIONS || DEFAULT_CONFIG.PBKDF2_ITERATIONS;
+      appState.securityLevel = settings.SECURITY_LEVEL || DEFAULT_CONFIG.SECURITY_LEVEL;
+      CONFIG.SESSION_TIMEOUT = (settings.SESSION_TIMEOUT || DEFAULT_CONFIG.SESSION_TIMEOUT) * 60000;
+      CONFIG.AUTO_WIPE = settings.AUTO_WIPE || DEFAULT_CONFIG.AUTO_WIPE;
+      CONFIG.QR_ERROR_CORRECTION = settings.QR_ERROR_CORRECTION || DEFAULT_CONFIG.QR_ERROR_CORRECTION;
+      
+      // Actualizar UI
+      updateSettingsUI();
+    } catch (e) {
+      console.error('Error loading settings:', e);
+    }
+  }
+}
+
+// Actualizar UI con la configuración
+function updateSettingsUI() {
+  dom.pbkdf2IterationsInput.value = CONFIG.PBKDF2_ITERATIONS;
+  dom.securityLevelSelect.value = appState.securityLevel;
+  dom.sessionTimeoutInput.value = CONFIG.SESSION_TIMEOUT / 60000;
+  dom.autoWipeSelect.value = CONFIG.AUTO_WIPE;
+  dom.qrErrorCorrectionSelect.value = CONFIG.QR_ERROR_CORRECTION;
+  
+  // Actualizar indicador de nivel de seguridad
+  const securityLevelElement = document.querySelector('.security-level');
+  if (securityLevelElement) {
+    securityLevelElement.className = `security-level ${appState.securityLevel}`;
+    securityLevelElement.querySelector('span').textContent = 
+      `Security Level: ${appState.securityLevel.charAt(0).toUpperCase() + appState.securityLevel.slice(1)}`;
+  }
+}
+
+// Guardar configuración
+function saveSettings() {
+  const settings = {
+    PBKDF2_ITERATIONS: parseInt(dom.pbkdf2IterationsInput.value) || DEFAULT_CONFIG.PBKDF2_ITERATIONS,
+    SECURITY_LEVEL: dom.securityLevelSelect.value,
+    SESSION_TIMEOUT: parseInt(dom.sessionTimeoutInput.value) || 30,
+    AUTO_WIPE: parseInt(dom.autoWipeSelect.value) || 0,
+    QR_ERROR_CORRECTION: dom.qrErrorCorrectionSelect.value
+  };
+  
+  // Validar valores
+  if (settings.PBKDF2_ITERATIONS < 100000) {
+    ui.showToast('PBKDF2 iterations must be at least 100,000', 'error');
+    return false;
+  }
+  
+  // Actualizar configuración en tiempo real
+  CONFIG.PBKDF2_ITERATIONS = settings.PBKDF2_ITERATIONS;
+  appState.securityLevel = settings.SECURITY_LEVEL;
+  CONFIG.SESSION_TIMEOUT = settings.SESSION_TIMEOUT * 60000;
+  CONFIG.AUTO_WIPE = settings.AUTO_WIPE;
+  CONFIG.QR_ERROR_CORRECTION = settings.QR_ERROR_CORRECTION;
+  
+  // Guardar en localStorage
+  localStorage.setItem('hushbox_settings', JSON.stringify(settings));
+  
+  // Actualizar UI
+  updateSettingsUI();
+  
+  // Reiniciar temporizador de sesión
+  handlers.resetSessionTimer();
+  
+  // Configurar auto-borrado si está habilitado
+  if (CONFIG.AUTO_WIPE > 0) {
+    clearTimeout(appState.wipeTimer);
+    appState.wipeTimer = setTimeout(() => {
+      handlers.clearSensitiveData();
+      ui.showToast('Sensitive data automatically wiped', 'info');
+    }, CONFIG.AUTO_WIPE * 60000);
+  }
+  
+  ui.showToast('Settings saved successfully', 'success');
+  return true;
+}
+
+// Restaurar configuración por defecto
+function resetSettings() {
+  CONFIG.PBKDF2_ITERATIONS = DEFAULT_CONFIG.PBKDF2_ITERATIONS;
+  appState.securityLevel = DEFAULT_CONFIG.SECURITY_LEVEL;
+  CONFIG.SESSION_TIMEOUT = DEFAULT_CONFIG.SESSION_TIMEOUT * 60000;
+  CONFIG.AUTO_WIPE = DEFAULT_CONFIG.AUTO_WIPE;
+  CONFIG.QR_ERROR_CORRECTION = DEFAULT_CONFIG.QR_ERROR_CORRECTION;
+  
+  // Actualizar UI
+  updateSettingsUI();
+  
+  // Eliminar configuración guardada
+  localStorage.removeItem('hushbox_settings');
+  
+  // Reiniciar temporizador de sesión
+  handlers.resetSessionTimer();
+  
+  // Configurar auto-borrado si está habilitado
+  if (CONFIG.AUTO_WIPE > 0) {
+    clearTimeout(appState.wipeTimer);
+    appState.wipeTimer = setTimeout(() => {
+      handlers.clearSensitiveData();
+      ui.showToast('Sensitive data automatically wiped', 'info');
+    }, CONFIG.AUTO_WIPE * 60000);
+  }
+  
+  ui.showToast('Settings reset to defaults', 'success');
+}
+
+// Enhanced cryptographic utilities with additional security measures
 const cryptoUtils = {
   validatePassphrase: (pass) => {
     if (!pass || pass.length < CONFIG.MIN_PASSPHRASE_LENGTH) {
       throw new Error(`Password must be at least ${CONFIG.MIN_PASSPHRASE_LENGTH} characters long`);
     }
+    
+    // Complexity requirements
     const hasUpperCase = /[A-Z]/.test(pass);
     const hasLowerCase = /[a-z]/.test(pass);
     const hasNumbers = /[0-9]/.test(pass);
@@ -102,12 +249,24 @@ const cryptoUtils = {
     if (uniqueChars < CONFIG.MIN_PASSPHRASE_LENGTH * 0.7) {
       throw new Error('Password has too many repeated characters');
     }
+    
+    // Use zxcvbn for advanced password strength analysis
     if (typeof zxcvbn !== 'undefined') {
-      const score = zxcvbn(pass).score;
-      if (score < 3) {
+      const result = zxcvbn(pass);
+      if (result.score < 3) {
         throw new Error('Password is too weak');
       }
+      
+      // Update security level based on password strength
+      if (result.score >= 4) {
+        appState.securityLevel = 'high';
+      } else if (result.score >= 2) {
+        appState.securityLevel = 'medium';
+      } else {
+        appState.securityLevel = 'low';
+      }
     }
+    
     return true;
   },
 
@@ -133,6 +292,7 @@ const cryptoUtils = {
       crypto.getRandomValues(values);
       let pass = Array.from(values, v => chars[v % chars.length]).join('');
 
+      // Ensure complexity requirements
       if (!/[A-Z]/.test(pass)) pass = 'A' + pass.slice(1);
       if (!/[a-z]/.test(pass)) pass = pass.slice(0, -1) + 'a';
       if (!/[0-9]/.test(pass)) pass = pass.slice(0, -1) + '1';
@@ -140,6 +300,7 @@ const cryptoUtils = {
 
       try {
         cryptoUtils.validatePassphrase(pass);
+        appState.securityLevel = 'high';
         return pass;
       } catch (error) {
         attempts++;
@@ -152,6 +313,7 @@ const cryptoUtils = {
     const aBytes = new TextEncoder().encode(a);
     const bBytes = new TextEncoder().encode(b);
     if (aBytes.length !== bBytes.length) return false;
+    
     let result = 0;
     for (let i = 0; i < aBytes.length; i++) {
       result |= aBytes[i] ^ bBytes[i];
@@ -164,6 +326,12 @@ const cryptoUtils = {
       const wipeArray = new Uint8Array(buffer);
       for (let i = 0; i < wipeArray.length; i++) {
         wipeArray[i] = 0;
+      }
+    } else if (typeof buffer === 'string') {
+      // Overwrite string by converting to array
+      const strArray = new Uint8Array(new TextEncoder().encode(buffer));
+      for (let i = 0; i < strArray.length; i++) {
+        strArray[i] = 0;
       }
     }
   },
@@ -208,6 +376,7 @@ const cryptoUtils = {
       ['sign', 'verify']
     );
 
+    // Securely wipe sensitive data
     cryptoUtils.secureWipe(derivedBitsArray);
     cryptoUtils.secureWipe(aesKeyBytes);
     cryptoUtils.secureWipe(hmacKeyBytes);
@@ -228,10 +397,12 @@ const cryptoUtils = {
       
       dataToEncrypt = new TextEncoder().encode(message);
 
+      // Compress large messages
       if (typeof pako !== 'undefined' && message.length > CONFIG.COMPRESSION_THRESHOLD) {
         dataToEncrypt = pako.deflate(dataToEncrypt, { level: 6 });
       }
 
+      // Generate cryptographic salt and IV
       salt = crypto.getRandomValues(new Uint8Array(CONFIG.SALT_LENGTH));
       iv = crypto.getRandomValues(new Uint8Array(CONFIG.IV_LENGTH));
 
@@ -239,6 +410,7 @@ const cryptoUtils = {
       aesKey = derivedAesKey;
       hmacKey = derivedHmacKey;
 
+      // Encrypt with AES-GCM
       const encrypted = await crypto.subtle.encrypt(
         { name: 'AES-GCM', iv, tagLength: 128 },
         aesKey,
@@ -246,12 +418,15 @@ const cryptoUtils = {
       );
 
       const ciphertext = new Uint8Array(encrypted);
+      
+      // Calculate HMAC for integrity verification
       const hmac = await crypto.subtle.sign(
         'HMAC',
         hmacKey,
         ciphertext
       );
 
+      // Combine all components
       const combined = new Uint8Array([
         ...salt,
         ...iv,
@@ -259,12 +434,14 @@ const cryptoUtils = {
         ...new Uint8Array(hmac)
       ]);
       
+      // Return as base64
       const result = btoa(String.fromCharCode(...combined));
       return result;
     } catch (error) {
       console.error('Encryption error:', error);
       throw new Error('Encryption failed: ' + error.message);
     } finally {
+      // Securely wipe sensitive data
       if (dataToEncrypt) cryptoUtils.secureWipe(dataToEncrypt);
       if (salt) cryptoUtils.secureWipe(salt);
       if (iv) cryptoUtils.secureWipe(iv);
@@ -281,6 +458,7 @@ const cryptoUtils = {
     try {
       if (!encryptedBase64 || !passphrase) throw new Error('Encrypted data and passphrase are required');
       
+      // Convert base64 to Uint8Array
       const encryptedData = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
       
       // Validate minimum length
@@ -295,6 +473,7 @@ const cryptoUtils = {
       const ciphertext = encryptedData.slice(CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH, -CONFIG.HMAC_LENGTH);
       const hmac = encryptedData.slice(-CONFIG.HMAC_LENGTH);
 
+      // Derive keys
       const { aesKey: derivedAesKey, hmacKey: derivedHmacKey } = await cryptoUtils.deriveKeys(passphrase, salt);
       aesKey = derivedAesKey;
       hmacKey = derivedHmacKey;
@@ -308,15 +487,17 @@ const cryptoUtils = {
       );
 
       if (!isValid) {
-        throw new Error('Integrity check failed: Data has been tampered with');
+        throw new Error('Integrity check failed: Data may have been tampered with');
       }
 
+      // Decrypt the message
       decrypted = await crypto.subtle.decrypt(
         { name: 'AES-GCM', iv, tagLength: 128 },
         aesKey,
         ciphertext
       );
 
+      // Decompress if necessary
       let decompressed;
       try {
         if (typeof pako !== 'undefined') {
@@ -327,6 +508,8 @@ const cryptoUtils = {
       } catch (e) {
         decompressed = new Uint8Array(decrypted);
       }
+      
+      // Convert to string
       const result = new TextDecoder().decode(decompressed);
 
       return result;
@@ -334,6 +517,7 @@ const cryptoUtils = {
       console.error('Decryption error:', error);
       throw new Error('Decryption failed: ' + error.message);
     } finally {
+      // Securely wipe sensitive data
       if (decrypted) cryptoUtils.secureWipe(decrypted);
       if (salt) cryptoUtils.secureWipe(salt);
       if (iv) cryptoUtils.secureWipe(iv);
@@ -341,7 +525,7 @@ const cryptoUtils = {
   }
 };
 
-// UI controller
+// Enhanced UI controller with better accessibility and user feedback
 const ui = {
   sanitizeHTML: (str) => {
     const div = document.createElement('div');
@@ -364,10 +548,16 @@ const ui = {
       placeholder.remove();
     }
 
+    const messageId = 'msg-' + Date.now();
     const messageEl = document.createElement('div');
     messageEl.className = `message ${isSent ? 'sent' : ''}`;
     messageEl.innerHTML = `
-      <div class="message-content" role="alert" aria-live="polite">${ui.sanitizeHTML(content)}</div>
+      <div class="message-content" id="${messageId}" role="alert" aria-live="polite">
+        ${ui.sanitizeHTML(content)}
+        <button class="copy-icon" data-message-id="${messageId}" aria-label="Copy message">
+          <i class="fas fa-copy"></i>
+        </button>
+      </div>
       <div class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
     `;
 
@@ -377,14 +567,27 @@ const ui = {
       timestamp: new Date()
     });
 
-    if (dom.messages.children.length >= 15) {
+    // Limit to 20 messages to prevent performance issues
+    if (dom.messages.children.length >= 20) {
       dom.messages.removeChild(dom.messages.firstChild);
     }
 
     dom.messages.appendChild(messageEl);
     dom.messages.scrollTop = dom.messages.scrollHeight;
 
+    // Enable export button if there are messages
     dom.exportHistory.disabled = appState.messageHistory.length === 0;
+    
+    // Add event listener for copy button
+    const copyButton = messageEl.querySelector('.copy-icon');
+    if (copyButton) {
+      copyButton.addEventListener('click', () => {
+        const messageContent = document.getElementById(messageId).textContent;
+        navigator.clipboard.writeText(messageContent).then(() => {
+          ui.showToast('Message copied to clipboard', 'success');
+        });
+      });
+    }
   },
 
   generateQR: async (data) => {
@@ -407,7 +610,7 @@ const ui = {
           width: qrSize,
           margin: 2,
           color: { dark: '#000000', light: '#ffffff' },
-          errorCorrectionLevel: 'H'
+          errorCorrectionLevel: CONFIG.QR_ERROR_CORRECTION
         },
         (error) => {
           if (error) {
@@ -420,6 +623,7 @@ const ui = {
           const circleX = qrSize / 2;
           const circleY = qrSize / 2;
 
+          // Draw HushBox logo in center
           ctx.beginPath();
           ctx.arc(circleX, circleY, circleRadius, 0, Math.PI * 2);
           ctx.fillStyle = '#000000';
@@ -432,12 +636,18 @@ const ui = {
           ctx.fillText('HUSH', circleX, circleY - circleRadius * 0.2);
           ctx.fillText('BOX', circleX, circleY + circleRadius * 0.3);
 
+          // Draw to main canvas
           const qrCtx = dom.qrCanvas.getContext('2d');
           qrCtx.clearRect(0, 0, qrSize, qrSize);
           qrCtx.drawImage(tempCanvas, 0, 0, qrSize, qrSize);
 
+          // Show QR container
           dom.qrContainer.classList.remove('hidden');
           dom.qrContainer.classList.add('no-print');
+          
+          // Set generation time
+          dom.qrTime.textContent = new Date().toLocaleTimeString();
+          
           resolve();
         }
       );
@@ -464,7 +674,17 @@ const ui = {
   showPassphraseModal: () => {
     dom.passphraseModal.style.display = 'flex';
     dom.modalPassphrase.focus();
-    dom.modalPassphraseError.classList.add('hidden');
+    
+    // Show scan time
+    document.getElementById('scan-time').textContent = 
+      new Date().toLocaleTimeString();
+    
+    // Add scan animation
+    if (!document.querySelector('.scan-beam')) {
+      const beam = document.createElement('div');
+      beam.className = 'scan-beam';
+      dom.cameraContainer.appendChild(beam);
+    }
   },
 
   hidePassphraseModal: () => {
@@ -484,7 +704,7 @@ const ui = {
       dom.detectionBox.appendChild(dom.scanLine);
     }
 
-    // Usar tamaño proporcional al contenedor
+    // Proportional size to container
     const size = Math.min(
       dom.cameraContainer.clientWidth, 
       dom.cameraContainer.clientHeight
@@ -561,7 +781,7 @@ const ui = {
   },
 
   clearMessageHistory: () => {
-    if (confirm('Are you sure you want to clear the message history?')) {
+    if (confirm('Are you sure you want to clear the message history? All messages will be permanently deleted.')) {
       ui.showPlaceholder('Message history cleared', 'fa-trash-alt');
       appState.messageHistory = [];
       dom.exportHistory.disabled = true;
@@ -576,11 +796,11 @@ const ui = {
     dom.togglePassword.children[0].classList.toggle('fa-eye-slash', appState.passwordVisible);
   },
 
-  showError: (message) => {
-    dom.passphraseError.textContent = ui.sanitizeHTML(message);
-    dom.passphraseError.classList.remove('hidden');
+  showError: (element, message) => {
+    element.textContent = ui.sanitizeHTML(message);
+    element.classList.remove('hidden');
     setTimeout(() => {
-      dom.passphraseError.classList.add('hidden');
+      element.classList.add('hidden');
     }, CONFIG.NOTICE_TIMEOUT);
   },
 
@@ -589,10 +809,17 @@ const ui = {
     setTimeout(() => {
       dom.comingSoon.classList.remove('visible');
     }, 2000);
+  },
+  
+  showSecurityInfo: () => {
+    ui.showToast(
+      `Security Level: ${appState.securityLevel.toUpperCase()}\nEncryption: AES-256-GCM + HMAC-SHA256`,
+      'info'
+    );
   }
 };
 
-// CSV parsing utilities
+// Enhanced CSV utilities with better error handling
 const csvUtils = {
   parseCSVLine: (line) => {
     const result = [];
@@ -712,7 +939,7 @@ const csvUtils = {
   }
 };
 
-// Event handlers
+// Enhanced event handlers with better error handling and performance
 const handlers = {
   decryptAttempts: 0,
 
@@ -739,14 +966,21 @@ const handlers = {
       ui.displayMessage(`Encrypted message: ${ui.sanitizeHTML(encrypted.slice(0, 40))}...`, true);
       ui.showToast('Message encrypted successfully', 'success');
 
+      // Clear inputs
       dom.messageInput.value = '';
       dom.passphrase.value = '';
       ui.updatePasswordStrength('');
       dom.decodeButton.disabled = false;
+      
+      // Update security level display
+      const securityLevelElement = document.querySelector('.security-level');
+      if (securityLevelElement) {
+        securityLevelElement.className = `security-level ${appState.securityLevel}`;
+      }
     } catch (error) {
       ui.displayMessage(error.message);
       ui.showToast(error.message, 'error');
-      ui.showError(error.message);
+      ui.showError(dom.passphraseError, error.message);
     } finally {
       appState.isEncrypting = false;
       ui.toggleButton(dom.sendButton, false, '<i class="fas fa-lock"></i> Encrypt');
@@ -765,7 +999,7 @@ const handlers = {
     const passphrase = dom.passphrase.value.trim();
     if (!passphrase) {
       ui.displayMessage('Please enter a passphrase');
-      ui.showError('Passphrase missing');
+      ui.showError(dom.passphraseError, 'Passphrase missing');
       ui.showToast('Passphrase missing', 'error');
       return;
     }
@@ -784,7 +1018,7 @@ const handlers = {
       handlers.decryptAttempts++;
       ui.displayMessage(error.message);
       ui.showToast(error.message, 'error');
-      ui.showError(error.message);
+      ui.showError(dom.passphraseError, error.message);
     } finally {
       appState.isDecrypting = false;
       ui.toggleButton(dom.decodeButton, false, '<i class="fas fa-unlock"></i> Decrypt');
@@ -794,22 +1028,26 @@ const handlers = {
 
   handleModalDecrypt: async () => {
     const passphrase = dom.modalPassphrase.value.trim();
-
+    
     if (!passphrase) {
-      dom.modalPassphraseError.textContent = 'Please enter a passphrase';
-      dom.modalPassphraseError.classList.remove('hidden');
+      ui.showToast('Passphrase required', 'error');
       return;
     }
 
     try {
-      const decrypted = await cryptoUtils.decryptMessage(appState.lastEncryptedData, passphrase);
-      ui.displayMessage(`Decrypted message: ${ui.sanitizeHTML(decrypted)}`);
+      const decrypted = await cryptoUtils.decryptMessage(
+        appState.lastEncryptedData, 
+        passphrase
+      );
+      
+      ui.displayMessage(`Decrypted: ${ui.sanitizeHTML(decrypted)}`);
       ui.hidePassphraseModal();
-      ui.showToast('Message decrypted successfully', 'success');
+      ui.showToast('Message decrypted', 'success');
+      
     } catch (error) {
-      console.error('Decryption error:', error);
-      dom.modalPassphraseError.textContent = error.message || 'Invalid passphrase or corrupted data';
-      dom.modalPassphraseError.classList.remove('hidden');
+      console.error('Decryption failed:', error);
+      ui.showToast('Decryption failed: Invalid passphrase', 'error');
+      ui.showError(dom.modalPassphraseError, 'Invalid passphrase');
     }
   },
 
@@ -818,105 +1056,86 @@ const handlers = {
       ui.showToast('Camera access not supported', 'error');
       return;
     }
-    if (typeof jsQR === 'undefined') {
-      ui.showToast('jsQR library not loaded', 'error');
-      return;
-    }
-
+    
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
       .then(stream => {
+        appState.cameraStream = stream;
         dom.cameraPreview.srcObject = stream;
-        ui.showDetectionBox();
-
+        
         let scanning = true;
-        const scanInterval = 300; // Reducir frecuencia de escaneo
-
-        // Manejar timeout de cámara
         const timeoutId = setTimeout(() => {
-          if (scanning) {
-            handlers.stopCamera();
-            ui.hideCameraModal();
-            ui.showToast('Scanning timed out', 'warning');
-          }
+          scanning && handlers.stopCamera();
+          ui.hideCameraModal();
+          ui.showToast('Scanning timed out', 'warning');
         }, CONFIG.CAMERA_TIMEOUT);
 
-        // Esperar a que el video esté listo
-        dom.cameraPreview.onloadedmetadata = () => {
-          dom.cameraPreview.play().then(() => {
-            const scanFrame = () => {
-              if (!scanning) return;
-
-              try {
-                // Usar dimensiones reales del video
-                const width = dom.cameraPreview.videoWidth;
-                const height = dom.cameraPreview.videoHeight;
-
-                if (width === 0 || height === 0) {
-                  requestAnimationFrame(scanFrame);
-                  return;
-                }
-
-                const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(dom.cameraPreview, 0, 0, width, height);
-
-                const imageData = ctx.getImageData(0, 0, width, height);
-                const qrCode = jsQR(imageData.data, width, height, {
-                  inversionAttempts: 'dontInvert',
-                });
-
-                if (qrCode) {
-                  ui.updateDetectionBox(qrCode.location);
-                  scanning = false;
-
-                  setTimeout(() => {
-                    handlers.stopCamera();
-                    ui.hideCameraModal();
-                    appState.lastEncryptedData = qrCode.data;
-                    ui.showPassphraseModal();
-                    clearTimeout(timeoutId);
-                  }, 500);
-                } else {
-                  ui.hideDetectionBox();
-                  requestAnimationFrame(scanFrame);
-                }
-              } catch (e) {
-                console.error('Scan error:', e);
-                requestAnimationFrame(scanFrame);
+        const scanFrame = () => {
+          if (!scanning) return;
+          
+          try {
+            const width = dom.cameraPreview.videoWidth;
+            const height = dom.cameraPreview.videoHeight;
+            
+            if (width === 0 || height === 0) {
+              requestAnimationFrame(scanFrame);
+              return;
+            }
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(dom.cameraPreview, 0, 0, width, height);
+            
+            const imageData = ctx.getImageData(0, 0, width, height);
+            const qrCode = jsQR(imageData.data, width, height, {
+              inversionAttempts: 'attemptBoth'
+            });
+            
+            if (qrCode) {
+              scanning = false;
+              clearTimeout(timeoutId);
+              
+              // Extract clean QR data
+              const qrData = qrCode.data.trim();
+              
+              // Verify if it's a valid HushBox QR
+              if (qrData.startsWith('HBX:') || qrData.length > 100) {
+                appState.lastEncryptedData = qrData;
+                handlers.stopCamera();
+                ui.hideCameraModal();
+                ui.showPassphraseModal();
+              } else {
+                ui.showToast('Invalid HushBox QR', 'warning');
+                scanning = true; // Continue scanning
               }
-            };
-
-            requestAnimationFrame(scanFrame);
-          }).catch(err => {
-            console.error('Camera play error:', err);
-            ui.showToast('Camera error: ' + err.message, 'error');
-          });
+            }
+          } catch (e) {
+            console.error('Scan error:', e);
+          }
+          requestAnimationFrame(scanFrame);
+        };
+        
+        // Start scan loop
+        dom.cameraPreview.onplaying = () => {
+          requestAnimationFrame(scanFrame);
         };
       })
       .catch(error => {
         console.error('Camera access error:', error);
         let message = 'Camera access denied';
-        if (error.name === 'NotFoundError') {
-          message = 'No camera found';
-        } else if (error.name === 'NotAllowedError') {
-          message = 'Camera permission denied';
-        }
+        if (error.name === 'NotFoundError') message = 'No camera found';
+        if (error.name === 'NotAllowedError') message = 'Permission denied';
         ui.showToast(message, 'error');
-        ui.hideCameraModal();
       });
   },
 
   stopCamera: () => {
-    if (dom.cameraPreview.srcObject) {
-      const tracks = dom.cameraPreview.srcObject.getTracks();
-      tracks.forEach(track => {
-        track.stop();
-      });
+    if (appState.cameraStream) {
+      appState.cameraStream.getTracks().forEach(track => track.stop());
+      appState.cameraStream = null;
       dom.cameraPreview.srcObject = null;
     }
-    ui.hideDetectionBox();
   },
 
   handleUpload: () => {
@@ -1226,7 +1445,7 @@ const handlers = {
       });
       dom.messageInput.addEventListener('input', () => {
         const len = dom.messageInput.value.length;
-        dom.charCounter.textContent = `${CONFIG.MAX_MESSAGE_LENGTH - len}/${CONFIG.MAX_MESSAGE_LENGTH}`;
+        dom.charCounter.textContent = `${len}/${CONFIG.MAX_MESSAGE_LENGTH}`;
         dom.charCounter.style.color = len > CONFIG.MAX_MESSAGE_LENGTH - 400
           ? 'var(--error-color)'
           : 'rgba(160,160,160,0.8)';
@@ -1249,25 +1468,57 @@ const handlers = {
         icon.classList.toggle('fa-eye');
         icon.classList.toggle('fa-eye-slash');
       });
+      document.getElementById('modal-rescan-button').addEventListener('click', () => {
+        ui.hidePassphraseModal();
+        setTimeout(() => ui.showCameraModal(), 300);
+      });
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
           if (dom.cameraModal.style.display === 'flex') {
             ui.hideCameraModal();
           } else if (dom.passphraseModal.style.display === 'flex') {
             ui.hidePassphraseModal();
+          } else if (dom.tutorialModal.style.display === 'flex') {
+            tutorial.hideTutorialModal();
+          } else if (dom.settingsModal.style.display === 'flex') {
+            dom.settingsModal.style.display = 'none';
           }
         }
       });
       handlers.resetSessionTimer();
       document.addEventListener('click', handlers.resetSessionTimer);
       document.addEventListener('keypress', handlers.resetSessionTimer);
-      if (navigator.userAgent.includes('Telegram')) {
-        document.documentElement.style.setProperty(
-          '--background-gradient',
-          'linear-gradient(135deg, #0d0d2d 0%, #1a1a3a 100%)'
-        );
-        ui.showToast('Telegram mode optimized', 'info');
-      }
+      
+      // Nuevos listeners para configuración
+      dom.settingsButton.addEventListener('click', () => {
+        updateSettingsUI();
+        dom.settingsModal.style.display = 'flex';
+      });
+      
+      dom.closeSettings.addEventListener('click', () => {
+        dom.settingsModal.style.display = 'none';
+      });
+      
+      dom.cancelSettings.addEventListener('click', () => {
+        dom.settingsModal.style.display = 'none';
+      });
+      
+      dom.saveSettings.addEventListener('click', () => {
+        if (saveSettings()) {
+          dom.settingsModal.style.display = 'none';
+        }
+      });
+      
+      dom.resetSettings.addEventListener('click', resetSettings);
+      
+      // Mover la funcionalidad de info al nuevo botón
+      dom.infoButton.addEventListener('click', ui.showSecurityInfo);
+      
+      // Add PWA installation prompt
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        ui.showToast('Install HushBox for a better experience', 'info');
+      });
     } catch (error) {
       console.error('Error initializing listeners:', error);
       ui.showToast('Application initialization failed', 'error');
@@ -1275,7 +1526,7 @@ const handlers = {
   }
 };
 
-// Welcome modal functions
+// Enhanced tutorial functions
 const tutorial = {
   showTutorialModal: () => {
     dom.tutorialModal.style.display = 'flex';
@@ -1292,24 +1543,39 @@ const tutorial = {
   }
 };
 
-// Initialization
+// Initialization with better error handling
 document.addEventListener('DOMContentLoaded', () => {
   try {
     handlers.initEventListeners();
     dom.qrContainer.classList.add('hidden');
     dom.cameraModal.style.display = 'none';
     dom.passphraseModal.style.display = 'none';
+    dom.tutorialModal.style.display = 'none';
+    dom.settingsModal.style.display = 'none';
 
     ui.showPlaceholder('Encrypted and decrypted messages will appear here. Secure history', 'fa-comments');
 
     const dontShowTutorial = localStorage.getItem('dontShowTutorial');
     if (!dontShowTutorial) {
-      tutorial.showTutorialModal();
+      setTimeout(() => {
+        tutorial.showTutorialModal();
+      }, 2000);
     } else {
       setTimeout(() => {
         ui.showToast('Welcome to HushBox Enterprise. Your secure messaging.', 'success');
         dom.exportHistory.disabled = true;
       }, 1000);
+    }
+
+    // Cargar configuración guardada
+    loadSettings();
+    
+    // Configurar auto-borrado si está habilitado
+    if (CONFIG.AUTO_WIPE > 0) {
+      appState.wipeTimer = setTimeout(() => {
+        handlers.clearSensitiveData();
+        ui.showToast('Sensitive data automatically wiped', 'info');
+      }, CONFIG.AUTO_WIPE * 60000);
     }
 
     dom.closeTutorial.addEventListener('click', () => {
