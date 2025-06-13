@@ -1,4 +1,3 @@
-
 // Enhanced configuration with additional security parameters
 const CONFIG = {
   PBKDF2_ITERATIONS: 310000,
@@ -45,7 +44,6 @@ const dom = {
   shareButton: document.getElementById('share-button'),
   copyButton: document.getElementById('copy-button'),
   qrContainer: document.getElementById('qr-container'),
-  comingSoon: document.getElementById('coming-soon-message'),
   cameraModal: document.getElementById('camera-modal'),
   cameraPreview: document.getElementById('camera-preview'),
   closeCamera: document.getElementById('close-camera'),
@@ -803,13 +801,6 @@ const ui = {
       element.classList.add('hidden');
     }, CONFIG.NOTICE_TIMEOUT);
   },
-
-  showComingSoon: () => {
-    dom.comingSoon.classList.add('visible');
-    setTimeout(() => {
-      dom.comingSoon.classList.remove('visible');
-    }, 2000);
-  },
   
   showSecurityInfo: () => {
     ui.showToast(
@@ -1553,7 +1544,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dom.tutorialModal.style.display = 'none';
     dom.settingsModal.style.display = 'none';
 
-    ui.showPlaceholder('Encrypted and decrypted messages will appear here. Secure history', 'fa-comments');
+    ui.showPlaceholder('Messages will appear here', 'fa-comments');
 
     const dontShowTutorial = localStorage.getItem('dontShowTutorial');
     if (!dontShowTutorial) {
