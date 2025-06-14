@@ -422,30 +422,6 @@ journey
      - 1 offsite location
 
 These workflows demonstrate HUSHBOX's versatility across high-security scenarios. Each implementation maintains the core principles of zero-server architecture and client-side encryption while adapting to specific industry requirements.
-`
-
-### Secure Board Communication  
-```mermaid
-sequenceDiagram
-    CEO->>HUSHBOX: Encrypt quarterly results
-    HUSHBOX->>CEO: Generate secure QR
-    CEO->>Slack: Post QR in #board channel
-    CFO->>HUSHBOX: Scan QR from Slack
-    CFO->>Signal: Request passphrase via Signal
-    CEO->>Signal: Share passphrase
-    CFO->>HUSHBOX: Decrypt report
-```
-
-### Medical Data Transfer  
-```mermaid
-flowchart LR
-    Doctor -->|Encrypt| HUSHBOX
-    HUSHBOX -->|QR Code| Printed_Form
-    Printed_Form --> Patient
-    Patient -->|Scan| HUSHBOX
-    SMS -->|Passphrase| Patient
-    HUSHBOX -->|Decrypted| Patient
-```
 
 ---
 
