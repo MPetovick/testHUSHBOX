@@ -1,13 +1,5 @@
 # 🔒 HUSHBOX - Your Digital Privacy Vault  
 
-<div align="center">
-    <a href="https://www.hushbox.online">Web</a> • 
-    <a href="https://github.com/MPetovick/HUSHBOX">GitHub</a> • 
-    <a href="https://t.me/HUSHBOX_QR">Telegram</a> • 
-    <a href="https://twitter.com/HUSHBOXonline">Twitter</a>
-  </p>
-</div>
-
 ## Overview  
 HUSHBOX is a next-generation, privacy-first communication tool that redefines secure messaging. By combining military-grade encryption with QR code technology, HUSHBOX enables users to exchange confidential messages without ever relying on external servers.
 
