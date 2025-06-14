@@ -532,11 +532,9 @@ journey
 ## 📜 License  
 GNU AFFERO GENERAL PUBLIC LICENSE - [View License](https://github.com/MPetovick/HUSHBOX/blob/main/LICENSE)
 
-## 🌐 Contact  
-- **Security Issues**: security@hushbox.com  
-- **Enterprise Support**: enterprise@hushbox.com  
+## 🌐 Contact    
 - **Community**: [Telegram](https://t.me/HUSHBOX_QR) | [Twitter](https://twitter.com/HUSHBOXonline)  
-- **Documentation**: [docs.hushbox.com](https://docs.hushbox.com)  
+- **Documentation**: [docs.hushbox.com](https://github.com/MPetovick/testHUSHBOX/blob/main/README3.md)  
 
 ---
 
