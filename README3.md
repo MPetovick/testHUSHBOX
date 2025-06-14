@@ -256,7 +256,7 @@ journey
       Audit trail: 7: Compliance
 ```
 
-### Medical Use Case Features
+***Medical Use Case Features***
 - **HIPAA Compliance**: End-to-end encrypted PHI (Protected Health Information)
 - **Temporary Access**: Records auto-delete after set period
 - **Access Control**: PIN-protected decryption
@@ -283,7 +283,7 @@ sequenceDiagram
     Employee->>Systems: Login with new credentials
 ```
 
-### Security Advantages
+***Security Advantages***
 - **No Plaintext Transmission**: Credentials never sent via email/chat
 - **One-Time Use**: QR invalidates after first scan
 - **Biometric Verification**: Optional face/fingerprint unlock
@@ -309,7 +309,7 @@ flowchart TD
     Decrypted --> Burn[Immediate destruction]
 ```
 
-### Diplomatic Security Features
+***Diplomatic Security Features***
 - **Plausible Deniability**: Message appears as random data if intercepted
 - **Duress Detection**: Hidden warning if decrypted under coercion
 - **Multi-Party Auth**: Require 2 officers to decrypt
@@ -336,7 +336,7 @@ journey
       Access history: 8: Compliance
 ```
 
-### Research Protection Features
+***Research Protection Features***
 - **Patent-Safe Encryption**: Pre-filing data protection
 - **Shamir's Secret Sharing**: Split across multiple QRs
 - **Temporal Locks**: Decrypt only after specific date
