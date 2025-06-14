@@ -200,7 +200,7 @@ sequenceDiagram
     Note over SocialMedia: Public QR Hosting<br>(Twitter DMs/Telegram Chats/Posts)
 ```
 
-## Examples
+### Examples
 
 ### 💰 Crypto Wallet Seed Backup Workflow
 ```mermaid
