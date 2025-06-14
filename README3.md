@@ -285,22 +285,6 @@ sequenceDiagram
 ### 🗝️ Diplomatic Communication
 
 ```mermaid
-flowchart TD
-    Ambassador -->|Compose message| HUSHBOX
-    HUSHBOX -->|Generate| QR
-    QR --> Embassy[Sealed diplomatic pouch]
-    Passphrase --> Cipher[One-time cipher]
-    
-    Embassy --> Courier[Courier transport]
-    Courier --> Consulate[Foreign consulate]
-    
-    Consulate --> Officer[Security officer]
-    Officer --> Scanner[Scan QR]
-    Scanner -->|Input| Cipher
-    Cipher --> Decrypted[Decrypted message]
-    Decrypted --> Burn[Immediate destruction]
-```
-```mermaid
 sequenceDiagram
     participant Ambassador
     participant HUSHBOX
