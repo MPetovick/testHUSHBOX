@@ -103,7 +103,17 @@ HUSHBOX/
 ├── script.js           
 ├── styles.css          
 ├── manifest.json       
-└── favicon.png        
+├── favicon.ico
+├── manifest.json
+├── sitemap.xml
+├── assets/                 
+│   └──  favicon.png
+├── legal/                
+│   └── LICENSE.md
+│   └── privacy-police.md
+│   └── terms-of-service.md
+├── LICENSE
+└── README.md        
 ```
 ### Local Deployment
 ```bash
