@@ -202,7 +202,7 @@ sequenceDiagram
 
 ### Examples
 
-### 💰 Crypto Wallet Seed Backup Workflow
+### ₿ Crypto Wallet Seed Backup Workflow
 ```mermaid
 sequenceDiagram
     participant User
