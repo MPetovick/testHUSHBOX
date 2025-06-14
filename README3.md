@@ -218,7 +218,7 @@ sequenceDiagram
     Note over User,SecureStorage: Store passphrase separately (e.g. password manager)
     User->>HUSHBOX: Destroy local session
 ```
-# Security Features for Crypto Seeds
+### Security Features for Crypto Seeds
 - **Multi-Location Storage**: QR physical backup + digital passphrase
 - **Redundancy**: Create multiple QR backups for different locations
 - **Tamper Evidence**: QR contains HMAC signature to detect alterations
