@@ -294,7 +294,8 @@ journey
 ---
 
 ## 📜 License  
-MIT License - [View License](https://github.com/MPetovick/HUSHBOX/blob/main/LICENSE)
+GNU AFFERO GENERAL PUBLIC LICENSE - Version 3, 19 November 2007  
+[View License](https://github.com/MPetovick/HUSHBOX/blob/main/LICENSE)
 
 ## 🌐 Contact  
 - **Security Issues**: security@hushbox.com  
