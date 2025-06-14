@@ -275,9 +275,8 @@ pie
 ### For All Users  
 1. 🔑 Always use 15+ character passphrases  
 2. 📲 Share passphrases via secure channels (Signal, ProtonMail)  
-3. 🕒 Set message expiration expectations  
-4. 🧹 Clear history after sensitive operations  
-5. 🔒 Use in private browsing sessions  
+3. 🧹 Clear history after sensitive operations  
+4. 🔒 Use in private browsing sessions or mode offline
 
 ### For Enterprises  
 ```mermaid
@@ -292,7 +291,6 @@ journey
       Employee training : 6: HR
       Policy review : 7: Legal
 ```
-
 ---
 
 ## 📜 License  
