@@ -229,6 +229,7 @@ Time-Lock: Optional delayed decryption feature
 
 Plausible Deniability: Seed appears as random data in QR
 
+```mermaid
 flowchart LR
     Seed[12/24-word Seed] --> HUSHBOX
     HUSHBOX -->|Encrypt| QR[Secured QR]
@@ -239,6 +240,7 @@ flowchart LR
     
     Physical --> Safe[Fireproof Safe]
     Digital --> Encrypted[Encrypted Cloud]
+```
 
 ### Secure Board Communication  
 ```mermaid
