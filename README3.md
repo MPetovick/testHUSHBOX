@@ -200,12 +200,9 @@ sequenceDiagram
     Note over SocialMedia: Public QR Hosting<br>(Twitter DMs/Telegram Chats/Posts)
 ```
 
-### Examples
+## Examples
 
-# 🔒 HUSHBOX - Additional Security Workflows
-
-## 💰 Crypto Wallet Seed Backup Workflow
-
+### 💰 Crypto Wallet Seed Backup Workflow
 ```mermaid
 sequenceDiagram
     participant User
@@ -221,8 +218,7 @@ sequenceDiagram
     Note over User,SecureStorage: Store passphrase separately (e.g. password manager)
     User->>HUSHBOX: Destroy local session
 ```
-
-### Security Features for Crypto Seeds
+# Security Features for Crypto Seeds
 - **Multi-Location Storage**: QR physical backup + digital passphrase
 - **Redundancy**: Create multiple QR backups for different locations
 - **Tamper Evidence**: QR contains HMAC signature to detect alterations
@@ -242,7 +238,7 @@ flowchart LR
     Digital --> Encrypted[Encrypted Cloud]
 ```
 
-## 🏥 Medical Records Transfer Workflow
+### 🏥 Medical Records Transfer Workflow
 
 ```mermaid
 journey
@@ -267,7 +263,7 @@ journey
 - **Emergency Access**: Break-glass mechanism for authorized personnel
 - **Compliance Logging**: Tamper-proof access records
 
-## 🔑 Enterprise Password Rotation Workflow
+### 🔑 Enterprise Password Rotation Workflow
 
 ```mermaid
 sequenceDiagram
@@ -294,7 +290,7 @@ sequenceDiagram
 - **Usage Analytics**: Track credential distribution
 - **Auto-Rotation**: Schedule regular password updates
 
-## 🗝️ Diplomatic Communication Workflow
+### 🗝️ Diplomatic Communication Workflow
 
 ```mermaid
 flowchart TD
@@ -320,7 +316,7 @@ flowchart TD
 - **Geofencing**: Only decrypt in authorized locations
 - **Ephemeral Storage**: Zero device persistence
 
-## 🧪 Research Data Protection Workflow
+### 🧪 Research Data Protection Workflow
 
 ```mermaid
 journey
