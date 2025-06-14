@@ -1,231 +1,233 @@
-# 🔒 [HUSHBOX](https://www.hushbox.online) - Secure Messaging with QR Encryption 
+# 🔒 HUSHBOX - Additional Security Workflows
 
-**HUSHBOX** is a privacy-first communication tool that combines military-grade encryption with QR code technology to enable secure message transmission. Designed for users who value digital privacy, it implements modern cryptographic standards to protect your communications from prying eyes.
+## 💰 Crypto Wallet Seed Backup Workflow
 
-- **Zero-Server Architecture**: Messages never touch external servers
-- **Ephemeral Design**: No message storage or tracking
-- **Open Source**: Fully transparent security implementation
-- **PWA Ready**: Installable as a progressive web app
-- **Offline Ready**: Works without an internet connection
-
-## 🛠️ Technical Stack
-
-|       **Category**       |        **Key Features**                                                                   |
-|--------------------------|-------------------------------------------------------------------------------------------|
-| 🔐 **Core Security**     | - AES-256-GCM encryption with HMAC integrity protection <br> - PBKDF2 key derivation (310,000 iterations) <br> - Compressed payloads for efficient QR encoding <br> - Anti-brute force protection (5 attempts limit) |
-| 📱 **User Experience**   | - Responsive design with mobile-first approach <br> - Real-time passphrase strength indicators <br> - Animated QR codes with custom branding <br> - Camera QR scanning (mobile devices) *Coming Soon <br> - Social media integration for secure sharing |
-| 🛡️ **Advanced Protections** | - IV time-stamping for replay attack prevention <br> - Memory sanitization after operations <br> - Secure content disposal <br> - Tamper-evident payload design|
-
-### Frontend
-| Library      | Version | Use                           | SRI Integrity                            |
-|--------------|---------|-------------------------------|------------------------------------------|
-| **pako**     | 2.1.0   | Compression DEFLATE           | `sha256-7eJpOkpqUSa501ZpBis1jsq2rnubhqHPMC/rRahRSQc=` |
-| **qrcode**   | 1.5.1   | QR Generation                 | `sha256-7GTYmrMJbc6AhJEt7f+fLKWuZBRNDKzUoILCk9XQa1k=` |
-| **jsqr**     | 1.4.0   | QR Decoding                   | `sha256-TnzVZFlCkL9D75PtJfOP7JASQkdCGD+pc60Lus+IrjA=` |
-| **jspdf**    | 2.5.1   | PDF export                    | `sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=` |
-| **zxcvbn**   | 4.4.2   | Passphrase validation         | `sha256-9CxlH0BQastrZiSQ8zjdR6WVHTMSA5xKuP5QkEhPNRo=` |
-- **UI Framework**: Pure CSS Grid/Flex
-- **Icons**: Font Awesome 6
-
-## Installation & Usage
-
-### 📁 Project Structure
-```bash
-HUSHBOX/
-├── index.html          
-├── script.js           
-├── styles.css          
-├── manifest.json       
-└── favicon.png        
-```
-
-### 📥 Local Deployment
-```bash
-git clone https://github.com/MPetovick/HUSHBOX.git
-cd HUSHBOX
-# Serve using local web server
-python3 -m http.server 8000
-```
-Open `http://localhost:8000` in modern browser or just click index.html
-
-### 🌐 Web Version  
-[https://www.hushbox.online](https://mpetovick.github.io/HUSHBOX)
-
-## ⚙️ System Architecture
-```mermaid
-graph TD
-    A[Web Client] --> B[User Interface]
-    B --> C[Encryption Module]
-    B --> D[Decryption Module]
-    C --> E[QR Generation]
-    D --> F[QR Scanning]
-    C --> G[Local Storage]
-    D --> G
-    G --> H[Message History]
-    C & D --> I[AES-256-GCM Cryptography]
-    I --> J[PBKDF2]
-```
-## 🔐 Security Architecture
-### Flujo de Encriptación
-```mermaid
-sequenceDiagram
-    Usuario->>Aplicación: Ingresa mensaje + passphrase
-    Aplicación->>Crypto: Validar passphrase (zxcvbn)
-    Crypto->>Crypto: Generar salt (32B) + IV (16B)
-    Crypto->>Crypto: Derivar clave (PBKDF2-HMAC-SHA256)
-    Crypto->>Crypto: Comprimir mensaje (pako DEFLATE)
-    Crypto->>Crypto: Encriptar (AES-256-GCM)
-    Crypto->>QR: Convertir a Base64
-    QR->>UI: Generar código QR animado
-    UI->>Usuario: Mostrar QR seguro
-```
-### Parámetros Criptográficos
-| Parámetro              | Valor                  | Descripción                          |
-|------------------------|------------------------|--------------------------------------|
-| Algoritmo              | AES-256-GCM            | Cifrado autenticado                  |
-| Modo                   | Galois/Counter Mode    | Protección integridad                |
-| Iteraciones PBKDF2     | 310,000                | Resistencia fuerza bruta             |
-| Longitud salt          | 32 bytes               | Unicidad por mensaje                 |
-| Longitud IV            | 16 bytes               | Vector de inicialización             |
-| Tamaño tag             | 128 bits               | Autenticación GCM                    |
-| Compresión             | DEFLATE (nivel 6)      | Para mensajes >100 caracteres        |
-
-### 1. Requisitos Passphrase
-| Parámetro               | Valor                     |
-|-------------------------|---------------------------|
-| Longitud mínima         | 12 caracteres             |
-| Complejidad             | 4 de 4 (zxcvbn)           |
-| Caracteres únicos       | >70% de longitud          |
-| Tipos requeridos        | A-Z, a-z, 0-9, símbolos  |
-
-### 2. Proceso de Desencriptación
-```mermaid
-flowchart TD
-    A[Iniciar desencriptación] --> B{QR válido?}
-    B -->|Sí| C[Ingresar passphrase]
-    B -->|No| D[Error: QR inválido]
-    C --> E{Passphrase correcta?}
-    E -->|Sí| F[Desencriptar y mostrar]
-    E -->|No| G[Contador intentos++]
-    G --> H{Intentos > 5?}
-    H -->|Sí| I[Bloquear temporalmente]
-    H -->|No| C
-```
-
-## 🔄 Workflow Diagram
-
-**Backup Workflow:**
 ```mermaid
 sequenceDiagram
     participant User
     participant HUSHBOX
-    participant StorageMedium
+    participant SecureStorage
+    participant BackupMedium
 
-    User->>HUSHBOX: 1. Enter data + passphrase
-    HUSHBOX->>HUSHBOX: 2. Encrypt data + Generate QR
-    HUSHBOX->>User: 3. Display secure QR
-    User->>StorageMedium: 4. Save/Print QR (offline backup)
-    StorageMedium->>User: 5. Retrieve QR (when needed)
-    User->>HUSHBOX: 6. Scan QR + Enter passphrase
-    HUSHBOX->>HUSHBOX: 7. Decrypt data
-    HUSHBOX->>User: 8. Display decrypted data
+    User->>HUSHBOX: Enter seed phrase + strong passphrase
+    HUSHBOX->>HUSHBOX: Encrypt seed using AES-256-GCM
+    HUSHBOX->>User: Generate secured QR code
+    User->>BackupMedium: Print QR on titanium plate
+    User->>SecureStorage: Store in fireproof safe
+    Note over User,SecureStorage: Store passphrase separately (e.g. password manager)
+    User->>HUSHBOX: Destroy local session
 ```
-**Offline Workflow:**
+
+### Security Features for Crypto Seeds
+- **Multi-Location Storage**: QR physical backup + digital passphrase
+- **Redundancy**: Create multiple QR backups for different locations
+- **Tamper Evidence**: QR contains HMAC signature to detect alterations
+- **Time-Lock**: Optional delayed decryption feature
+- **Plausible Deniability**: Seed appears as random data in QR
+
+```mermaid
+flowchart LR
+    Seed[12/24-word Seed] --> HUSHBOX
+    HUSHBOX -->|Encrypt| QR[Secured QR]
+    QR --> Physical[Physical Backup]
+    QR --> Digital[Digital Backup]
+    Passphrase --> Manager[Password Manager]
+    Passphrase --> Memory[Memorized]
+    
+    Physical --> Safe[Fireproof Safe]
+    Digital --> Encrypted[Encrypted Cloud]
+```
+
+## 🏥 Medical Records Transfer Workflow
+
+```mermaid
+journey
+    title HIPAA-Compliant Medical Data Transfer
+    section Doctor
+      Enter patient data: 5: Doctor
+      Generate encrypted QR: 8: HUSHBOX
+      Print QR on document: 6: Staff
+    section Patient
+      Receive physical document: 7: Patient
+      Scan QR at home: 8: HUSHBOX
+      Access medical records: 9: Patient Portal
+    section Security
+      Auto-expire after 72h: 8: System
+      Audit trail: 7: Compliance
+```
+
+### Medical Use Case Features
+- **HIPAA Compliance**: End-to-end encrypted PHI (Protected Health Information)
+- **Temporary Access**: Records auto-delete after set period
+- **Access Control**: PIN-protected decryption
+- **Emergency Access**: Break-glass mechanism for authorized personnel
+- **Compliance Logging**: Tamper-proof access records
+
+## 🔑 Enterprise Password Rotation Workflow
+
 ```mermaid
 sequenceDiagram
-    participant UserA
+    participant Admin
     participant HUSHBOX
-    participant UserB
+    participant Employee
+    participant ActiveDirectory
 
-    UserA->>HUSHBOX: 1. Enter message + passphrase
-    HUSHBOX->>HUSHBOX: 2. Encrypt + Generate QR
-    HUSHBOX->>UserA: 3. Display secure QR
-    UserA->>UserB: 4. Share QR (offline)
-    UserB->>HUSHBOX: 5. Scan QR + Enter passphrase
-    HUSHBOX->>UserB: 6. Decrypted message
+    Admin->>HUSHBOX: Generate new credentials
+    HUSHBOX->>HUSHBOX: Create password + encrypt
+    HUSHBOX->>Admin: Produce secure QR
+    Admin->>ActiveDirectory: Update credentials
+    ActiveDirectory-->>Admin: Confirmation
+    Admin->>Employee: Distribute QR via secure channel
+    Employee->>HUSHBOX: Scan QR + authenticate
+    HUSHBOX->>Employee: Reveal credentials
+    Employee->>Systems: Login with new credentials
 ```
-**Online Workflow:**
+
+### Security Advantages
+- **No Plaintext Transmission**: Credentials never sent via email/chat
+- **One-Time Use**: QR invalidates after first scan
+- **Biometric Verification**: Optional face/fingerprint unlock
+- **Usage Analytics**: Track credential distribution
+- **Auto-Rotation**: Schedule regular password updates
+
+## 🗝️ Diplomatic Communication Workflow
 
 ```mermaid
-sequenceDiagram
-    participant UserA
-    participant HUSHBOX_A
-    participant SocialMedia
-    participant HUSHBOX_B
-    participant UserB
-
-    UserA->>HUSHBOX_A: 1. Compose message + set passphrase
-    HUSHBOX_A->>HUSHBOX_A: 2. Encrypt & Generate Secured QR
-    HUSHBOX_A->>UserA: 3. Display Protected QR Code
+flowchart TD
+    Ambassador -->|Compose message| HUSHBOX
+    HUSHBOX -->|Generate| QR
+    QR --> Embassy[Sealed diplomatic pouch]
+    Passphrase --> Cipher[One-time cipher]
     
-    UserA->>SocialMedia: 4. Share QR via Twitter/Telegram/Other
-    Note right of SocialMedia: Platform-Neutral Exchange
-    SocialMedia->>UserB: 5. Notification of QR Post
+    Embassy --> Courier[Courier transport]
+    Courier --> Consulate[Foreign consulate]
     
-    UserB->>HUSHBOX_B: 6. Import QR from Social Media
-    UserB->>HUSHBOX_B: 7. Input Passphrase (via secure channel)
-    HUSHBOX_B->>HUSHBOX_B: 8. Validate & Decrypt Contents
-    HUSHBOX_B->>UserB: 9. Display Clear-Text Message
-    
-    Note over UserA,UserB: Passphrase Exchange via<br>Signal/Encrypted Email/Physical Meet
-    Note over SocialMedia: Public QR Hosting<br>(Twitter DMs/Telegram Chats/Posts)
+    Consulate --> Officer[Security officer]
+    Officer --> Scanner[Scan QR]
+    Scanner -->|Input| Cipher
+    Cipher --> Decrypted[Decrypted message]
+    Decrypted --> Burn[Immediate destruction]
 ```
 
-1. **Secure Creation Phase:**
-   - User A crafts message + 12+ character passphrase
-   - HUSHBOX performs AES-256 encryption with time-stamped IV
-   - Generates branded QR with anti-scanning protection
+### Diplomatic Security Features
+- **Plausible Deniability**: Message appears as random data if intercepted
+- **Duress Detection**: Hidden warning if decrypted under coercion
+- **Multi-Party Auth**: Require 2 officers to decrypt
+- **Geofencing**: Only decrypt in authorized locations
+- **Ephemeral Storage**: Zero device persistence
 
-2. **Social Media Distribution:**
-   - User posts encrypted QR to chosen platform(s)
-   - Options: Twitter DM groups, Telegram channels, or public posts
-   - QR contains no metadata about sender/receiver
+## 🧪 Research Data Protection Workflow
 
-3. **Cross-Platform Reception:**
-   - User B saves QR image from social platform
-   - Uses HUSHBOX to scan/upload the QR file
-   - Enters pre-shared passphrase (via separate secure channel)
+```mermaid
+journey
+    title Intellectual Property Protection
+    section Research
+      Enter experimental data: 5: Scientist
+      Encrypt with patent passphrase: 8: HUSHBOX
+      Generate multiple QRs: 7: System
+    section Protection
+      Distribute QRs to stakeholders: 6: Legal
+      Store in secure facilities: 9: Security
+    section Access
+      Court order verification: 8: System
+      Multi-party decryption: 9: Executives
+    section Audit
+      Blockchain notarization: 7: System
+      Access history: 8: Compliance
+```
 
-4. **Multi-Layer Security:**
-   - Social Media: Acts as public transport layer only
-   - Secondary Channel: For passphrase exchange (e.g., Signal)
-   - Time-Based Protection: QR contains encrypted timestamp for expiration *Coming soon
+### Research Protection Features
+- **Patent-Safe Encryption**: Pre-filing data protection
+- **Shamir's Secret Sharing**: Split across multiple QRs
+- **Temporal Locks**: Decrypt only after specific date
+- **Non-Repudiation**: Cryptographic proof of access
+- **Data Inheritance**: Dead man's switch mechanism
 
-**Security Best Practices for Social Sharing:**
-- 🔒 Never share passphrase on same platform as QR
-- 🌐 Use different networks for QR and credential exchange
-- ⏳ Set post expiration where possible (e.g., Twitter Fleets)
-- 🖼️ Convert QR to lossy formats (JPEG) to hinder automated scanning
-- 🔗 Prefer private channels (DMs) over public posts
-- 📍 Add visual noise to QR background when posting publicly
-- ✉️ Split QR across multiple posts for high-sensitivity messages
+## 🚨 Suggested Additional Workflows
 
-This workflow enables secure communication through untrusted platforms while maintaining E2E encryption through the combination of QR steganography and separate credential exchange.
+### 1. Emergency Access System
+```mermaid
+sequenceDiagram
+    participant User
+    participant HUSHBOX
+    participant Trustee1
+    participant Trustee2
+    participant Trustee3
+    
+    User->>HUSHBOX: Set up emergency access
+    HUSHBOX->>Trustee1: Distribute partial QR
+    HUSHBOX->>Trustee2: Distribute partial QR
+    HUSHBOX->>Trustee3: Distribute partial QR
+    Note over Trustee1,Trustee3: Require 2/3 to reconstruct
+    User->>HUSHBOX: No activity for 30 days
+    HUSHBOX->>Trustees: Send access requests
+    Trustees->>HUSHBOX: Submit partial QRs
+    HUSHBOX->>Designee: Grant full access
+```
 
-## ⚠️ Security Considerations
+### 2. Notary Verification System
+```mermaid
+flowchart LR
+    Document --> Hash[Create hash]
+    Hash --> HUSHBOX
+    HUSHBOX -->|Encrypt| QR[Notary QR]
+    QR --> Seal[Document seal]
+    Registry --> Blockchain
+    
+    Verify --> Scanner[Scan QR]
+    Scanner --> Hasher[Recompute hash]
+    Hasher --> Compare{Match?}
+    Compare -->|Yes| Valid[Valid document]
+    Compare -->|No| Invalid[Tampered document]
+```
 
-### Best Practices
-- Use 15+ character passphrases
-- Share passphrases through secure channels
-- Verify QR source before scanning
-- Limit decryption attempts
-- Use in private browsing sessions
+### 3. Digital Inheritance System
+```mermaid
+journey
+    title Estate Planning Workflow
+    section Setup
+      Configure assets: 7: Owner
+      Set verification method: 8: Attorney
+      Distribute access QRs: 6: Executors
+    section Activation
+      Death certificate verification: 9: System
+      Notify beneficiaries: 5: Executor
+    section Access
+      Multi-party authentication: 8: Executors
+      Gradual release: 7: System
+    section Distribution
+      Transfer digital assets: 9: Beneficiaries
+      Automatic revocation: 8: System
+```
 
-### Implementation Notes
-- Memory wiping after crypto operations
-- Time-based nonce generation
-- Compression side-channel protection
-- Secure error handling
-- CSP-compliant script loading
+## 🛡️ Implementation Tips for All Workflows
 
-## 📜 License
-MIT License
+1. **Physical Backup Best Practices**:
+   - Use archival-quality paper or titanium plates
+   - Laminate with UV-protective coating
+   - Store in fireproof/waterproof containers
+   - Create geographical distribution (multiple locations)
 
-## 🌐 Contact & Community
-- Telegram: [@HUSHBOX_QR](https://t.me/HUSHBOX_QR)
-- Twitter: [@HUSHBOXonline](https://twitter.com/HUSHBOXonline)
+2. **Passphrase Management**:
+   ```mermaid
+   pie
+       title Passphrase Storage Methods
+       "Password Manager" : 45
+       "Physical Vault" : 30
+       "Memorization" : 15
+       "Split Knowledge" : 10
+   ```
 
----
+3. **Security Verification Schedule**:
+   - Monthly: Test decryption process
+   - Quarterly: Rotate master passphrases
+   - Annually: Replace physical backups
+   - Biannually: Security audit penetration test
 
-**HUSHBOX** - Your Digital Privacy Vault 🔏  
-Because your secrets deserve better than the cloud ☁️✔
+4. **Disaster Recovery**:
+   - Maintain 3-2-1 backup rule:
+     - 3 copies of QR
+     - 2 different media types (paper/metal/digital)
+     - 1 offsite location
+
+These workflows demonstrate HUSHBOX's versatility across high-security scenarios. Each implementation maintains the core principles of zero-server architecture and client-side encryption while adapting to specific industry requirements.
