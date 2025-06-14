@@ -300,6 +300,36 @@ flowchart TD
     Cipher --> Decrypted[Decrypted message]
     Decrypted --> Burn[Immediate destruction]
 ```
+```mermaid
+sequenceDiagram
+    participant Ambassador
+    participant HUSHBOX_A
+    participant DiplomaticPouch
+    participant Courier
+    participant Consulate
+    participant SecurityOfficer
+    participant HUSHBOX_B
+    participant BurnBin
+    
+    Ambassador->>HUSHBOX_A: 1. Compose classified message
+    HUSHBOX_A->>HUSHBOX_A: 2. Generate diplomatic passphrase
+    HUSHBOX_A->>HUSHBOX_A: 3. Encrypt with AES-256-GCM + HMAC
+    HUSHBOX_A->>Ambassador: 4. Produce secured QR code
+    Ambassador->>DiplomaticPouch: 5. Seal QR in diplomatic pouch
+    Ambassador->>Courier: 6. Handover with credentials
+    Courier->>Consulate: 7. Transport via secure route
+    Consulate->>SecurityOfficer: 8. Receive and authenticate
+    SecurityOfficer->>HUSHBOX_B: 9. Scan QR code
+    SecurityOfficer->>SecurityOfficer: 10. Retrieve one-time cipher
+    SecurityOfficer->>HUSHBOX_B: 11. Input cipher
+    HUSHBOX_B->>HUSHBOX_B: 12. Verify geolocation (embassy only)
+    HUSHBOX_B->>HUSHBOX_B: 13. Decrypt message
+    HUSHBOX_B->>SecurityOfficer: 14. Display message
+    SecurityOfficer->>SecurityOfficer: 15. Read message
+    SecurityOfficer->>BurnBin: 16. Immediately destroy physical QR
+    HUSHBOX_B->>HUSHBOX_B: 17. Wipe decrypted data from memory
+    Note over SecurityOfficer,BurnBin: Zero persistent copies remain
+```
 
 ***Diplomatic Security Features***
 - **Plausible Deniability**: Message appears as random data if intercepted
