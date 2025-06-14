@@ -201,6 +201,45 @@ sequenceDiagram
 ```
 
 ### Examples
+
+### Crypto Wallet Seed Backup
+```mermaid
+sequenceDiagram
+    participant User
+    participant HUSHBOX
+    participant SecureStorage
+    participant BackupMedium
+
+    User->>HUSHBOX: Enter seed phrase + strong passphrase
+    HUSHBOX->>HUSHBOX: Encrypt seed using AES-256-GCM
+    HUSHBOX->>User: Generate secured QR code
+    User->>BackupMedium: Print QR on titanium plate
+    User->>SecureStorage: Store in fireproof safe
+    Note over User,SecureStorage: Store passphrase separately (e.g. password manager)
+    User->>HUSHBOX: Destroy local session
+```
+Security Features for Crypto Seeds
+Multi-Location Storage: QR physical backup + digital passphrase
+
+Redundancy: Create multiple QR backups for different locations
+
+Tamper Evidence: QR contains HMAC signature to detect alterations
+
+Time-Lock: Optional delayed decryption feature
+
+Plausible Deniability: Seed appears as random data in QR
+
+flowchart LR
+    Seed[12/24-word Seed] --> HUSHBOX
+    HUSHBOX -->|Encrypt| QR[Secured QR]
+    QR --> Physical[Physical Backup]
+    QR --> Digital[Digital Backup]
+    Passphrase --> Manager[Password Manager]
+    Passphrase --> Memory[Memorized]
+    
+    Physical --> Safe[Fireproof Safe]
+    Digital --> Encrypted[Encrypted Cloud]
+
 ### Secure Board Communication  
 ```mermaid
 sequenceDiagram
