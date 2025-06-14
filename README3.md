@@ -202,7 +202,7 @@ sequenceDiagram
 
 ### Examples
 
-### ₿ Crypto Wallet Seed Backup Workflow
+### ₿ Crypto Wallet Seed Backup
 ```mermaid
 sequenceDiagram
     participant User
@@ -238,7 +238,7 @@ flowchart LR
     Digital --> Encrypted[Encrypted Cloud]
 ```
 
-### 🏥 Medical Records Transfer Workflow
+### 🏥 Medical Records Transfer
 
 ```mermaid
 journey
@@ -263,7 +263,7 @@ journey
 - **Emergency Access**: Break-glass mechanism for authorized personnel
 - **Compliance Logging**: Tamper-proof access records
 
-### 🔑 Enterprise Password Rotation Workflow
+### 🔑 Enterprise Password Rotation
 
 ```mermaid
 sequenceDiagram
@@ -290,7 +290,7 @@ sequenceDiagram
 - **Usage Analytics**: Track credential distribution
 - **Auto-Rotation**: Schedule regular password updates
 
-### 🗝️ Diplomatic Communication Workflow
+### 🗝️ Diplomatic Communication
 
 ```mermaid
 flowchart TD
@@ -316,7 +316,7 @@ flowchart TD
 - **Geofencing**: Only decrypt in authorized locations
 - **Ephemeral Storage**: Zero device persistence
 
-### 🧪 Research Data Protection Workflow
+### 🧪 Research Data Protection
 
 ```mermaid
 journey
