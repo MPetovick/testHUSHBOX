@@ -8,6 +8,8 @@
   </p>
 </div>
 ---
+---
+
 
 HUSHBOX is a next-generation, privacy-first communication tool that redefines secure messaging. By combining military-grade encryption with QR code technology, HUSHBOX enables users to exchange confidential messages without ever relying on external servers.
 
