@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   ===========================================================================
- *  HUSHBOX ENTERPRISE v3.2.2 - Secure QR Messaging Platform
+ *  HUSHBOX v3.2.2 - Secure QR Messaging Platform
  *  CSS Architecture & Design: MikePetovick
  *  Copyright © 2025 HushBox Technologies. All rights reserved.
  *  Security Certificate: HBX-SEC-2025-08 | Authored: 2025-06-14
@@ -10,6 +10,9 @@
  *  Core Features: Crypto-grade UI | Accessibility AA+ | Zero-dependency
  *  MikePetovick Design Signature: Dark theme with biometric-inspired accents
  *  HushBox Technology Stack: WebCrypto API | Military-grade encryption
+
+SPDX-License-Identifier: AGPL-3.0-only
+Copyright (C) 2025 HushBox
 ===========================================================================
 -->
 
@@ -17,11 +20,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <meta name="description" content="HushBox Enterprise - Secure messaging with enterprise-grade QR encryption">
+    <meta name="description" content="HushBox - Secure messaging with enterprise-grade QR encryption">
     <meta name="keywords" content="secure messaging, encryption, QR, AES-256, privacy, enterprise security">
     <meta name="author" content="HushBox Team">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'wasm-unsafe-eval'; style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; font-src https://cdnjs.cloudflare.com; img-src 'self' data:;">
-    <title>HushBox Enterprise - Secure Messaging</title>
+    <title>HushBox - Secure Messaging</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="icon" type="image/png" href="favicon.png">
@@ -126,6 +129,10 @@
                         <p>Messages will appear here</p>
                         <p>Secure history</p>
                     </div>
+                    <div class="destroyed-message hidden">
+                        <i class="fas fa-fire"></i>
+                        <p>This message has been destroyed</p>
+                    </div>
                 </div>
                 
                 <div class="action-buttons compact history-buttons">
@@ -152,19 +159,19 @@
             <a href="https://twitter.com/HUSHBOXonline" target="_blank" rel="noopener noreferrer" class="btn-icon social-icon twitter" title="Twitter" aria-label="Twitter Profile">
                 <i class="fab fa-twitter"></i>
             </a>
-            <a href="https://docs.hushbox.com" target="_blank" rel="noopener noreferrer" class="btn-icon social-icon docs" title="Documentation" aria-label="Documentation">
+            <a href="https://github.com/MPetovick/HUSHBOX/blob/main/README.md" target="_blank" rel="noopener noreferrer" class="btn-icon social-icon docs" title="Documentation" aria-label="Documentation">
                 <i class="fas fa-book"></i>
             </a>
-            <a href="mailto:support@hushbox.com" class="btn-icon social-icon support" title="Support" aria-label="Support">
+            <a href="mailto:hushbox.online@pm.me" class="btn-icon social-icon support" title="Support" aria-label="Support">
                 <i class="fas fa-headset"></i>
             </a>
         </div>
-        <p>© 2025 HushBox Enterprise. All rights reserved.</p>
+        <p>© 2025 HushBox. All rights reserved.</p>
         <p id="app-version">Version 3.2.2 | Security Certificate: HBX-SEC-2025-08</p>
         <nav aria-label="Legal Links">
-            <a href="https://hushbox.com/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a> | 
-            <a href="https://hushbox.com/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a> | 
-            <a href="mailto:security@hushbox.com" target="_blank" rel="noopener noreferrer">Report Vulnerability</a>
+            <a href="https://github.com/MPetovick/HUSHBOX/blob/main/legal/privacy-policy.md" target="_blank" rel="noopener noreferrer">Privacy Policy</a> | 
+            <a href="https://github.com/MPetovick/HUSHBOX/blob/main/legal/terms-of-service.md" target="_blank" rel="noopener noreferrer">Terms of Service</a> | 
+            <a href="mailto:hushbox.online@pm.me" target="_blank" rel="noopener noreferrer">Report Vulnerability</a>
         </nav>
     </footer>
 
@@ -320,6 +327,14 @@
                             <option value="M">Low (15%)</option>
                             <option value="L">Lowest (7%)</option>
                         </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label" for="auto-destroy">
+                            <input type="checkbox" id="auto-destroy" checked>
+                            Auto-destroy QR after decryption
+                        </label>
+                        <p class="hint">Messages will be permanently inaccessible after first decryption</p>
                     </div>
                 </form>
             </div>
