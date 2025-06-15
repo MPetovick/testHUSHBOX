@@ -8,6 +8,9 @@
  *  Core Features: Crypto-grade UI | Accessibility AA+ | Zero-dependency
  *  MikePetovick Design Signature: Dark theme with biometric-inspired accents
  *  HushBox Technology Stack: WebCrypto API | Military-grade encryption
+ *
+ *  SPDX-License-Identifier: AGPL-3.0-only
+ *  Copyright (C) 2025 HushBox Enterprise
  * ====================================================================== */
 
 :root {
@@ -55,7 +58,7 @@ body::before {
     left: 0;
     width: 100%;
     height: 100%;
-    background: 
+    background:
         radial-gradient(circle at 10% 20%, rgba(0, 204, 153, 0.05) 0%, transparent 20%),
         radial-gradient(circle at 90% 80%, rgba(0, 204, 153, 0.05) 0%, transparent 20%);
     z-index: -1;
@@ -931,9 +934,9 @@ body::before {
 }
 
 .modal-subtitle {
-    color: rgba(255,255, 255, 0.8);
-    font-size: clamp(0.5rem, 2vw, 0);
-    margin: top 0.5rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: clamp(0.9rem, 2vw, 1.1rem);
+    margin-top: 0.5rem;
 }
 
 .modal-body {
@@ -1210,6 +1213,128 @@ body::before {
     color: var(--warning-color);
 }
 
+.message.destroyed .message-content {
+  background: rgba(255, 77, 77, 0.15);
+  border: 1px solid var(--error-color);
+}
+
+.destroyed-text {
+  color: var(--error-color);
+  font-weight: bold;
+  margin-left: 0.5rem;
+}
+
+/* Wipe timer styles */
+.wipe-timer {
+    position: fixed;
+    bottom: 70px;
+    right: 20px;
+    background: rgba(255, 77, 77, 0.2);
+    color: var(--error-color);
+    padding: 0.6rem 1.2rem; /* Ajustado para más espacio con MM:SS */
+    border-radius: 20px;
+    font-size: clamp(0.85rem, 1.8vw, 0.9rem); /* Tamaño de fuente más consistente */
+    display: flex;
+    align-items: center;
+    gap: 0.6rem; /* Aumentado para mejor espaciado */
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+    border: 1px solid var(--error-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: var(--transition);
+    white-space: nowrap; /* Evitar que el texto se divida */
+}
+
+.wipe-timer:hover {
+    background: rgba(255, 77, 77, 0.3);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+    transform: translateY(-2px);
+}
+
+.wipe-timer i {
+    animation: pulse 2s infinite; /* Animación más lenta para menos distracción */
+    font-size: clamp(0.9rem, 1.8vw, 1rem); /* Tamaño ajustado */
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+.cancel-wipe-btn {
+    background: none;
+    border: 1px solid var(--error-color); /* Añadido borde para mejor visibilidad */
+    border-radius: 8px; /* Bordes más suaves */
+    color: var(--error-color);
+    cursor: pointer;
+    font-size: clamp(0.8rem, 1.6vw, 0.9rem); /* Tamaño más compacto */
+    padding: 0.4rem; /* Padding más pequeño */
+    margin-left: 0.6rem; /* Ajustado para mejor alineación */
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; /* Tamaño fijo para el botón */
+    height: 28px;
+}
+
+.cancel-wipe-btn:hover {
+    background: var(--error-color);
+    color: #1a1a1a; /* Contraste oscuro en hover */
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(255, 77, 77, 0.3);
+}
+
+.cancel-wipe-btn:focus {
+    outline: 2px solid var(--error-color);
+    outline-offset: 2px;
+    border-radius: 8px;
+}
+
+/* Responsive adjustments for wipe timer and cancel button */
+@media (max-width: 768px) {
+    .wipe-timer {
+        bottom: 60px;
+        right: 15px;
+        padding: 0.5rem 1rem;
+        font-size: clamp(0.8rem, 1.6vw, 0.85rem);
+    }
+
+    .wipe-timer i {
+        font-size: clamp(0.85rem, 1.6vw, 0.9rem);
+    }
+
+    .cancel-wipe-btn {
+        font-size: clamp(0.75rem, 1.4vw, 0.8rem);
+        padding: 0.35rem;
+        margin-left: 0.5rem;
+        width: 26px;
+        height: 26px;
+    }
+}
+
+@media (max-width: 480px) {
+    .wipe-timer {
+        bottom: 50px;
+        right: 10px;
+        padding: 0.4rem 0.8rem;
+        font-size: clamp(0.75rem, 1.4vw, 0.8rem);
+    }
+
+    .wipe-timer i {
+        font-size: clamp(0.8rem, 1.4vw, 0.85rem);
+    }
+
+    .cancel-wipe-btn {
+        font-size: clamp(0.7rem, 1.3vw, 0.75rem);
+        padding: 0.3rem;
+        margin-left: 0.4rem;
+        width: 24px;
+        height: 24px;
+    }
+}
+
 .error-message {
     color: var(--error-color);
     font-size: 0.8rem;
@@ -1335,23 +1460,37 @@ body::before {
     .camera-container {
         height: 50vh;
     }
-    
+
     .message-placeholder {
         font-size: 1.1rem;
         padding: 1.2rem;
     }
-    
+
     .message-placeholder i {
         font-size: 2.8rem;
     }
-    
+
     .message-placeholder p {
         font-size: 1rem;
         margin-top: 0.8rem;
     }
-    
+
     .message-container {
         min-height: 200px;
+    }
+}
+
+@media (max-width: 480px) {
+    .destroyed-message {
+        padding: 0.8rem;
+    }
+
+    .destroyed-message i {
+        font-size: 1.8rem;
+    }
+
+    .destroyed-message p {
+        font-size: 0.9rem;
     }
 }
 
@@ -1475,7 +1614,6 @@ body::before {
     border-color: var(--primary-color);
     box-shadow: 0 0 10px var(--glow-color);
 }
-
 
 #security-level,
 #auto-wipe,
