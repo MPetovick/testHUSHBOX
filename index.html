@@ -281,46 +281,64 @@ Copyright (C) 2025 HushBox
 
     <!-- Settings modal -->
     <div id="settings-modal" class="modal" role="dialog" aria-labelledby="settings-title" aria-modal="true" tabindex="-1">
-        <div class="modal-content">
-            <button class="close-modal" aria-label="Close Settings">×</button>
-            <div class="modal-header">
-                <h2 id="settings-title"><i class="fas fa-cog" aria-hidden="true"></i> Security Settings</h2>
-                <p class="modal-subtitle" lang="en">Customize encryption parameters</p>
-            </div>
-            <div class="modal-body">
-                <form id="settings-form">
+    <div class="modal-content compact-settings">
+        <button class="close-modal" aria-label="Close Settings">×</button>
+        
+        <div class="modal-header">
+            <h2 id="settings-title"><i class="fas fa-cog" aria-hidden="true"></i> Security Settings</h2>
+            <p class="modal-subtitle">Customize encryption parameters</p>
+        </div>
+        
+        <div class="settings-tabs">
+            <button class="tab-btn active" data-tab="security"><i class="fas fa-shield-alt"></i> Security</button>
+            <button class="tab-btn" data-tab="qr"><i class="fas fa-qrcode"></i> QR</button>
+            <button class="tab-btn" data-tab="session"><i class="fas fa-clock"></i> Session</button>
+        </div>
+        
+        <div class="settings-content">
+            <div class="settings-group active" id="security-tab">
+                <div class="input-row">
                     <div class="input-group">
-                        <label class="input-label" for="pbkdf2-iterations">PBKDF2 Iterations</label>
+                        <label for="pbkdf2-iterations">PBKDF2 Iterations</label>
                         <input type="number" id="pbkdf2-iterations" min="100000" max="1000000" step="10000" value="310000" required>
-                        <p class="hint">Higher values increase security but slow down processing (Default: 310,000)</p>
+                        <p class="hint">Higher values increase security</p>
                     </div>
                     
                     <div class="input-group">
-                        <label class="input-label" for="security-level">Security Level</label>
+                        <label for="security-level">Security Level</label>
                         <select id="security-level">
-                            <option value="high">High (AES-256 + HMAC-SHA256)</option>
-                            <option value="medium">Medium (AES-256)</option>
-                            <option value="low">Low (AES-128)</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
                         </select>
                     </div>
-                    
+                </div>
+                
+                <div class="input-row">
                     <div class="input-group">
-                        <label class="input-label" for="session-timeout">Session Timeout (minutes)</label>
-                        <input type="number" id="session-timeout" min="1" max="120" value="30">
-                    </div>
-                    
-                    <div class="input-group">
-                        <label class="input-label" for="auto-wipe">Auto Wipe Sensitive Data</label>
+                        <label for="auto-wipe">Auto Wipe</label>
                         <select id="auto-wipe">
-                            <option value="5">After 5 minutes</option>
-                            <option value="10">After 10 minutes</option>
-                            <option value="30">After 30 minutes</option>
+                            <option value="5">5 min</option>
+                            <option value="10">10 min</option>
+                            <option value="30">30 min</option>
                             <option value="0" selected>Never</option>
                         </select>
                     </div>
                     
                     <div class="input-group">
-                        <label class="input-label" for="qr-error-correction">QR Error Correction</label>
+                        <label for="auto-destroy">
+                            <input type="checkbox" id="auto-destroy" checked>
+                            Auto-destroy QR
+                        </label>
+                        <p class="hint">After first decryption</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-group" id="qr-tab">
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="qr-error-correction">Error Correction</label>
                         <select id="qr-error-correction">
                             <option value="H">High (30%)</option>
                             <option value="Q">Medium (25%)</option>
@@ -328,23 +346,61 @@ Copyright (C) 2025 HushBox
                             <option value="L">Lowest (7%)</option>
                         </select>
                     </div>
-
+                    
                     <div class="input-group">
-                        <label class="input-label" for="auto-destroy">
-                            <input type="checkbox" id="auto-destroy" checked>
-                            Auto-destroy QR after decryption
-                        </label>
-                        <p class="hint">Messages will be permanently inaccessible after first decryption</p>
+                        <label for="qr-size">QR Size</label>
+                        <select id="qr-size">
+                            <option value="small">Small</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="large">Large</option>
+                        </select>
                     </div>
-                </form>
+                </div>
+                <!-- QR Color eliminado -->
             </div>
-            <div class="modal-actions">
-                <button id="save-settings" class="btn-primary" aria-label="Save Settings">Save Settings</button>
-                <button id="reset-settings" class="btn-secondary" aria-label="Reset to Defaults">Reset Defaults</button>
-                <button id="cancel-settings" class="btn-secondary" aria-label="Cancel">Cancel</button>
+            
+            <div class="settings-group" id="session-tab">
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="session-timeout">Session Timeout</label>
+                        <select id="session-timeout">
+                            <option value="5">5 min</option>
+                            <option value="15">15 min</option>
+                            <option value="30" selected>30 min</option>
+                            <option value="60">60 min</option>
+                            <option value="0">Never</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="history-retention">History Retention</label>
+                        <select id="history-retention">
+                            <option value="0">Clear on exit</option>
+                            <option value="1">1 day</option>
+                            <option value="7" selected>7 days</option>
+                            <option value="30">30 days</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="session-lock">Lock on Minimize</label>
+                    <select id="session-lock">
+                        <option value="0">Disabled</option>
+                        <option value="1">1 min</option>
+                        <option value="5" selected>5 min</option>
+                    </select>
+                </div>
             </div>
         </div>
+        
+        <div class="modal-actions">
+            <button id="save-settings" class="btn-primary" aria-label="Save Settings">Save</button>
+            <button id="reset-settings" class="btn-secondary" aria-label="Reset to Defaults">Reset</button>
+            <button id="cancel-settings" class="btn-secondary" aria-label="Cancel">Cancel</button>
+        </div>
     </div>
+</div>
 
     <!-- External dependencies -->
     <script defer src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js" integrity="sha256-7eJpOkpqUSa501ZpBis1jsq2rnubhqHPMC/rRahRSQc=" crossorigin="anonymous"></script>
