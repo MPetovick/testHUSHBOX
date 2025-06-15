@@ -1,12 +1,13 @@
 /*!
  * ===========================================================================
- * HUSHBOX ENTERPRISE CORE ENGINE v3.2.2
+ * HUSHBOX ENTERPRISE CORE ENGINE v3.3.0
  * ===========================================================================
  * 
  * Cryptographic Architecture:
  * - AES-256-GCM with HMAC-SHA256 authentication
  * - PBKDF2 key derivation (310,000 iterations)
  * - Zero-knowledge message protocol
+ * - Auto-destroy QR after decryption
  * 
  * Developed by: MikePetovick
  * Security Lead: HushBox Cryptography Team
@@ -16,7 +17,8 @@
  * 2. Ephemeral key lifecycle
  * 3. Constant-time operations
  * 4. Memory-hardened encryption
- * 
+ * 5. Responsive UI design
+ 
  SPDX-License-Identifier: AGPL-3.0-only
  Copyright (C) 2025 HushBox Enterprise 
  * ===========================================================================
@@ -42,7 +44,7 @@ const CONFIG = {
   HISTORY_STORAGE_KEY: 'hushbox_message_history',
   AUTO_WIPE: 0, // Minutes, 0 = disabled
   QR_ERROR_CORRECTION: 'H',
-  AUTO_DESTROY_QR: false // Auto-destroy QR after decryption
+  AUTO_DESTROY_QR: true
 };
 
 // DOM elements with enhanced error handling
@@ -106,7 +108,11 @@ const dom = {
   sessionTimeoutInput: document.getElementById('session-timeout'),
   autoWipeSelect: document.getElementById('auto-wipe'),
   qrErrorCorrectionSelect: document.getElementById('qr-error-correction'),
-  autoDestroy: document.getElementById('auto-destroy') // Auto-destroy checkbox
+  autoDestroy: document.getElementById('auto-destroy'),
+  qrSizeSelect: document.getElementById('qr-size'),
+  historyRetentionSelect: document.getElementById('history-retention'),
+  tabBtns: document.querySelectorAll('.tab-btn'),
+  settingsGroups: document.querySelectorAll('.settings-group')
 };
 
 // Initialize file input
@@ -130,7 +136,7 @@ const appState = {
   cameraStream: null,
   wipeTimer: null,
   wipeStartTime: null,
-  destroyedMessages: new Set() // Store hashes of destroyed messages
+  destroyedMessages: new Set()
 };
 
 // Configuración por defecto
@@ -140,76 +146,10 @@ const DEFAULT_CONFIG = {
   SESSION_TIMEOUT: 30,
   AUTO_WIPE: 0,
   QR_ERROR_CORRECTION: 'H',
-  AUTO_DESTROY_QR: false
+  QR_SIZE: 'medium',
+  HISTORY_RETENTION: '7',
+  AUTO_DESTROY_QR: true
 };
-
-// Register sensitive actions
-function registerSensitiveAction() {
-  if (!appState.wipeStartTime) {
-    appState.wipeStartTime = Date.now();
-    localStorage.setItem('wipeStartTime', appState.wipeStartTime.toString());
-    setupAutoWipe();
-  }
-}
-
-// Setup auto-wipe timer
-function setupAutoWipe() {
-  if (appState.wipeTimer) {
-    clearTimeout(appState.wipeTimer);
-    appState.wipeTimer = null;
-  }
-
-  if (CONFIG.AUTO_WIPE > 0 && appState.wipeStartTime) {
-    const wipeTime = CONFIG.AUTO_WIPE * 60000;
-    const elapsed = Date.now() - appState.wipeStartTime;
-    const remainingTime = Math.max(0, wipeTime - elapsed);
-    
-    appState.wipeTimer = setTimeout(() => {
-      handlers.clearSensitiveData();
-      ui.showToast('Sensitive data automatically wiped', 'info');
-    }, remainingTime);
-    
-    updateWipeTimerUI();
-  }
-}
-
-// Update wipe timer UI with cancel button
-function updateWipeTimerUI() {
-  if (!appState.wipeStartTime || CONFIG.AUTO_WIPE === 0) {
-    const timerEl = document.getElementById('wipe-timer');
-    if (timerEl) timerEl.remove();
-    return;
-  }
-
-  const totalTime = CONFIG.AUTO_WIPE * 60000;
-  const elapsed = Date.now() - appState.wipeStartTime;
-  const remaining = Math.max(0, totalTime - elapsed);
-  const minutes = Math.floor(remaining / 60000);
-  const seconds = Math.floor((remaining % 60000) / 1000);
-
-  let timerEl = document.getElementById('wipe-timer');
-  if (!timerEl) {
-    timerEl = document.createElement('div');
-    timerEl.id = 'wipe-timer';
-    timerEl.className = 'wipe-timer';
-    document.body.appendChild(timerEl);
-  }
-
-  timerEl.innerHTML = `
-    <i class="fas fa-hourglass-half"></i>
-    Auto-wipe in: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}
-    <button id="cancel-wipe" class="cancel-wipe-btn" title="Cancel auto wipe">
-      <i class="fas fa-times"></i>
-    </button>
-  `;
-
-  document.getElementById('cancel-wipe').addEventListener('click', () => {
-    handlers.clearSensitiveData();
-    ui.showToast('Auto wipe cancelled', 'info');
-  });
-
-  setTimeout(updateWipeTimerUI, 1000);
-}
 
 // Cargar configuración guardada
 function loadSettings() {
@@ -222,17 +162,35 @@ function loadSettings() {
       CONFIG.SESSION_TIMEOUT = (settings.SESSION_TIMEOUT || DEFAULT_CONFIG.SESSION_TIMEOUT) * 60000;
       CONFIG.AUTO_WIPE = settings.AUTO_WIPE || DEFAULT_CONFIG.AUTO_WIPE;
       CONFIG.QR_ERROR_CORRECTION = settings.QR_ERROR_CORRECTION || DEFAULT_CONFIG.QR_ERROR_CORRECTION;
-      CONFIG.AUTO_DESTROY_QR = settings.AUTO_DESTROY_QR ?? DEFAULT_CONFIG.AUTO_DESTROY_QR;
-      if (dom.autoDestroy) dom.autoDestroy.checked = CONFIG.AUTO_DESTROY_QR;
+      CONFIG.QR_SIZE = settings.QR_SIZE || DEFAULT_CONFIG.QR_SIZE;
+      CONFIG.HISTORY_RETENTION = settings.HISTORY_RETENTION || DEFAULT_CONFIG.HISTORY_RETENTION;
+      CONFIG.AUTO_DESTROY_QR = settings.AUTO_DESTROY_QR !== undefined ? settings.AUTO_DESTROY_QR : DEFAULT_CONFIG.AUTO_DESTROY_QR;
+      
+      // Actualizar UI
       updateSettingsUI();
     } catch (e) {
       console.error('Error loading settings:', e);
     }
   }
-  const autoDestroy = localStorage.getItem('autoDestroyQR');
-  if (autoDestroy !== null) {
-    CONFIG.AUTO_DESTROY_QR = autoDestroy === 'true';
-    if (dom.autoDestroy) dom.autoDestroy.checked = CONFIG.AUTO_DESTROY_QR;
+  
+  // Cargar mensajes destruidos
+  const destroyedMessages = localStorage.getItem('destroyedMessages');
+  if (destroyedMessages) {
+    appState.destroyedMessages = new Set(JSON.parse(destroyedMessages));
+  }
+  
+  // Cargar tiempo de inicio de wipe si existe
+  const wipeStartTime = localStorage.getItem('wipeStartTime');
+  if (wipeStartTime) {
+    appState.wipeStartTime = parseInt(wipeStartTime);
+    
+    // Verificar si ya expiró
+    const elapsed = Date.now() - appState.wipeStartTime;
+    if (elapsed > CONFIG.AUTO_WIPE * 60000) {
+      handlers.clearSensitiveData();
+    } else {
+      setupAutoWipe();
+    }
   }
 }
 
@@ -243,50 +201,72 @@ function updateSettingsUI() {
   dom.sessionTimeoutInput.value = CONFIG.SESSION_TIMEOUT / 60000;
   dom.autoWipeSelect.value = CONFIG.AUTO_WIPE;
   dom.qrErrorCorrectionSelect.value = CONFIG.QR_ERROR_CORRECTION;
-  if (dom.autoDestroy) dom.autoDestroy.checked = CONFIG.AUTO_DESTROY_QR;
+  dom.autoDestroy.checked = CONFIG.AUTO_DESTROY_QR;
+  dom.qrSizeSelect.value = CONFIG.QR_SIZE;
+  dom.historyRetentionSelect.value = CONFIG.HISTORY_RETENTION;
   
+  // Actualizar indicador de nivel de seguridad
   const securityLevelElement = document.querySelector('.security-level');
   if (securityLevelElement) {
     securityLevelElement.className = `security-level ${appState.securityLevel}`;
     securityLevelElement.querySelector('span').textContent = 
       `Security Level: ${appState.securityLevel.charAt(0).toUpperCase() + appState.securityLevel.slice(1)}`;
   }
+  
+  // Actualizar tamaño QR
+  updateQrSize();
+}
+
+// Función para actualizar tamaño QR
+function updateQrSize() {
+  switch(CONFIG.QR_SIZE) {
+    case 'small': CONFIG.QR_SIZE = 180; break;
+    case 'medium': CONFIG.QR_SIZE = 220; break;
+    case 'large': CONFIG.QR_SIZE = 260; break;
+    default: CONFIG.QR_SIZE = 220;
+  }
 }
 
 // Guardar configuración
 function saveSettings() {
-  const newAutoWipeValue = parseInt(dom.autoWipeSelect.value) || 0;
   const settings = {
     PBKDF2_ITERATIONS: parseInt(dom.pbkdf2IterationsInput.value) || DEFAULT_CONFIG.PBKDF2_ITERATIONS,
     SECURITY_LEVEL: dom.securityLevelSelect.value,
     SESSION_TIMEOUT: parseInt(dom.sessionTimeoutInput.value) || 30,
-    AUTO_WIPE: newAutoWipeValue,
+    AUTO_WIPE: parseInt(dom.autoWipeSelect.value) || 0,
     QR_ERROR_CORRECTION: dom.qrErrorCorrectionSelect.value,
-    AUTO_DESTROY_QR: dom.autoDestroy ? dom.autoDestroy.checked : DEFAULT_CONFIG.AUTO_DESTROY_QR
+    QR_SIZE: dom.qrSizeSelect.value,
+    HISTORY_RETENTION: dom.historyRetentionSelect.value,
+    AUTO_DESTROY_QR: dom.autoDestroy.checked
   };
   
+  // Validar valores
   if (settings.PBKDF2_ITERATIONS < 100000) {
     ui.showToast('PBKDF2 iterations must be at least 100,000', 'error');
     return false;
   }
   
+  // Actualizar configuración en tiempo real
   CONFIG.PBKDF2_ITERATIONS = settings.PBKDF2_ITERATIONS;
   appState.securityLevel = settings.SECURITY_LEVEL;
   CONFIG.SESSION_TIMEOUT = settings.SESSION_TIMEOUT * 60000;
   CONFIG.AUTO_WIPE = settings.AUTO_WIPE;
   CONFIG.QR_ERROR_CORRECTION = settings.QR_ERROR_CORRECTION;
+  CONFIG.QR_SIZE = settings.QR_SIZE;
+  CONFIG.HISTORY_RETENTION = settings.HISTORY_RETENTION;
   CONFIG.AUTO_DESTROY_QR = settings.AUTO_DESTROY_QR;
   
+  // Guardar en localStorage
   localStorage.setItem('hushbox_settings', JSON.stringify(settings));
-  localStorage.setItem('autoDestroyQR', CONFIG.AUTO_DESTROY_QR);
   
+  // Actualizar UI
+  updateSettingsUI();
+  
+  // Reiniciar temporizador de sesión
   handlers.resetSessionTimer();
   
-  if (appState.wipeStartTime) {
-    if (appState.wipeTimer) {
-      clearTimeout(appState.wipeTimer);
-      appState.wipeTimer = null;
-    }
+  // Configurar auto-borrado si está habilitado
+  if (CONFIG.AUTO_WIPE > 0) {
     setupAutoWipe();
   }
   
@@ -301,41 +281,69 @@ function resetSettings() {
   CONFIG.SESSION_TIMEOUT = DEFAULT_CONFIG.SESSION_TIMEOUT * 60000;
   CONFIG.AUTO_WIPE = DEFAULT_CONFIG.AUTO_WIPE;
   CONFIG.QR_ERROR_CORRECTION = DEFAULT_CONFIG.QR_ERROR_CORRECTION;
+  CONFIG.QR_SIZE = DEFAULT_CONFIG.QR_SIZE;
+  CONFIG.HISTORY_RETENTION = DEFAULT_CONFIG.HISTORY_RETENTION;
   CONFIG.AUTO_DESTROY_QR = DEFAULT_CONFIG.AUTO_DESTROY_QR;
   
+  // Actualizar UI
   updateSettingsUI();
   
+  // Eliminar configuración guardada
   localStorage.removeItem('hushbox_settings');
-  localStorage.removeItem('autoDestroyQR');
   
+  // Reiniciar temporizador de sesión
   handlers.resetSessionTimer();
   
-  if (appState.wipeTimer) {
-    clearTimeout(appState.wipeTimer);
-    appState.wipeTimer = null;
+  // Configurar auto-borrado si está habilitado
+  if (CONFIG.AUTO_WIPE > 0) {
+    setupAutoWipe();
   }
-  appState.wipeStartTime = null;
-  localStorage.removeItem('wipeStartTime');
-  updateWipeTimerUI();
   
   ui.showToast('Settings reset to defaults', 'success');
 }
 
+// Actualización de la lógica JavaScript
+function openSettingsTab(tabName) {
+    // Remover clase active de todos los tabs
+    dom.tabBtns.forEach(btn => btn.classList.remove('active'));
+    dom.settingsGroups.forEach(group => {
+        group.classList.remove('active');
+        group.style.display = 'none';
+    });
+    
+    // Activar el tab seleccionado
+    const activeBtn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+    const activeGroup = document.getElementById(`${tabName}-tab`);
+    
+    if (activeBtn && activeGroup) {
+        activeBtn.classList.add('active');
+        activeGroup.classList.add('active');
+        activeGroup.style.display = 'block';
+    }
+}
+
+// Al abrir el modal
+dom.settingsButton.addEventListener('click', () => {
+    updateSettingsUI();
+    dom.settingsModal.style.display = 'flex';
+    openSettingsTab('security');
+    
+    // Asegurar que solo el grupo activo es visible
+    dom.settingsGroups.forEach(group => {
+        if (!group.classList.contains('active')) {
+            group.style.display = 'none';
+        }
+    });
+});
+
 // Enhanced cryptographic utilities with additional security measures
 const cryptoUtils = {
-  hashMessage: async (message) => {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(message);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  },
-
   validatePassphrase: (pass) => {
     if (!pass || pass.length < CONFIG.MIN_PASSPHRASE_LENGTH) {
       throw new Error(`Password must be at least ${CONFIG.MIN_PASSPHRASE_LENGTH} characters long`);
     }
     
+    // Complexity requirements
     const hasUpperCase = /[A-Z]/.test(pass);
     const hasLowerCase = /[a-z]/.test(pass);
     const hasNumbers = /[0-9]/.test(pass);
@@ -349,12 +357,14 @@ const cryptoUtils = {
       throw new Error('Password has too many repeated characters');
     }
     
+    // Use zxcvbn for advanced password strength analysis
     if (typeof zxcvbn !== 'undefined') {
       const result = zxcvbn(pass);
       if (result.score < 3) {
         throw new Error('Password is too weak');
       }
       
+      // Update security level based on password strength
       if (result.score >= 4) {
         appState.securityLevel = 'high';
       } else if (result.score >= 2) {
@@ -389,6 +399,7 @@ const cryptoUtils = {
       crypto.getRandomValues(values);
       let pass = Array.from(values, v => chars[v % chars.length]).join('');
 
+      // Ensure complexity requirements
       if (!/[A-Z]/.test(pass)) pass = 'A' + pass.slice(1);
       if (!/[a-z]/.test(pass)) pass = pass.slice(0, -1) + 'a';
       if (!/[0-9]/.test(pass)) pass = pass.slice(0, -1) + '1';
@@ -424,6 +435,7 @@ const cryptoUtils = {
         wipeArray[i] = 0;
       }
     } else if (typeof buffer === 'string') {
+      // Overwrite string by converting to array
       const strArray = new Uint8Array(new TextEncoder().encode(buffer));
       for (let i = 0; i < strArray.length; i++) {
         strArray[i] = 0;
@@ -471,6 +483,7 @@ const cryptoUtils = {
       ['sign', 'verify']
     );
 
+    // Securely wipe sensitive data
     cryptoUtils.secureWipe(derivedBitsArray);
     cryptoUtils.secureWipe(aesKeyBytes);
     cryptoUtils.secureWipe(hmacKeyBytes);
@@ -491,10 +504,12 @@ const cryptoUtils = {
       
       dataToEncrypt = new TextEncoder().encode(message);
 
+      // Compress large messages
       if (typeof pako !== 'undefined' && message.length > CONFIG.COMPRESSION_THRESHOLD) {
         dataToEncrypt = pako.deflate(dataToEncrypt, { level: 6 });
       }
 
+      // Generate cryptographic salt and IV
       salt = crypto.getRandomValues(new Uint8Array(CONFIG.SALT_LENGTH));
       iv = crypto.getRandomValues(new Uint8Array(CONFIG.IV_LENGTH));
 
@@ -502,6 +517,7 @@ const cryptoUtils = {
       aesKey = derivedAesKey;
       hmacKey = derivedHmacKey;
 
+      // Encrypt with AES-GCM
       const encrypted = await crypto.subtle.encrypt(
         { name: 'AES-GCM', iv, tagLength: 128 },
         aesKey,
@@ -510,12 +526,14 @@ const cryptoUtils = {
 
       const ciphertext = new Uint8Array(encrypted);
       
+      // Calculate HMAC for integrity verification
       const hmac = await crypto.subtle.sign(
         'HMAC',
         hmacKey,
         ciphertext
       );
 
+      // Combine all components
       const combined = new Uint8Array([
         ...salt,
         ...iv,
@@ -523,12 +541,14 @@ const cryptoUtils = {
         ...new Uint8Array(hmac)
       ]);
       
+      // Return as base64
       const result = btoa(String.fromCharCode(...combined));
       return result;
     } catch (error) {
       console.error('Encryption error:', error);
       throw new Error('Encryption failed: ' + error.message);
     } finally {
+      // Securely wipe sensitive data
       if (dataToEncrypt) cryptoUtils.secureWipe(dataToEncrypt);
       if (salt) cryptoUtils.secureWipe(salt);
       if (iv) cryptoUtils.secureWipe(iv);
@@ -545,22 +565,27 @@ const cryptoUtils = {
     try {
       if (!encryptedBase64 || !passphrase) throw new Error('Encrypted data and passphrase are required');
       
+      // Convert base64 to Uint8Array
       const encryptedData = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
       
+      // Validate minimum length
       const minLength = CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH + CONFIG.HMAC_LENGTH;
       if (encryptedData.length < minLength) {
         throw new Error('Invalid encrypted data: too short');
       }
       
+      // Extract components
       salt = encryptedData.slice(0, CONFIG.SALT_LENGTH);
       iv = encryptedData.slice(CONFIG.SALT_LENGTH, CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH);
       const ciphertext = encryptedData.slice(CONFIG.SALT_LENGTH + CONFIG.IV_LENGTH, -CONFIG.HMAC_LENGTH);
       const hmac = encryptedData.slice(-CONFIG.HMAC_LENGTH);
 
+      // Derive keys
       const { aesKey: derivedAesKey, hmacKey: derivedHmacKey } = await cryptoUtils.deriveKeys(passphrase, salt);
       aesKey = derivedAesKey;
       hmacKey = derivedHmacKey;
 
+      // Verify HMAC before decryption
       const isValid = await crypto.subtle.verify(
         'HMAC',
         hmacKey,
@@ -572,12 +597,14 @@ const cryptoUtils = {
         throw new Error('Integrity check failed: Data may have been tampered with');
       }
 
+      // Decrypt the message
       decrypted = await crypto.subtle.decrypt(
         { name: 'AES-GCM', iv, tagLength: 128 },
         aesKey,
         ciphertext
       );
 
+      // Decompress if necessary
       let decompressed;
       try {
         if (typeof pako !== 'undefined') {
@@ -589,6 +616,7 @@ const cryptoUtils = {
         decompressed = new Uint8Array(decrypted);
       }
       
+      // Convert to string
       const result = new TextDecoder().decode(decompressed);
 
       return result;
@@ -596,10 +624,19 @@ const cryptoUtils = {
       console.error('Decryption error:', error);
       throw new Error('Decryption failed: ' + error.message);
     } finally {
+      // Securely wipe sensitive data
       if (decrypted) cryptoUtils.secureWipe(decrypted);
       if (salt) cryptoUtils.secureWipe(salt);
       if (iv) cryptoUtils.secureWipe(iv);
     }
+  },
+  
+  hashMessage: async (message) => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 };
 
@@ -621,7 +658,6 @@ const ui = {
   },
 
   displayMessage: (content, isSent = false, isDestroyed = false) => {
-    // UPDATED: Updated to handle custom content for destroyed messages
     const placeholder = dom.messages.querySelector('.message-placeholder');
     if (placeholder) {
       placeholder.remove();
@@ -636,6 +672,9 @@ const ui = {
         <div class="message-content" id="${messageId}" role="alert" aria-live="polite">
           <i class="fas fa-fire"></i> 
           <span>${ui.sanitizeHTML(content)}</span>
+          <button class="copy-icon" data-message-id="${messageId}" aria-label="Copy message">
+            <i class="fas fa-copy"></i>
+          </button>
         </div>
         <div class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
       `;
@@ -653,11 +692,13 @@ const ui = {
     }
 
     appState.messageHistory.push({
-      content: isDestroyed ? content : content,
+      content,
       isSent,
-      timestamp: new Date()
+      timestamp: new Date(),
+      isDestroyed
     });
 
+    // Limit to 20 messages to prevent performance issues
     if (dom.messages.children.length >= 20) {
       dom.messages.removeChild(dom.messages.firstChild);
     }
@@ -665,19 +706,18 @@ const ui = {
     dom.messages.appendChild(messageEl);
     dom.messages.scrollTop = dom.messages.scrollHeight;
 
+    // Enable export button if there are messages
     dom.exportHistory.disabled = appState.messageHistory.length === 0;
     
-    // Add event listener for copy button (only for non-destroyed messages)
-    if (!isDestroyed) {
-      const copyButton = messageEl.querySelector('.copy-icon');
-      if (copyButton) {
-        copyButton.addEventListener('click', () => {
-          const messageContent = document.getElementById(messageId).textContent;
-          navigator.clipboard.writeText(messageContent).then(() => {
-            ui.showToast('Message copied to clipboard', 'success');
-          });
+    // Add event listener for copy button
+    const copyButton = messageEl.querySelector('.copy-icon');
+    if (copyButton) {
+      copyButton.addEventListener('click', () => {
+        const messageContent = document.getElementById(messageId).textContent;
+        navigator.clipboard.writeText(messageContent).then(() => {
+          ui.showToast('Message copied to clipboard', 'success');
         });
-      }
+      });
     }
   },
 
@@ -714,6 +754,7 @@ const ui = {
           const circleX = qrSize / 2;
           const circleY = qrSize / 2;
 
+          // Draw HushBox logo in center
           ctx.beginPath();
           ctx.arc(circleX, circleY, circleRadius, 0, Math.PI * 2);
           ctx.fillStyle = '#000000';
@@ -726,13 +767,16 @@ const ui = {
           ctx.fillText('HUSH', circleX, circleY - circleRadius * 0.2);
           ctx.fillText('BOX', circleX, circleY + circleRadius * 0.3);
 
+          // Draw to main canvas
           const qrCtx = dom.qrCanvas.getContext('2d');
           qrCtx.clearRect(0, 0, qrSize, qrSize);
           qrCtx.drawImage(tempCanvas, 0, 0, qrSize, qrSize);
 
+          // Show QR container
           dom.qrContainer.classList.remove('hidden');
           dom.qrContainer.classList.add('no-print');
           
+          // Set generation time
           dom.qrTime.textContent = new Date().toLocaleTimeString();
           
           resolve();
@@ -762,9 +806,11 @@ const ui = {
     dom.passphraseModal.style.display = 'flex';
     dom.modalPassphrase.focus();
     
+    // Show scan time
     document.getElementById('scan-time').textContent = 
       new Date().toLocaleTimeString();
     
+    // Add scan animation
     if (!document.querySelector('.scan-beam')) {
       const beam = document.createElement('div');
       beam.className = 'scan-beam';
@@ -789,6 +835,7 @@ const ui = {
       dom.detectionBox.appendChild(dom.scanLine);
     }
 
+    // Proportional size to container
     const size = Math.min(
       dom.cameraContainer.clientWidth, 
       dom.cameraContainer.clientHeight
@@ -1036,10 +1083,12 @@ const handlers = {
       ui.displayMessage(`Encrypted message: ${ui.sanitizeHTML(encrypted.slice(0, 40))}...`, true);
       ui.showToast('Message encrypted successfully', 'success');
 
+      // Clear inputs
       dom.messageInput.value = '';
       dom.passphrase.value = '';
       ui.updatePasswordStrength('');
-
+      
+      // Registrar como acción sensible
       registerSensitiveAction();
     } catch (error) {
       ui.displayMessage(error.message);
@@ -1052,7 +1101,6 @@ const handlers = {
   },
 
   handleModalDecrypt: async () => {
-    // UPDATED: Updated to show destroyed message in history
     const passphrase = dom.modalPassphrase.value.trim();
     
     if (!passphrase) {
@@ -1061,9 +1109,10 @@ const handlers = {
     }
 
     try {
+      // Verificar si el mensaje ya fue destruido
       const messageHash = await cryptoUtils.hashMessage(appState.lastEncryptedData);
-      
       if (appState.destroyedMessages.has(messageHash)) {
+        // Mostrar mensaje de destruido en el historial
         ui.displayMessage('This message has been destroyed', false, true);
         ui.hidePassphraseModal();
         ui.showToast('Message already destroyed', 'error');
@@ -1078,6 +1127,7 @@ const handlers = {
       ui.displayMessage(`Decrypted: ${ui.sanitizeHTML(decrypted)}`);
       ui.showToast('Message decrypted', 'success');
       
+      // Destruir el mensaje después del descifrado exitoso (si está activado)
       if (CONFIG.AUTO_DESTROY_QR) {
         appState.destroyedMessages.add(messageHash);
         localStorage.setItem('destroyedMessages', JSON.stringify([...appState.destroyedMessages]));
@@ -1086,6 +1136,7 @@ const handlers = {
       
       ui.hidePassphraseModal();
       
+      // Registrar como acción sensible
       registerSensitiveAction();
     } catch (error) {
       console.error('Decryption failed:', error);
@@ -1095,7 +1146,6 @@ const handlers = {
   },
 
   startCamera: () => {
-    // UPDATED: Updated to show destroyed message in history
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       ui.showToast('Camera access not supported', 'error');
       return;
@@ -1139,34 +1189,31 @@ const handlers = {
             if (qrCode) {
               const qrData = qrCode.data.trim();
               
+              // Verificar si es un mensaje destruido
               cryptoUtils.hashMessage(qrData).then(messageHash => {
                 if (appState.destroyedMessages.has(messageHash)) {
+                  // Mostrar mensaje de destruido en el historial
                   ui.displayMessage('This message has been destroyed', false, true);
                   ui.showToast('Scanned a destroyed message', 'error');
-                  scanning = true; // Continue scanning
                   return;
                 }
                 
+                // Procesar QR válido
+                appState.lastEncryptedData = qrData;
                 scanning = false;
                 clearTimeout(timeoutId);
-                
-                if (qrData.startsWith('HBX:') || qrData.length > 100) {
-                  appState.lastEncryptedData = qrData;
-                  handlers.stopCamera();
-                  ui.hideCameraModal();
-                  ui.showPassphraseModal();
-                } else {
-                  ui.showToast('Invalid HushBox QR', 'warning');
-                  scanning = true;
-                }
+                handlers.stopCamera();
+                ui.hideCameraModal();
+                ui.showPassphraseModal();
               });
             }
-            requestAnimationFrame(scanFrame);
           } catch (e) {
             console.error('Scan error:', e);
           }
+          requestAnimationFrame(scanFrame);
         };
         
+        // Start scan loop
         dom.cameraPreview.onplaying = () => {
           requestAnimationFrame(scanFrame);
         };
@@ -1248,23 +1295,25 @@ const handlers = {
 
           if (qrCode) {
             const qrData = qrCode.data;
+            
+            // Verificar si es un mensaje destruido
             cryptoUtils.hashMessage(qrData).then(messageHash => {
               if (appState.destroyedMessages.has(messageHash)) {
+                // Mostrar mensaje de destruido en el historial
                 ui.displayMessage('This message has been destroyed', false, true);
                 ui.showToast('Uploaded a destroyed message', 'error');
-                resolve();
                 return;
               }
+              
               appState.lastEncryptedData = qrData;
               ui.showPassphraseModal();
               ui.showToast('QR code uploaded successfully', 'success');
-              resolve();
             });
           } else {
             ui.displayMessage('No QR code detected');
             ui.showToast('No QR code found', 'error');
-            resolve();
           }
+          resolve();
         };
         img.src = e.target.result;
       };
@@ -1347,7 +1396,7 @@ const handlers = {
       doc.setFontSize(8);
       doc.setTextColor(160, 160, 160);
       doc.text(
-        `Generated by HushBox Enterprise v3.2.2 | ${new Date().toLocaleString()}`,
+        `Generated by HushBox Enterprise v3.3.0 | ${new Date().toLocaleString()}`,
         105,
         290,
         null,
@@ -1429,7 +1478,8 @@ const handlers = {
 
           ui.showToast(`Imported ${messages.length} messages`, 'success');
           dom.exportHistory.disabled = false;
-
+          
+          // Registrar como acción sensible
           registerSensitiveAction();
         } catch (error) {
           console.error('Error importing history:', error);
@@ -1444,25 +1494,43 @@ const handlers = {
   },
 
   clearSensitiveData: () => {
+    // Limpiar todos los campos de contraseña
     dom.passphrase.value = '';
     dom.modalPassphrase.value = '';
+    
+    // Limpiar campo de mensaje
     dom.messageInput.value = '';
+    
+    // Limpiar datos en memoria
     appState.lastEncryptedData = null;
+    
+    // Limpiar historial completo
     appState.messageHistory = [];
-    appState.destroyedMessages.clear();
-    localStorage.removeItem('destroyedMessages');
+    
+    // Actualizar UI
     dom.qrContainer.classList.add('hidden');
     ui.updatePasswordStrength('');
+    
+    // Restablecer UI de mensajes
     ui.showPlaceholder('No messages', 'fa-comments');
+    
+    // Limpiar temporizador
     if (appState.wipeTimer) {
       clearTimeout(appState.wipeTimer);
       appState.wipeTimer = null;
     }
+    
+    // Resetear estado de limpieza
     appState.wipeStartTime = null;
     localStorage.removeItem('wipeStartTime');
+    
+    // Ocultar contador UI
     const timerEl = document.getElementById('wipe-timer');
     if (timerEl) timerEl.remove();
+    
+    // Deshabilitar botón de exportación
     dom.exportHistory.disabled = true;
+    
     ui.showToast('All sensitive data cleared', 'success');
   },
 
@@ -1513,6 +1581,8 @@ const handlers = {
           ui.updatePasswordStrength(pass);
           ui.displayMessage(`Generated password: ${ui.sanitizeHTML(pass)}`, true);
           ui.showToast('Secure password generated', 'success');
+          
+          // Registrar como acción sensible
           registerSensitiveAction();
         } catch (error) {
           ui.showToast(`Error generating password: ${error.message}`, 'error');
@@ -1567,6 +1637,7 @@ const handlers = {
       dom.settingsButton.addEventListener('click', () => {
         updateSettingsUI();
         dom.settingsModal.style.display = 'flex';
+        openSettingsTab('security');
       });
       
       dom.closeSettings.addEventListener('click', () => {
@@ -1585,14 +1656,20 @@ const handlers = {
       
       dom.resetSettings.addEventListener('click', resetSettings);
       
-      if (dom.autoDestroy) {
-        dom.autoDestroy.addEventListener('change', () => {
-          CONFIG.AUTO_DESTROY_QR = dom.autoDestroy.checked;
-          localStorage.setItem('autoDestroyQR', CONFIG.AUTO_DESTROY_QR);
-          ui.showToast(`Auto-destroy ${CONFIG.AUTO_DESTROY_QR ? 'enabled' : 'disabled'}`, 'info');
-        });
-      }
+      dom.autoDestroy.addEventListener('change', () => {
+        CONFIG.AUTO_DESTROY_QR = dom.autoDestroy.checked;
+        ui.showToast(`Auto-destroy ${CONFIG.AUTO_DESTROY_QR ? 'enabled' : 'disabled'}`, 'info');
+      });
       
+      // Event listeners para tabs
+      dom.tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tabName = btn.getAttribute('data-tab');
+          openSettingsTab(tabName);
+        });
+      });
+      
+      // Add PWA installation prompt
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         ui.showToast('Install HushBox for a better experience', 'info');
@@ -1603,6 +1680,81 @@ const handlers = {
     }
   }
 };
+
+// Función para configurar auto wipe
+function setupAutoWipe() {
+  // Limpiar temporizador existente
+  if (appState.wipeTimer) {
+    clearTimeout(appState.wipeTimer);
+    appState.wipeTimer = null;
+  }
+
+  // Solo activar si está configurado
+  if (CONFIG.AUTO_WIPE > 0 && appState.wipeStartTime) {
+    const wipeTime = CONFIG.AUTO_WIPE * 60000; // minutos a ms
+    
+    // Calcular tiempo restante
+    const elapsed = Date.now() - appState.wipeStartTime;
+    const remainingTime = Math.max(0, wipeTime - elapsed);
+    
+    appState.wipeTimer = setTimeout(() => {
+      handlers.clearSensitiveData();
+      ui.showToast('Sensitive data automatically wiped', 'info');
+    }, remainingTime);
+    
+    // Actualizar UI del contador
+    updateWipeTimerUI();
+  }
+}
+
+// Función para registrar acciones sensibles
+function registerSensitiveAction() {
+  if (!appState.wipeStartTime) {
+    appState.wipeStartTime = Date.now();
+    localStorage.setItem('wipeStartTime', appState.wipeStartTime.toString());
+    setupAutoWipe();
+  }
+}
+
+// Función para actualizar el contador en la UI
+function updateWipeTimerUI() {
+  if (!appState.wipeStartTime || CONFIG.AUTO_WIPE === 0) {
+    const timerEl = document.getElementById('wipe-timer');
+    if (timerEl) timerEl.remove();
+    return;
+  }
+
+  const totalTime = CONFIG.AUTO_WIPE * 60000;
+  const elapsed = Date.now() - appState.wipeStartTime;
+  const remaining = Math.max(0, totalTime - elapsed);
+  const minutes = Math.floor(remaining / 60000);
+  const seconds = Math.floor((remaining % 60000) / 1000);
+
+  let timerEl = document.getElementById('wipe-timer');
+  if (!timerEl) {
+    timerEl = document.createElement('div');
+    timerEl.id = 'wipe-timer';
+    timerEl.className = 'wipe-timer';
+    document.body.appendChild(timerEl);
+  }
+
+  timerEl.innerHTML = `
+    <i class="fas fa-hourglass-half"></i>
+    Auto-wipe in: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}
+    <button id="cancel-wipe" class="cancel-wipe-btn" title="Cancel auto wipe">
+      <i class="fas fa-times"></i>
+    </button>
+  `;
+
+  // Agregar evento para cancelar
+  document.getElementById('cancel-wipe').addEventListener('click', () => {
+    handlers.clearSensitiveData();
+    ui.showToast('Auto wipe cancelled', 'info');
+  });
+
+  // Actualizar cada segundo
+  setTimeout(updateWipeTimerUI, 1000);
+}
 
 // Enhanced tutorial functions
 const tutorial = {
@@ -1633,11 +1785,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     ui.showPlaceholder('Messages will appear here', 'fa-comments');
 
-    const destroyedMessages = localStorage.getItem('destroyedMessages');
-    if (destroyedMessages) {
-      appState.destroyedMessages = new Set(JSON.parse(destroyedMessages));
-    }
-
     const dontShowTutorial = localStorage.getItem('dontShowTutorial');
     if (!dontShowTutorial) {
       setTimeout(() => {
@@ -1650,18 +1797,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 1000);
     }
 
+    // Cargar configuración guardada
     loadSettings();
     
-    const wipeStartTime = localStorage.getItem('wipeStartTime');
-    if (wipeStartTime) {
-      appState.wipeStartTime = parseInt(wipeStartTime);
-      
-      const elapsed = Date.now() - appState.wipeStartTime;
-      if (elapsed > CONFIG.AUTO_WIPE * 60000) {
-        handlers.clearSensitiveData();
-      } else {
-        setupAutoWipe();
-      }
+    // Configurar auto-borrado si está habilitado
+    if (CONFIG.AUTO_WIPE > 0 && appState.wipeStartTime) {
+      setupAutoWipe();
     }
 
     dom.closeTutorial.addEventListener('click', () => {
