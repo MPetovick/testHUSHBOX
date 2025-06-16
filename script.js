@@ -139,7 +139,6 @@ const appState = {
   destroyedMessages: new Set()
 };
 
-// Configuración por defecto
 const DEFAULT_CONFIG = {
   PBKDF2_ITERATIONS: 310000,
   SECURITY_LEVEL: 'high',
@@ -151,7 +150,6 @@ const DEFAULT_CONFIG = {
   AUTO_DESTROY_QR: true
 };
 
-// Cargar configuración guardada
 function loadSettings() {
   const savedSettings = localStorage.getItem('hushbox_settings');
   if (savedSettings) {
@@ -166,25 +164,21 @@ function loadSettings() {
       CONFIG.HISTORY_RETENTION = settings.HISTORY_RETENTION || DEFAULT_CONFIG.HISTORY_RETENTION;
       CONFIG.AUTO_DESTROY_QR = settings.AUTO_DESTROY_QR !== undefined ? settings.AUTO_DESTROY_QR : DEFAULT_CONFIG.AUTO_DESTROY_QR;
       
-      // Actualizar UI
       updateSettingsUI();
     } catch (e) {
       console.error('Error loading settings:', e);
     }
   }
   
-  // Cargar mensajes destruidos
   const destroyedMessages = localStorage.getItem('destroyedMessages');
   if (destroyedMessages) {
     appState.destroyedMessages = new Set(JSON.parse(destroyedMessages));
   }
   
-  // Cargar tiempo de inicio de wipe si existe
   const wipeStartTime = localStorage.getItem('wipeStartTime');
   if (wipeStartTime) {
     appState.wipeStartTime = parseInt(wipeStartTime);
     
-    // Verificar si ya expiró
     const elapsed = Date.now() - appState.wipeStartTime;
     if (elapsed > CONFIG.AUTO_WIPE * 60000) {
       handlers.clearSensitiveData();
@@ -194,7 +188,6 @@ function loadSettings() {
   }
 }
 
-// Actualizar UI con la configuración
 function updateSettingsUI() {
   dom.pbkdf2IterationsInput.value = CONFIG.PBKDF2_ITERATIONS;
   dom.securityLevelSelect.value = appState.securityLevel;
@@ -205,7 +198,6 @@ function updateSettingsUI() {
   dom.qrSizeSelect.value = CONFIG.QR_SIZE;
   dom.historyRetentionSelect.value = CONFIG.HISTORY_RETENTION;
   
-  // Actualizar indicador de nivel de seguridad
   const securityLevelElement = document.querySelector('.security-level');
   if (securityLevelElement) {
     securityLevelElement.className = `security-level ${appState.securityLevel}`;
@@ -213,11 +205,9 @@ function updateSettingsUI() {
       `Security Level: ${appState.securityLevel.charAt(0).toUpperCase() + appState.securityLevel.slice(1)}`;
   }
   
-  // Actualizar tamaño QR
   updateQrSize();
 }
 
-// Función para actualizar tamaño QR
 function updateQrSize() {
   switch(CONFIG.QR_SIZE) {
     case 'small': CONFIG.QR_SIZE = 180; break;
@@ -227,7 +217,6 @@ function updateQrSize() {
   }
 }
 
-// Guardar configuración
 function saveSettings() {
   const settings = {
     PBKDF2_ITERATIONS: parseInt(dom.pbkdf2IterationsInput.value) || DEFAULT_CONFIG.PBKDF2_ITERATIONS,
@@ -240,13 +229,11 @@ function saveSettings() {
     AUTO_DESTROY_QR: dom.autoDestroy.checked
   };
   
-  // Validar valores
   if (settings.PBKDF2_ITERATIONS < 100000) {
     ui.showToast('PBKDF2 iterations must be at least 100,000', 'error');
     return false;
   }
   
-  // Actualizar configuración en tiempo real
   CONFIG.PBKDF2_ITERATIONS = settings.PBKDF2_ITERATIONS;
   appState.securityLevel = settings.SECURITY_LEVEL;
   CONFIG.SESSION_TIMEOUT = settings.SESSION_TIMEOUT * 60000;
@@ -256,16 +243,12 @@ function saveSettings() {
   CONFIG.HISTORY_RETENTION = settings.HISTORY_RETENTION;
   CONFIG.AUTO_DESTROY_QR = settings.AUTO_DESTROY_QR;
   
-  // Guardar en localStorage
   localStorage.setItem('hushbox_settings', JSON.stringify(settings));
   
-  // Actualizar UI
   updateSettingsUI();
   
-  // Reiniciar temporizador de sesión
   handlers.resetSessionTimer();
   
-  // Configurar auto-borrado si está habilitado
   if (CONFIG.AUTO_WIPE > 0) {
     setupAutoWipe();
   }
@@ -274,7 +257,6 @@ function saveSettings() {
   return true;
 }
 
-// Restaurar configuración por defecto
 function resetSettings() {
   CONFIG.PBKDF2_ITERATIONS = DEFAULT_CONFIG.PBKDF2_ITERATIONS;
   appState.securityLevel = DEFAULT_CONFIG.SECURITY_LEVEL;
@@ -285,16 +267,12 @@ function resetSettings() {
   CONFIG.HISTORY_RETENTION = DEFAULT_CONFIG.HISTORY_RETENTION;
   CONFIG.AUTO_DESTROY_QR = DEFAULT_CONFIG.AUTO_DESTROY_QR;
   
-  // Actualizar UI
   updateSettingsUI();
   
-  // Eliminar configuración guardada
   localStorage.removeItem('hushbox_settings');
   
-  // Reiniciar temporizador de sesión
   handlers.resetSessionTimer();
   
-  // Configurar auto-borrado si está habilitado
   if (CONFIG.AUTO_WIPE > 0) {
     setupAutoWipe();
   }
@@ -302,7 +280,6 @@ function resetSettings() {
   ui.showToast('Settings reset to defaults', 'success');
 }
 
-// Actualización de la lógica JavaScript
 function openSettingsTab(tabName) {
     // Remover clase active de todos los tabs
     dom.tabBtns.forEach(btn => btn.classList.remove('active'));
@@ -311,7 +288,6 @@ function openSettingsTab(tabName) {
         group.style.display = 'none';
     });
     
-    // Activar el tab seleccionado
     const activeBtn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
     const activeGroup = document.getElementById(`${tabName}-tab`);
     
@@ -322,13 +298,11 @@ function openSettingsTab(tabName) {
     }
 }
 
-// Al abrir el modal
 dom.settingsButton.addEventListener('click', () => {
     updateSettingsUI();
     dom.settingsModal.style.display = 'flex';
     openSettingsTab('security');
     
-    // Asegurar que solo el grupo activo es visible
     dom.settingsGroups.forEach(group => {
         if (!group.classList.contains('active')) {
             group.style.display = 'none';
@@ -1494,41 +1468,31 @@ const handlers = {
   },
 
   clearSensitiveData: () => {
-    // Limpiar todos los campos de contraseña
     dom.passphrase.value = '';
     dom.modalPassphrase.value = '';
     
-    // Limpiar campo de mensaje
     dom.messageInput.value = '';
     
-    // Limpiar datos en memoria
     appState.lastEncryptedData = null;
     
-    // Limpiar historial completo
     appState.messageHistory = [];
     
-    // Actualizar UI
     dom.qrContainer.classList.add('hidden');
     ui.updatePasswordStrength('');
     
-    // Restablecer UI de mensajes
     ui.showPlaceholder('No messages', 'fa-comments');
     
-    // Limpiar temporizador
     if (appState.wipeTimer) {
       clearTimeout(appState.wipeTimer);
       appState.wipeTimer = null;
     }
     
-    // Resetear estado de limpieza
     appState.wipeStartTime = null;
     localStorage.removeItem('wipeStartTime');
     
-    // Ocultar contador UI
     const timerEl = document.getElementById('wipe-timer');
     if (timerEl) timerEl.remove();
     
-    // Deshabilitar botón de exportación
     dom.exportHistory.disabled = true;
     
     ui.showToast('All sensitive data cleared', 'success');
@@ -1681,7 +1645,6 @@ const handlers = {
   }
 };
 
-// Función para configurar auto wipe
 function setupAutoWipe() {
   // Limpiar temporizador existente
   if (appState.wipeTimer) {
@@ -1689,11 +1652,9 @@ function setupAutoWipe() {
     appState.wipeTimer = null;
   }
 
-  // Solo activar si está configurado
   if (CONFIG.AUTO_WIPE > 0 && appState.wipeStartTime) {
     const wipeTime = CONFIG.AUTO_WIPE * 60000; // minutos a ms
     
-    // Calcular tiempo restante
     const elapsed = Date.now() - appState.wipeStartTime;
     const remainingTime = Math.max(0, wipeTime - elapsed);
     
@@ -1707,7 +1668,6 @@ function setupAutoWipe() {
   }
 }
 
-// Función para registrar acciones sensibles
 function registerSensitiveAction() {
   if (!appState.wipeStartTime) {
     appState.wipeStartTime = Date.now();
@@ -1716,7 +1676,6 @@ function registerSensitiveAction() {
   }
 }
 
-// Función para actualizar el contador en la UI
 function updateWipeTimerUI() {
   if (!appState.wipeStartTime || CONFIG.AUTO_WIPE === 0) {
     const timerEl = document.getElementById('wipe-timer');
@@ -1746,17 +1705,14 @@ function updateWipeTimerUI() {
     </button>
   `;
 
-  // Agregar evento para cancelar
   document.getElementById('cancel-wipe').addEventListener('click', () => {
     handlers.clearSensitiveData();
     ui.showToast('Auto wipe cancelled', 'info');
   });
 
-  // Actualizar cada segundo
   setTimeout(updateWipeTimerUI, 1000);
 }
 
-// Enhanced tutorial functions
 const tutorial = {
   showTutorialModal: () => {
     dom.tutorialModal.style.display = 'flex';
@@ -1797,10 +1753,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 1000);
     }
 
-    // Cargar configuración guardada
     loadSettings();
     
-    // Configurar auto-borrado si está habilitado
     if (CONFIG.AUTO_WIPE > 0 && appState.wipeStartTime) {
       setupAutoWipe();
     }
